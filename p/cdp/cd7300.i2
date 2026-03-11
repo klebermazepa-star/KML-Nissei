@@ -1,0 +1,22 @@
+/*************************************************************************
+** 
+** cd7300.i2 - Definicao de Frames e Literais para Emissao de 
+**             Relatorio de Erros de Integracao com o Multiplanta
+**
+*************************************************************************/
+
+form 
+    i-erro  
+    c-desc-erro                  
+    c-conteudo 
+    with frame f-cabec-erro width 132 stream-io.
+/* Inicio -- Projeto Internacional -- ut-trfrrp.p adicionado */
+RUN utp/ut-trfrrp.p (INPUT FRAME f-cabec-erro:HANDLE).
+
+    
+{utp/ut-liter.i Erro * R}       assign i-erro:label      in frame f-cabec-erro = return-value. 
+{utp/ut-liter.i Descri‡Æo * R}  assign c-desc-erro:label in frame f-cabec-erro = return-value.   
+{utp/ut-liter.i Conte£do * R}   assign c-conteudo:label  in frame f-cabec-erro = return-value.
+
+
+/*** Fim do Include ***/ 

@@ -1,0 +1,92 @@
+/**********************************************************************
+ **
+ ** FT2010.i77
+ **
+ ***********************************************************************/
+ 
+ procedure pi-impress-pad:
+ find layout_impres_padr no-lock where 
+      layout_impres_padr.cod_usuario = c-seg-usuario and 
+      layout_impres_padr.cod_proced  = c-programa-mg97  use-index lytmprsp_id /*cl_default_procedure_user of layout_impres_padr*/ no-error.
+ 
+ if  not avail layout_impres_padr then do:
+     find layout_impres_padr no-lock where 
+          layout_impres_padr.cod_usuario = "*" and 
+          layout_impres_padr.cod_proced = c-programa-mg97  use-index lytmprsp_id /*cl_default_procedure of layout_impres_padr*/ no-error.
+ 
+     if  avail layout_impres_padr then do:
+         find imprsor_usuar no-lock where 
+              imprsor_usuar.nom_impressora = layout_impres_padr.nom_impressora and 
+              imprsor_usuar.cod_usuario = string(c-seg-usuario) use-index imprsrsr_id /*cl_layout_current_user of imprsor_usuar*/ no-error.
+   
+         if  not avail imprsor_usuar then
+             find layout_impres_padr no-lock where 
+                  layout_impres_padr.cod_usuario = c-seg-usuario and 
+                  layout_impres_padr.cod_proced = "*" use-index lytmprsp_id /*cl_default_user of layout_impres_padr*/ no-error.
+     end.
+     else
+         find layout_impres_padr no-lock where 
+              layout_impres_padr.cod_usuario = c-seg-usuario and 
+              layout_impres_padr.cod_proced = "*" use-index lytmprsp_id /*cl_default_user of layout_impres_padr*/ no-error.
+ end /* if */.
+ 
+ if  avail layout_impres_padr then
+     assign c-imp-ent = layout_impres_padr.nom_impressora
+                      + ":"
+                      + layout_impres_padr.cod_layout_impres.
+ else
+     assign c-imp-ent = "".
+   
+ end.
+ 
+ PROCEDURE pi-imprime-nota :
+ /*------------------------------------------------------------------------------
+   Purpose:     
+   Parameters:  <none>
+   Notes:       
+ ------------------------------------------------------------------------------*/
+ 
+     if  i-sc-transven = '1' then do:  /* imprime NF auto */
+         run pi-impres-pad. 
+ 
+         assign c-arq-ent  = 'spool/' + c-programa-mg97 + '.lst'
+                c-arq-bloq = 'spool/' + c-programa-mg97 + '.lst'.
+     
+         run pdp/pd0508o.w (input  nota-fiscal.cod-portador,
+                            input  c-arq-ent,
+                            input  c-imp-ent,
+                            input  c-arq-bloq,
+                            input  c-imp-bloq,
+                            output p-arquivo, 
+                            output p-destino,
+                            output p-modelo,
+                            output i-emite,
+                            output p-arquivo-2,
+                            output p-destino-2).                 
+         run ftp/ft2010e.p (input rowid(nota-fiscal),
+                            input ?,
+                            input ?).                                         
+    end.
+ 
+     if  i-emite = 1 and {1} <> "" then
+         run pi-imprime-bloq.
+ 
+ END PROCEDURE.
+ 
+ PROCEDURE pi-imprime-bloq :
+ /*------------------------------------------------------------------------------
+   Purpose:     
+   Parameters:  <none>
+   Notes:       
+ ------------------------------------------------------------------------------*/
+ if  i-sc-transven = '1' then do:  /* imprime NF auto */
+ 
+     run ftp/ft2010f.p (input rowid(nota-fiscal),
+                        input ?,
+                        input ?).                                         
+ end. /* fim imprime NF auto */
+ 
+ END PROCEDURE.
+ 
+ /* fim */
+ 

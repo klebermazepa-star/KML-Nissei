@@ -1,0 +1,38 @@
+/****************************************************************************
+** OF0770.I1 - Determina a data inicial para o Ajuste Sinief - Novo        **
+**             formato do CFOP                                             **
+** OBS: A include cdp/cdcfgdis.i ² pr²-requisito para utiliza‡Æo desta.    **
+****************************************************************************/
+
+&if defined(PrimeiraVezDaInclude) &then
+&else
+    def buffer b-param-of-cfop for param-of.    
+    def var da-dt-cfop      as date                     no-undo.
+    def var c-desc-cfop-nat like natur-oper.denominacao no-undo.
+    if  no then do:
+        find first b-param-of-cfop   no-lock no-error.
+        find first natur-oper no-lock no-error.
+    end.    
+    &GLOBAL-DEFINE PrimeiraVezDaInclude
+&endif
+
+if  not avail b-param-of-cfop 
+or  b-param-of-cfop.cod-estabel <> {1} then
+    find b-param-of-cfop 
+         where b-param-of-cfop.cod-estabel = {1} no-lock no-error.
+
+if  not avail b-param-of-cfop then
+    find first b-param-of-cfop no-lock no-error.
+
+if  avail b-param-of-cfop then do:
+    assign da-dt-cfop = &if defined(bf_dis_formato_CFOP) 
+                        &then b-param-of-cfop.dat-format-cfop.
+                        &else b-param-of-cfop.data-2.
+                        &endif
+    if  da-dt-cfop = ? then              
+        assign da-dt-cfop = 01/01/2003. 
+end.  
+else 
+    assign da-dt-cfop = 01/01/2003.
+
+/* OF0770.I1 */

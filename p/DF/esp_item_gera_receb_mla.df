@@ -1,0 +1,11 @@
+ADD FIELD "Valida_ordem" OF "esp_item_gera_receb_MLA" AS logical 
+  FORMAT "sim/nao"
+  INITIAL "no"
+  POSITION 4 
+  MAX-WIDTH 1
+  ORDER 40
+.
+PSC
+cpstream=ibm850
+.
+0000000543

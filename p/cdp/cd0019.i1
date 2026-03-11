@@ -1,0 +1,7 @@
+
+IF  VALID-HANDLE(h-onfind) THEN
+    DELETE PROCEDURE h-onfind NO-ERROR.
+                
+/* IF  VALID-HANDLE(h-hubapi100) THEN
+    	DELETE PROCEDURE h-hubapi100 NO-ERROR. */
+

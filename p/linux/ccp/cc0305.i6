@@ -1,0 +1,63 @@
+/****************************************************************************
+**
+**  cc0305.i6 - Define frame de parametros e variaveis para traducao
+**
+****************************************************************************/
+
+def new global shared var v_log_eai_habilit as logical no-undo.
+def var h-axssu004          as handle  no-undo.
+def var l-first-emitente    as logical no-undo.
+def var de-preco-conv       like ordem-compra.preco-unit format ">>>>>,>>>,>>9.9999" decimals 8  no-undo.
+def var de-preco-unit       like ordem-compra.preco-unit format ">>>>>,>>>,>>9.99999" decimals 8 no-undo.
+def var de-tot-ger          as decimal format ">>>,>>>,>>>,>>>,>>9.99" decimals 8 no-undo.
+def var de-total            as decimal format ">>>>>,>>>,>>9.99"       decimals 8 no-undo.
+def var de-ipi1             as decimal format ">>>>>,>>>,>>9.99"       decimals 8 no-undo.
+def var de-preco-total      as decimal format ">>>>>>>>,>>>,>>9.99"    decimals 8 no-undo.
+def var de-enc              as decimal format ">,>>>,>>>,>>9.99".
+def var de-desc             as decimal format ">>>>>>,>>9.9999".
+def var c-traco             as char    format "x(36)"                  extent 3   no-undo.
+def var c-nome              as char    format "x(30)"                  extent 3   no-undo.
+def var c-cargo             as char    format "x(30)"                  extent 3   no-undo.
+def var c-msg               as char    format "x(10)"                             no-undo.
+def var c-ped               as char    format "x(100)"                            no-undo.
+def var c-desc-var-1        as char    format "x(14)"                             no-undo.
+def var c-desc-var-2        as char    format "x(14)"                             no-undo.
+def var c-natureza          as char    format "x(14)"                             no-undo.
+def var c-descricao         as char    format "x(60)"                             no-undo.
+def var c-tax-aux           as char    format "x(1)"                              no-undo.
+def var c-pe-aux            like pedido-compr.num-pedido no-undo.
+def var de-ipi              like de-total format ">>>>>>,>>9.9999".
+def var de-ipi-tot          like de-total format ">>>>>>,>>9.9999".
+def var de-preco-tot-aux    like de-preco-total no-undo.
+def var de-total-pedido     like de-total       no-undo.
+def var de-preco-calc       like de-preco-conv  no-undo.
+def var l-com1              as logical                              no-undo.
+def var l-ordem             as logical                              no-undo.
+def var l-branco            as logical                              no-undo.
+def var l-r2                as logical                              no-undo.
+def var l-r3                as logical                              no-undo.
+def var l-imprimiu          as logical                              no-undo.
+def var h-acomp             as handle                               no-undo.
+def var c-desc-contrato     as char format "x(32)" label "        " no-undo.
+def var l-pendente          as logical                              no-undo.
+def var c-desc-frete        as char                                 no-undo.
+def var c-desc-destino      as char format "x(32)"                  no-undo.
+def var c-lb-b2b            as char format "x(20)"                  no-undo.
+def var c-b2b               as char format "x(40)"                  no-undo.
+def var c-bb-ordem          as char format "x(70)"                  no-undo.
+def var i-contador-2        as integer initial 2.
+def var l-multiplanta       as logical initial no.
+def var c-changecode        as char no-undo.
+def var c-status            as char.
+def VAR i-status            as int no-undo initial 1.
+def var c-valid-status      as char extent 3 initial ["Enviado","Nao Aprovado","Ordem nao enviada pelo Portal Datasul"].
+
+def var c-format            as char    no-undo.
+def var c-erro-eai          as char    no-undo.
+def var c-erro-totvs-colab  as char    no-undo.
+def var c-lb-erro           as char    no-undo.
+def var c-lb-ajuda          as char    no-undo.
+def var l-primeira          as log     no-undo.
+def var raw-param-mp        as raw     no-undo.
+
+/* Fim Include */

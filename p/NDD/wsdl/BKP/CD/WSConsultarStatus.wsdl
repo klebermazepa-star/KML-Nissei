@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://nddigital.com.br/eForms/webservices" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://nddigital.com.br/eForms/webservices" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://nddigital.com.br/eForms/webservices">
+      <s:element name="ConsultarStatus">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="xml" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultarStatusResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarStatusResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ConsultarStatusSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarStatus" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarStatusSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarStatusResponse" />
+  </wsdl:message>
+  <wsdl:portType name="WSConsultarStatusSoap">
+    <wsdl:operation name="ConsultarStatus">
+      <wsdl:input message="tns:ConsultarStatusSoapIn" />
+      <wsdl:output message="tns:ConsultarStatusSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WSConsultarStatusSoap" type="tns:WSConsultarStatusSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarStatus">
+      <soap:operation soapAction="http://nddigital.com.br/eForms/webservices/ConsultarStatus" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="WSConsultarStatusSoap12" type="tns:WSConsultarStatusSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarStatus">
+      <soap12:operation soapAction="http://nddigital.com.br/eForms/webservices/ConsultarStatus" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WSConsultarStatus">
+    <wsdl:port name="WSConsultarStatusSoap" binding="tns:WSConsultarStatusSoap">
+      <soap:address location="http://10.181.1.2/eFormsWebServices/WSConsultarStatus.asmx" />
+    </wsdl:port>
+    <wsdl:port name="WSConsultarStatusSoap12" binding="tns:WSConsultarStatusSoap12">
+      <soap12:address location="http://10.181.1.2/eFormsWebServices/WSConsultarStatus.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

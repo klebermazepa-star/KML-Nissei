@@ -1,0 +1,26 @@
+/***********************************************************
+**
+**    CDP/CD9400.I4.
+**    Temp-tables e variaveis comuns a rotina e sua origem.
+**
+************************************************************/
+
+def {1} temp-table tt-ordem 
+    field sequencia    as integer
+    field numero-ordem like prazo-compra.numero-ordem  
+    field parcela      like prazo-compra.parcela
+    field fornec       like item-fornec.cod-emite 
+    field nome-fornec  like emitente.nome-abrev
+    field quantidade   like ordem-compra.qt-solic format ">>>>>,>>9.9999"
+    field contr-forn   like item-fornec.contr-forn
+    field data-entrega like prazo-compra.data-entrega.
+
+def temp-table tt-ordem-split 
+    field sequencia    as integer
+    field numero-ordem like prazo-compra.numero-ordem  
+    field parcela      like prazo-compra.parcela
+    field fornec       like item-fornec.cod-emite 
+    field nome-fornec  like emitente.nome-abrev
+    field quantidade   like ordem-compra.qt-solic format ">>>>>,>>9.9999"
+    field contr-forn   like item-fornec.contr-forn
+    field data-entrega like prazo-compra.data-entrega.

@@ -1,0 +1,24 @@
+/******************************************************************************
+**
+**  of0717.i7 - Controla Quebra de Paginas.
+**
+******************************************************************************/
+
+assign l-impr-sep = yes.
+
+if  line-counter + i-pag-print >= page-size then do:
+    put c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip.
+    do while l-impr-sep:
+       put c-sep at 1.       
+       if l-separadores then 
+          put c-sep at 132.
+       else
+          put c-sep at 132 skip.
+       if line-counter >= page-size then 
+          assign l-impr-sep = no.     
+    end.
+end.
+
+run pi-imprime-termo ( line-counter, i-pag-print ).
+
+/* OF0717.I7 */

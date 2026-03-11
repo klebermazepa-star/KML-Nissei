@@ -1,0 +1,19 @@
+/******************************************************************************
+**
+** CD4314.I2 - Definicoes da tabela temporaria tt-nota-trans.
+**
+** OBS: - Include elaborado especificamente para versao I.
+**
+** Programas que utilizam essa include:
+** - CD4314
+**
+******************************************************************************/
+
+def temp-table tt-nota-trans no-undo like nota-trans
+    field seq-tt-docto as   int
+    field ind-icms-ret like it-nota-fisc.ind-icm-ret
+    
+    index seq is unique
+          seq-tt-docto.
+
+/*  CD4314.I2  */

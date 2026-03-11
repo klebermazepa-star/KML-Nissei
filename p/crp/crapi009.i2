@@ -1,0 +1,28 @@
+/********************************************************************************
+***
+*** crp/crapi009.i2 - Cria TempTable de Retorno da Consistˆncia.
+***
+********************************************************************************/
+
+assign c-cod-erro = "{1}"
+       l-situacao-aux = {4}.
+
+find first tt-erros-cons
+    where tt-erros-cons.cod-erro  = int({1}) 
+    and   tt-erros-cons.parametro = {3} use-index ch-codigo no-error.
+if  avail tt-erros-cons then
+    assign c-desc-erro  = tt-erros-cons.descricao.
+else do:
+    run utp/ut-msgs.p (input "{2}",
+                       input int({1}),
+                       input {3}).
+    create tt-erros-cons.
+    assign tt-erros-cons.cod-erro  = int({1})
+           tt-erros-cons.parametro = {3}
+           tt-erros-cons.descricao = trim(return-value)
+           c-desc-erro             = trim(return-value).
+end.
+
+{crp/crapi009.i1 c-cod-erro l-situacao-aux c-desc-erro}
+
+/* crp/crapi009.i2 */

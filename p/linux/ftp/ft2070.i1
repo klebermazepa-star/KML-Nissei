@@ -1,0 +1,19 @@
+/******************************************************************************
+**
+** FT2070.I1 - Definicao da tabela temporaria tt-fat-repre.
+**
+******************************************************************************/
+
+def temp-table tt-fat-repre no-undo
+    field seq-tt-docto as   int
+    field sequencia    as   int
+    field cod-rep      like nota-fiscal.cod-rep               
+    field nome-ab-rep  like fat-repre.nome-ab-rep             
+    field perc-comis   like fat-repre.perc-comis form ">9.99" 
+    field comis-emis   like fat-repre.comis-emis
+    field vl-comis     as dec
+    field vl-emis      as dec
+    index codigo is primary
+          sequencia.
+ 
+/*  FT2070.I1  */

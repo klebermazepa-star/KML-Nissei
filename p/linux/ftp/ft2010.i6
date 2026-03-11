@@ -1,0 +1,72 @@
+/******************************************************************************
+**
+** ftp/ft2010.i6 - Copiar campos: tt-fat-duplic para fat-duplic 
+**
+******************************************************************************/
+
+create fat-duplic.
+assign fat-duplic.cod-estabel  = nota-fiscal.cod-estabel
+       fat-duplic.serie        = nota-fiscal.serie
+       fat-duplic.nr-fatura    = nota-fiscal.nr-fatura
+       fat-duplic.cod-vencto   = tt-fat-duplic.cod-vencto   
+       fat-duplic.dt-venciment = tt-fat-duplic.dt-venciment 
+       fat-duplic.dt-desconto  = tt-fat-duplic.dt-desconto  
+       fat-duplic.parcela      = tt-fat-duplic.parcela
+       fat-duplic.cod-esp      = tt-fat-duplic.cod-esp 
+       fat-duplic.ct-recven    = estabelec.ct-recven
+       fat-duplic.sc-recven    = estabelec.sc-recven       
+       fat-duplic.dt-emissao   = tt-docto.dt-base-dup
+       fat-duplic.ind-fat-nota = if can-find(funcao where funcao.cd-funcao = "spp-fat-ser-est"
+                                             and   funcao.ativo)
+                                 and ser-estab.ind-nff
+                                 then 2
+                                 else tt-docto.fat-nota
+       fat-duplic.mo-negoc     = if  i-pais-impto-usuario = 1
+                                 and substring(tt-docto.nat-operacao,1,1) <> "7"
+                                 then 0
+                                 else tt-docto.mo-codigo
+       fat-duplic.nat-operacao = tt-docto.nat-operacao
+       fat-duplic.nome-ab-cli  = tt-docto.nome-abrev
+       fat-duplic.nr-pedido    = if  tt-docto.nr-pedcli <> ""
+                                 then ped-venda.nr-pedido
+                                 else 0.
+                                 
+assign fat-duplic.vl-parcela   = fn_ajust_dec(tt-fat-duplic.vl-parcela, int(nota-fiscal.mo-codigo))
+       fat-duplic.vl-comis     = fn_ajust_dec(tt-fat-duplic.vl-comis, int(nota-fiscal.mo-codigo))
+       fat-duplic.vl-acum-dup  = fn_ajust_dec(tt-fat-duplic.vl-acum-dup, int(nota-fiscal.mo-codigo))
+       fat-duplic.vl-desconto  = fn_ajust_dec(tt-fat-duplic.vl-desconto, int(nota-fiscal.mo-codigo)).
+
+&if  defined (bf_dis_fat_moeda) &then 
+   assign fat-duplic.vl-parcela-me  = fat-duplic.vl-parcela
+          fat-duplic.vl-comis-me    = fat-duplic.vl-comis
+          fat-duplic.vl-desconto-me = fat-duplic.vl-desconto-me
+          fat-duplic.mo-negoc       = if  para-fat.ind-legislacao = 1 
+                                      then i-moeda-fatur
+                                      else fat-duplic.mo-negoc.
+   if  i-moeda-fatur <> 0 then
+   
+       assign fat-duplic.vl-parcela = fn_ajust_dec(if  l-trunca then trunc(fat-duplic.vl-parcela * de-taxa-fatur, i-round)
+                                           else round(fat-duplic.vl-parcela * de-taxa-fatur, i-round), int(nota-fiscal.mo-codigo))
+              fat-duplic.vl-comis =  fn_ajust_dec(if  l-trunca then trunc(fat-duplic.vl-comis * de-taxa-fatur, i-round)
+                                                  else round(fat-duplic.vl-comis * de-taxa-fatur, i-round), int (nota-fiscal.mo-codigo))
+              fat-duplic.vl-desconto = fn_ajust_dec((if  l-trunca then trunc(fat-duplic.vl-desconto * de-taxa-fatur, i-round)
+                                                     else round(fat-duplic.vl-desconto * de-taxa-fatur, i-round)), int(nota-fiscal.mo-codigo)).
+    assign fat-duplic.vl-parcela = fn_ajust_dec(fat-duplic.vl-parcela, 0)
+           fat-duplic.vl-comis   = fn_ajust_dec(fat-duplic.vl-comis, 0)
+           fat-duplic.vl-desconto = fn_ajust_dec(fat-duplic.vl-desconto, 0).
+&endif
+
+&IF '{&BF_DIS_VERSAO_EMS}' >= '2.04' &THEN
+    if  i-pais-impto-usuario = 1 then do:
+
+        find first tt-fat-duplic-boleto
+             where tt-fat-duplic-boleto.seq-tt-fat-duplic = tt-fat-duplic.seq-tt-fat-duplic
+               and tt-fat-duplic-boleto.seq-tt-docto      = tt-fat-duplic.seq-tt-docto
+               and tt-fat-duplic-boleto.parcela           = tt-fat-duplic.parcela no-lock no-error.
+        if  avail tt-fat-duplic-boleto then
+            assign fat-duplic.char-1 = tt-fat-duplic-boleto.nro-boleto.
+    end.
+&ENDIF
+
+/*  FT2010.I6  */
+

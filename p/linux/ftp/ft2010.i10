@@ -1,0 +1,129 @@
+/******************************************************************************
+**
+**  FT2010.I10 - Criacao das embalagens para nota fiscal.
+**
+******************************************************************************/
+
+for each it-nota-fisc
+    where it-nota-fisc.cod-estabel = nota-fiscal.cod-estabel
+    and   it-nota-fisc.serie       = nota-fiscal.serie
+    and   it-nota-fisc.nr-nota-fis = nota-fiscal.nr-nota-fis no-lock,
+    each tt-item-embal
+    where tt-item-embal.it-codigo    = it-nota-fisc.it-codigo
+    and   tt-item-embal.nr-pedcli    = it-nota-fisc.nr-pedcli
+    and tt-item-embal.nr-sequencia   = it-nota-fisc.nr-seq-ped exclusive-lock,
+    first tt-nota-embal
+    where tt-nota-embal.seq-tt-nota-embal = tt-item-embal.seq-tt-nota-embal exclusive-lock
+    break by it-nota-fisc.cod-estabel
+          by it-nota-fisc.serie
+          by it-nota-fisc.nr-nota-fis
+          by it-nota-fisc.it-codigo
+          by tt-nota-embal.sigla-emb
+          by tt-item-embal.volume:
+
+    if  l-embalagem
+    and param-global.dec-2 = 1 then do:
+        run ebp/ebft2010.p (input "2",
+                            input rowid(nota-fiscal),
+                            input-output table tt-nota-embal,
+                            input rowid(tt-nota-embal),
+                            output i-detalha).
+    end.
+    else do:
+        find embalag where embalag.sigla-emb = tt-nota-embal.sigla-emb
+            no-lock.
+        assign i-detalha = embalag.ind-detemb.
+    end.
+    
+    if  not session:remote then do:
+        assign n-reg = n-reg + 1.
+        if  time - i-time-aux >=  1 or  time - i-time-aux <= -1 then do:
+            {utp/ut-liter.i "Calculando Embalagens"}
+            run pi-acompanhar in h-acomp (input trim(return-value) + ": " +  string(n-reg)).
+            assign i-time-aux = time.
+        end.    
+    end.    
+         
+    if  i-detalha = 2 then do: /* detalha */
+        create item-embal.
+        assign item-embal.cod-estabel = nota-fiscal.cod-estabel
+               item-embal.serie       = nota-fiscal.serie
+               item-embal.nr-nota-fis = nota-fiscal.nr-nota-fis
+               item-embal.nr-seq-fat  = it-nota-fisc.nr-seq-fat
+               item-embal.it-codigo   = tt-item-embal.it-codigo
+               item-embal.sigla-emb   = tt-nota-embal.sigla-emb
+               item-embal.int-1       = tt-item-embal.volume
+               item-embal.dec-1       = tt-item-embal.qt-embalada.
+    end.
+    find nota-embal
+         where nota-embal.cod-estabel = nota-fiscal.cod-estabel
+         and   nota-embal.serie       = nota-fiscal.serie
+         and   nota-embal.nr-nota-fis = nota-fiscal.nr-nota-fis
+         and   nota-embal.sigla-emb   = tt-nota-embal.sigla-emb exclusive-lock no-error.
+
+    if  not avail nota-embal then 
+        create nota-embal.
+        assign nota-embal.cod-estabel = nota-fiscal.cod-estabel
+               nota-embal.serie       = nota-fiscal.serie
+               nota-embal.nr-nota-fis = nota-fiscal.nr-nota-fis
+               nota-embal.sigla-emb   = tt-nota-embal.sigla-emb.
+
+    if i-detalha <> 2 then 
+        /* Embalagens tipo TEXTO */
+       assign nota-embal.qt-volumes = nota-embal.qt-volumes      + 
+                                      if  tt-item-embal.volume <> 0 
+                                      then 1
+                                      else tt-item-embal.qt-embalada
+              nota-embal.desc-vol   = substr(tt-nota-embal.desc-vol, 1,76).
+    else do:
+        /* Embalagens tipo DETALHA */
+        assign nota-embal.qt-volumes = nota-embal.qt-volumes + 1.
+
+        if  first-of(tt-nota-embal.sigla-emb) 
+        and last-of (tt-nota-embal.sigla-emb) 
+        then do:
+            if  nota-embal.desc-vol <> "" then
+                assign nota-embal.desc-vol = substr(nota-embal.desc-vol + ","  + 
+                                                    string(tt-item-embal.volume), 1,76).
+            else
+                assign nota-embal.desc-vol = substr(string(tt-item-embal.volume), 1,76).
+        end.                                                    
+        else do:
+            if  first-of(tt-nota-embal.sigla-emb) then
+                assign nota-embal.desc-vol = substr(nota-embal.desc-vol + 
+                                                    string(tt-item-embal.volume),1,76).
+            else 
+                if  last-of(tt-nota-embal.sigla-emb) then
+                    assign nota-embal.desc-vol = substr(nota-embal.desc-vol + "-" + 
+                                                        string(tt-item-embal.volume), 1,76).
+                else 
+                    if  tt-item-embal.volume - i-vol-anterior > 1 then
+                        assign nota-embal.desc-vol = substr(nota-embal.desc-vol + "-" +
+                                                            string(i-vol-anterior) + 
+                                                            "," + 
+                                                            string(tt-item-embal.volume), 1,76).
+
+            assign i-vol-anterior = tt-item-embal.volume.
+        end.
+    end.
+end. 
+
+if  last(tt-docto.nr-nota) then
+    for each tt-nota-embal
+        where tt-nota-embal.seq-tt-docto = tt-docto.seq-tt-docto:
+        find first tt-item-embal
+             where tt-item-embal.seq-tt-nota-embal = tt-nota-embal.seq-tt-nota-embal
+             no-error.
+
+        if  not avail tt-item-embal then do:
+            create nota-embal.
+            assign nota-embal.cod-estabel = nota-fiscal.cod-estabel
+                   nota-embal.serie       = nota-fiscal.serie
+                   nota-embal.nr-nota-fis = nota-fiscal.nr-nota-fis
+                   nota-embal.sigla-emb   = tt-nota-embal.sigla-emb
+                   nota-embal.qt-volumes  = tt-nota-embal.qt-volumes
+                   nota-embal.desc-vol    = tt-nota-embal.desc-vol.
+        end.
+    end.
+
+/*  FT2010.I10  */

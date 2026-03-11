@@ -1,0 +1,27 @@
+output to t:\docum-est-faturamento.txt.
+for each nota-fiscal where
+    nota-fiscal.ind-tip-nota = 8:
+
+
+    for each docum-est where 
+        docum-est.serie-docto  = nota-fiscal.serie          and
+        docum-est.nro-docto    = nota-fiscal.nr-nota-fis    and
+        docum-est.cod-emitente = nota-fiscal.cod-emitente   and
+        docum-est.nat-operacao = nota-fiscal.nat-operacao:
+        
+        assign docum-est.idi-sit-nf-eletro = nota-fiscal.idi-sit-nf-eletro
+               docum-est.log-1 = yes
+               docum-est.cod-chave-aces-nf-eletro = nota-fiscal.cod-chave-aces-nf-eletro.
+
+        display docum-est.serie-docto  
+                docum-est.nro-docto    
+                docum-est.cod-emitente 
+                docum-est.nat-operacao 
+                nota-fiscal.dt-cancela
+            with width 300 stream-io.
+
+
+    end.
+
+end.
+output close.

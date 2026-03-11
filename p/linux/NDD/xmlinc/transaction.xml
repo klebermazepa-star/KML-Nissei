@@ -1,0 +1,1173 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<DatasulTransactions>
+	<ListOfProduct>
+		<Product>
+			<Name>DBR</Name>
+			<Description>Datasul DBR</Description>
+			<ListOfTransaction>
+				<Transaction>
+					<Name>CalendarDBR</Name>
+					<Description>Calendários</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb002.p</AdapterSender>
+					<XsdSender>dbr/CalendarDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb002.p</AdapterReceiver>
+					<XsdReceiver>dbr/CalendarDBR_204_000.xsd</XsdReceiver>
+				</Transaction>
+				<Transaction>
+					<Name>ConfirmationDBR</Name>
+					<Description>Confirmação OC/OP (Ordens de compra e ordens de produção)</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb019.p</AdapterSender>
+					<XsdSender>dbr/ConfirmationDBR_204_200.xsd</XsdSender>					
+					<AdapterReceiver>adapters/xml/dbr/axrdb019.p</AdapterReceiver>
+					<XsdReceiver>dbr/ConfirmationDBR_204_200.xsd</XsdReceiver>
+				</Transaction>
+				<Transaction>				
+					<Name>DataUpdateDBR</Name>
+					<Description>Confirmação do encerramento atualização</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb020.p</AdapterSender>
+					<XsdSender>dbr/DataUpdateDBR_204_200.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb020.p</AdapterReceiver>
+					<XsdReceiver>dbr/DataUpdateDBR_204_200.xsd</XsdReceiver>
+				</Transaction>
+				<Transaction>				
+					<Name>ExceptionTurnDetailDBR</Name>
+					<Description>Detalhe Turno de Exceção</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb028.p</AdapterSender>
+					<XsdSender>dbr/ExceptionTurnDetailDBR_204_200.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>
+				</Transaction>				
+				<Transaction>
+					<Name>InventoryGroupDBR</Name>
+					<Description>Grupo de Estoque</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb011.p</AdapterSender>
+					<XsdSender>dbr/InventoryGroupDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb011.p</AdapterReceiver>
+					<XsdReceiver>dbr/InventoryGroupDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>InventoryReserves</Name>
+					<Description>Saldo das Reservas de Necessidade da Programação</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb026.p</AdapterSender>
+					<XsdSender>dbr/InventoryReserves_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb026.p</AdapterReceiver>
+					<XsdReceiver>dbr/InventoryReserves_204_000.xsd</XsdReceiver>					
+				</Transaction>			
+				<Transaction>
+					<Name>ItemDBR</Name>
+					<Description>Item</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb018.p</AdapterSender>
+					<XsdSender>dbr/ItemDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb018.p</AdapterReceiver>
+					<XsdReceiver>dbr/ItemDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>MachineGroupDBR</Name>
+					<Description>Grupo de Máquina</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb005.p</AdapterSender>
+					<XsdSender>dbr/MachineGroupDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb005.p</AdapterReceiver>
+					<XsdReceiver>dbr/MachineGroupDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>MaterialFamilyDBR</Name>
+					<Description>Família de Materiais</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb010.p</AdapterSender>
+					<XsdSender>dbr/MaterialFamilyDBR_204_200.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb010.p</AdapterReceiver>
+					<XsdReceiver>dbr/MaterialFamilyDBR_204_200.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ParamDataUpdateDBR</Name>
+					<Description>Atualização de dados</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb001.p</AdapterSender>
+					<XsdSender>dbr/DataUpdateDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb001.p</AdapterReceiver>
+					<XsdReceiver>dbr/DataUpdateDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>PlannerDBR</Name>
+					<Description>Planejadores</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb014.p</AdapterSender>
+					<XsdSender>dbr/PlannerDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb014.p</AdapterReceiver>
+					<XsdReceiver>dbr/PlannerDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ProductionAreaDBR</Name>
+					<Description>Área de Produção</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb006.p</AdapterSender>
+					<XsdSender>dbr/ProductionAreaDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb006.p</AdapterReceiver>
+					<XsdReceiver>dbr/ProductionAreaDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ProductionLineDBR</Name>
+					<Description>Linha de Produção</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb013.p</AdapterSender>
+					<XsdSender>dbr/ProductionLineDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb013.p</AdapterReceiver>
+					<XsdReceiver>dbr/ProductionLineDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ProductionToolsDBR</Name>
+					<Description>Ferramentas</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb004.p</AdapterSender>
+					<XsdSender>dbr/ProductionToolsDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb004.p</AdapterReceiver>
+					<XsdReceiver>dbr/ProductionToolsDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Programming</Name>
+					<Description>Programação BMG</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb024.p</AdapterSender>
+					<XsdSender>dbr/programming_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb024.p</AdapterReceiver>
+					<XsdReceiver>dbr/programming_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ReferenceDBR</Name>
+					<Description>Referência</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb015.p</AdapterSender>
+					<XsdSender>dbr/ReferenceDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb015.p</AdapterReceiver>
+					<XsdReceiver>dbr/ReferenceDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ReturnConfirmationDBR</Name>
+					<Description>Retorno da Confirmação da OC/OP</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb021.p</AdapterSender>
+					<XsdSender>dbr/ReturnConfirmationDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb021.p</AdapterReceiver>
+					<XsdReceiver>dbr/ReturnConfirmationDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>RoutingOfFactoryDBR</Name>
+					<Description>Roteiros de fabricação</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb017.p</AdapterSender>
+					<XsdSender>dbr/RoutingOfFactoringDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb017.p</AdapterReceiver>
+					<XsdReceiver>dbr/RoutingOfFactoringDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ShiftDBR</Name>
+					<Description>Turnos</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb003.p</AdapterSender>
+					<XsdSender>dbr/ShiftDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb003.p</AdapterReceiver>
+					<XsdReceiver>dbr/ShiftDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ShiftOfMachineGroup</Name>
+					<Description>Turnos do Grupo de Máquina</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb008.p</AdapterSender>
+					<XsdSender>dbr/ShiftOfMachineGroupDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb008.p</AdapterReceiver>
+					<XsdReceiver>dbr/ShiftOfMachineGroupDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>SiteDBR</Name>
+					<Description>Estabelecimento</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb012.p</AdapterSender>
+					<XsdSender>dbr/SiteDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb012.p</AdapterReceiver>
+					<XsdReceiver>dbr/SiteDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>StandardOperationDBR</Name>
+					<Description>Operação Padrão</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb009.p</AdapterSender>
+					<XsdSender>dbr/StandardOperationDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb009.p</AdapterReceiver>
+					<XsdReceiver>dbr/StandardOperationDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>UnitOfMeasureDBR</Name>
+					<Description>Unidade de Medida</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb016.p</AdapterSender>
+					<XsdSender>dbr/UnitOfMeasureDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb016.p</AdapterReceiver>
+					<XsdReceiver>dbr/UnitOfMeasureDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>VendorBMG</Name>
+					<Description>Fornecedores BMG</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb023.p</AdapterReceiver>
+					<XsdReceiver>dbr/VendorBMG_101_000.xsd</XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>WareHouseBMG</Name>
+					<Description>Depósitos BMG</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb022.p</AdapterReceiver>
+					<XsdReceiver>dbr/WareHouseBMG_101_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>WorkCenterDBR</Name>
+					<Description>Centro de Trabalho</Description>
+					<AdapterSender>adapters/xml/dbr/axsdb007.p</AdapterSender>
+					<XsdSender>dbr/WorkCenterDBR_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/dbr/axrdb007.p</AdapterReceiver>
+					<XsdReceiver>dbr/WorkCenterDBR_204_000.xsd</XsdReceiver>					
+				</Transaction>
+			</ListOfTransaction>
+		</Product>
+		<Product>
+			<Name>EMS2</Name>
+			<Description>Datasul EMS 2</Description>
+			<ListOfTransaction>
+				<Transaction>
+					<Name>AssetDepreciation</Name>
+					<Description>Depreciação por Bem</Description>
+					<AdapterSender>adapters/xml/ct2/axsct002.p</AdapterSender>
+					<XsdSender>ct5/AssetDepreciation_506_001.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>										
+				</Transaction>
+				<Transaction>
+					<Name>CancelInvoiceDocument</Name>
+					<Description>Cancela Nota Fiscal Eletronica</Description>
+					<AdapterSender>adapters/xml/ep2/axsep002.p</AdapterSender>
+					<XsdSender>ep2/CancelInvoiceDocument_204_106.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>CancelInvoiceDocument2</Name>
+					<Description>Cancelamento Documento de Fatura 2</Description>
+					<AdapterSender>adapters/xml/ep2/axsep005.p</AdapterSender>
+					<XsdSender>ep2/CancelInvoiceDocument2_204_106.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>				
+				<Transaction>
+					<Name>CancelInvoiceRetDocument</Name>
+					<Description>Cancelamento Documento de Retorno de Fatura</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/ep2/axrep002.p</AdapterReceiver>
+					<XsdReceiver>ep2/CancelInvoiceRetDocument_204_106.xsd</XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>CancelPickingList</Name>
+					<Description>Cancelamento de Lista de Seleção</Description>
+					<AdapterSender>adapters/xml/ep2/axsep509.p</AdapterSender>
+					<XsdSender>ep2/CancelPickingList_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>				
+				<Transaction>
+					<Name>Carrier</Name>
+					<Description>Transportador</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd007.p</AdapterSender>
+					<XsdSender>vd2/Carrier_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/vd2/axrvd007.p</AdapterReceiver>
+					<XsdReceiver>vd2/Carrier_204_000.xsd</XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>ConsStatServEnv</Name>
+					<Description>Consulta Status Servidor Envio</Description>
+					<AdapterSender>adapters/xml/ep2/axsep010.p</AdapterSender>
+					<XsdSender>ep2/ConsStatServEnv_204_000_v1.07.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>				
+				<Transaction>
+					<Name>ConsultInvoiceDocument</Name>
+					<Description>Consulta Nota Fiscal Eletronica</Description>
+					<AdapterSender>adapters/xml/ep2/axsep004.p</AdapterSender>
+					<XsdSender>ep2/ConsultInvoiceDocument_204_106.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>ConsultInvoiceRetDocument</Name>
+					<Description>Consulta Nota Fiscal Eletronica</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/ep2/axrep004.p</AdapterReceiver>
+					<XsdReceiver>ep2/ConsultInvoiceRetDocument_204_106.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>CostCenter</Name>
+					<Description>Centro de Custo – SubConta</Description>
+					<AdapterSender>adapters/xml/ct2/axsct001.p</AdapterSender>
+					<XsdSender>ct5/CostCenter_506_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>CostCenterExtension</Name>
+					<Description>Gastos Gerais por Centro de Custo</Description>
+					<AdapterSender>adapters/xml/ma2/axsma001.p</AdapterSender>
+					<XsdSender>ma2/CostCenterExtension_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/ma2/axrma003.p</AdapterReceiver>
+					<XsdReceiver>ma2/CostCenterExtension_204_001.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Currency</Name>
+					<Description>Moedas</Description>
+					<AdapterSender>adapters/xml/fi2/axsfi002.p</AdapterSender>
+					<XsdSender>fi2/Currency_207_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>CurrencyRate</Name>
+					<Description>Cotação de Moedas</Description>
+					<AdapterSender>adapters/xml/fi2/axsfi003.p</AdapterSender>
+					<XsdSender>fi2/CurrencyRate_207_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>CustomerGroup</Name>
+					<Description>Grupo Cliente</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd008.p</AdapterSender>
+					<XsdSender>vd2/CustomerGroup_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>CustomerItem</Name>
+					<Description>Item Cliente</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd012.p</AdapterSender>
+					<XsdSender>vd2/CustomerItem_207_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>				
+				<Transaction>
+					<Name>CustomerVendor</Name>
+					<Description>Emitente</Description>
+					<AdapterSender>adapters/xml/fi2/axsfi001.p</AdapterSender>
+					<XsdSender>un5/CustomerVendor_506_001.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/fi2/axsfi001a.p</AdapterReceiver>
+					<XsdReceiver>un5/CustomerVendor_506_001.xsd</XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>DeliveryScheduling</Name>
+					<Description>Programação de Entrega</Description>
+					<AdapterSender>adapters/xml/su2/axssu005.p</AdapterSender>
+					<XsdSender>su2/DeliveryScheduling_207_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>				
+				<Transaction>
+					<Name>FiscalClassification</Name>
+					<Description>Classificação Fiscal</Description>
+					<AdapterSender>adapters/xml/of2/axsof001.p</AdapterSender>
+					<XsdSender>of2/FiscalClassification_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/of2/axrof001.p</AdapterReceiver>
+					<XsdReceiver>of2/FiscalClassification_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>FiscalOperation</Name>
+					<Description>Sender da Natureza de Operação</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd002.p</AdapterSender>
+					<XsdSender>vd2/FiscalOperation_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>GLTransaction</Name>
+					<Description>Lançamentos Contábeis</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/ct2/axrct001.p</AdapterReceiver>
+					<XsdReceiver>ct5/GLTransaction_506_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>InitialItemBalance</Name>
+					<Description>Saldo Inicial do Item no Estoque</Description>
+					<AdapterSender>adapters/xml/ar2/axsar007.p</AdapterSender>
+					<XsdSender>ar2/InitialItemBalance_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																									
+				</Transaction>				
+				<Transaction>
+					<Name>InutInvoiceDocument</Name>
+					<Description>Inutilazação Nota Fiscal Eletronica</Description>
+					<AdapterSender>adapters/xml/ep2/axsep003.p</AdapterSender>
+					<XsdSender>ep2/InutInvoiceDocument_204_106.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																									
+				</Transaction>
+				<Transaction>
+					<Name>InutInvoiceRetDocument</Name>
+					<Description>Inutilização Nota Fiscal Eletronica</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/ep2/axrep003.p</AdapterReceiver>
+					<XsdReceiver>ep2/InutInvoiceRetDocument_204_106.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>InventoryTransaction</Name>
+					<Description>Movimento de Estoque</Description>
+					<AdapterSender>adapters/xml/ar2/axsar001.p</AdapterSender>
+					<XsdSender>ar2/InventoryTransaction_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/ar2/axrar001.p</AdapterReceiver>
+					<XsdReceiver>ar2/InventoryTransaction_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>InventoryTransaction</Name>
+					<Description>Movimento do Estoque</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/ar2/axrar001.p</AdapterReceiver>
+					<XsdReceiver>ar2/InventoryTransaction_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>InventoryTransactionQuery</Name>
+					<Description>Consulta Movimento do Estoque</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/ar2/axrar009.p</AdapterReceiver>
+					<XsdReceiver>ar2/InventoryTransactionQuery_204_000.xsd</XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>InvoiceDocument</Name>
+					<Description>Sender de Nota Fiscal</Description>
+					<AdapterSender>adapters/xml/ep2/axsep001.p</AdapterSender>
+					<XsdSender>ep2/InvoiceDocument_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>										
+				</Transaction>
+				<Transaction>
+					<Name>InvoiceNFe</Name>
+					<Description>NF-e Fatura</Description>
+					<AdapterSender>adapters/xml/ep2/axsep006.p</AdapterSender>
+					<XsdSender>ep2/InvoiceNFe_204_000_v1.10.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>										
+				</Transaction>				
+				<Transaction>
+					<Name>Item</Name>
+					<Description>Item</Description>
+					<AdapterSender>adapters/xml/ma2/axsma003.p</AdapterSender>
+					<XsdSender>ma2/item_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/ma2/axrma005.p</AdapterReceiver>
+					<XsdReceiver>ma2/item_204_000.xsd</XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>ItemBalance</Name>
+					<Description>Receiver do Saldo Estoque</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/ar2/axrar003.p</AdapterReceiver>
+					<XsdReceiver>ar2/ItemBalance_204_000.xsd</XsdReceiver>															
+				</Transaction>				
+				<Transaction>
+					<Name>ItemCosting</Name>
+					<Description>Custos dos Itens</Description>
+					<AdapterSender>adapters/xml/ar2/axsar002.p</AdapterSender>
+					<XsdSender>ar2/ItemCosting_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>ItemCostingManufactured</Name>
+					<Description>Custos do Item Manufaturado</Description>
+					<AdapterSender>adapters/xml/ar2/axsar002a.p</AdapterSender>
+					<XsdSender>ar2/ItemCostingManufactured_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>				
+				<Transaction>
+					<Name>ItemProductionReport</Name>
+					<Description>Reporte de Produção por Item</Description>
+					<AdapterSender>adapters/xml/ma2/axsma006.p</AdapterSender>
+					<XsdSender>ma2/ItemProductionReport_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/ma2/axrma001.p</AdapterReceiver>
+					<XsdReceiver>ma2/ItemProductionReport_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>MaintenanceOrder</Name>
+					<Description>Ordem de Manutenção</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/mn2/axrmn001.p</AdapterReceiver>
+					<XsdReceiver>mn2/MaintenanceOrder_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>MasterUser</Name>
+					<Description>Usuário Mestre</Description>
+					<AdapterSender>adapters/xml/tn2/axstn001.p</AdapterSender>
+					<XsdSender>tn2/User_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>										
+				</Transaction>
+				<Transaction>
+					<Name>MaterialFamily</Name>
+					<Description>Família de Material</Description>
+					<AdapterSender>adapters/xml/ma2/axsma004.p</AdapterSender>
+					<XsdSender>ma2/MaterialFamily_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/ma2/axrma010.p</AdapterReceiver>
+					<XsdReceiver>ma2/MaterialFamily_204_000.xsd</XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>MicroTerritory</Name>
+					<Description>Micro Região</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd010.p</AdapterSender>
+					<XsdSender>vd2/MicroTerritory_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>PaymentPlan</Name>
+					<Description>Sender da Condição de Pagamento</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd001.p</AdapterSender>
+					<XsdSender>vd2/PaymentPlan_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>PeriodGLBalance</Name>
+					<Description>Saldos Contábeis do Período</Description>
+					<AdapterSender>adapters/xml/ct2/axsct003.p</AdapterSender>
+					<XsdSender>ct5/PeriodGLBalance_506_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>				
+					<Name>PickingList</Name>
+					<Description>Lista de Seleção</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/ep2/axrep509.p</AdapterReceiver>
+					<XsdReceiver>ep2/PickingList_204_000.xsd</XsdReceiver>															
+				</Transaction>				
+				<Transaction>
+					<Name>PriceTable</Name>
+					<Description>Sender de Tabela de Preço</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd004.p</AdapterSender>
+					<XsdSender>vd2/PriceTable_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>PriceTableItem</Name>
+					<Description>Tabela Preço do Item</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd006.p</AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>ProcessQuotations</Name>
+					<Description>Processo de Cotação</Description>
+					<AdapterSender>adapters/xml/su2/axssu003.p</AdapterSender>
+					<XsdSender>su2/ProcessQuotations_207_000.xsd</XsdSender>					
+					<AdapterReceiver>adapters/xml/su2/axrsu003.p</AdapterReceiver>
+					<XsdReceiver>su2/ProcessQuotations_207_000.xsd</XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>ProductComposition</Name>
+					<Description>Receiver de Produto Composto</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/vd2/axrvd005.p</AdapterReceiver>
+					<XsdReceiver>vd2/ProductComposition_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ProductionOrder/Item Maintenance</Name>
+					<Description>Ordem de Produção / Implantação do Item</Description>
+					<AdapterSender>adapters/xml/ma2/axsma007.p</AdapterSender>
+					<XsdSender>ma2/ProductionOrder_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>PurchaseOrder</Name>
+					<Description>Pedido de Compra</Description>
+					<AdapterSender>adapters/xml/su2/axssu004.p</AdapterSender>
+					<XsdSender>su2/PurchaseOrder_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/su2/axrsu004.p</AdapterReceiver>
+					<XsdReceiver>su2/PurchaseOrder_204_000.xsd</XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>PurchaseOrderLine</Name>
+					<Description>Sender de Ordem de Compra</Description>
+					<AdapterSender>adapters/xml/su2/axssu002.p</AdapterSender>
+					<XsdSender>su2/PurchaseOrderLine_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/su2/axrsu002.p</AdapterReceiver>
+					<XsdReceiver>su2/PurchaseOrderLine_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>PhysicalReceiving</Name>
+					<Description>Recebimento Físico</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/su2/axrsu902.p</AdapterReceiver>
+					<XsdReceiver>su2/PhysicalReceiving_204_000.xsd</XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>ReceiptDocument</Name>
+					<Description>Notas Fiscais de Recebimento</Description>
+					<AdapterSender>adapters/xml/su2/axssu001.p</AdapterSender>
+					<XsdSender>su2/ReceiptDocument_204_000.xsd</XsdSender>					
+					<AdapterReceiver>adapters/xml/su2/axrsu001.p</AdapterReceiver>
+					<XsdReceiver>su2/ReceiptDocument_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ReportProductionReversal</Name>
+					<Description>Estorno de Reporte de Produção</Description>
+					<AdapterSender>adapters/xml/ma2/axsma008.p</AdapterSender>
+					<XsdSender>ma2/ReportProductionReversal_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/ma2/axrma002.p</AdapterReceiver>
+					<XsdReceiver>ma2/ReportProductionReversal_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Representative</Name>
+					<Description>Representante</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd009.p</AdapterSender>
+					<XsdSender>vd2/Representative_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>										
+				</Transaction>
+				<Transaction>
+					<Name>ReturnInvoiceDocument</Name>
+					<Description>Retorno Nota Fiscal Eletronica</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/ep2/axrep001.p</AdapterReceiver>
+					<XsdReceiver>ep2/ReturnInvoiceDocument_204_106.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>SalesOrder</Name>
+					<Description>Sender do Pedido de Venda</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd003.p</AdapterSender>
+					<XsdSender>vd2/SalesOrder_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/vd2/axrvd003.p</AdapterReceiver>
+					<XsdReceiver>vd2/SalesOrder_204_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>SalesOrderNotify</Name>
+					<Description>Atualização Pedido de Venda</Description>
+					<AdapterSender>adapters/xml/vd2/axnvd003.p</AdapterSender>
+					<XsdSender>vd2/SalesOrderNotify_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>				
+				<Transaction>
+					<Name>Site</Name>
+					<Description>Estabelecimento</Description>
+					<AdapterSender>adapters/xml/vd2/axsvd011.p</AdapterSender>
+					<XsdSender>vd2/Site_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>SituationClosingProcess</Name>
+					<Description>Situação do Processo de Fechamento Estoque</Description>
+					<AdapterSender>adapters/xml/ar2/axsar008.p</AdapterSender>
+					<XsdSender>ar2/SituationClosingProcess_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>				
+				<Transaction>
+					<Name>TSSMonitorFaixaEnv</Name>
+					<Description>TSS Monitor Faixa Envio</Description>
+					<AdapterSender>adapters/xml/ep2/axsep011.p</AdapterSender>
+					<XsdSender>ep2/TSSMonitorFaixaEnv_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>							
+				<Transaction>
+					<Name>TSSMonitorFaixaRet</Name>
+					<Description>TSS Monitor Faixa Retorno</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/ep2/axrep011.p</AdapterReceiver>
+					<XsdReceiver>ep2/TSSMonitorFaixaRet_204_000.xsd</XsdReceiver>															
+				</Transaction>			
+				<Transaction>
+					<Name>TSSRetornaNotasEnv</Name>
+					<Description>TSS Retorna Notas Envio</Description>
+					<AdapterSender>adapters/xml/ep2/axsep009.p</AdapterSender>
+					<XsdSender>ep2/TSSRetornaNotasEnv_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>					
+				<Transaction>
+					<Name>TSSRetornaNotasRet</Name>
+					<Description>TSS Retorna Notas Retorno</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/ep2/axrep009.p</AdapterReceiver>
+					<XsdReceiver>ep2/TSSRetornaNotasRet_204_000.xsd</XsdReceiver>															
+				</Transaction>	
+				<Transaction>
+					<Name>TSSSchemaRet</Name>
+					<Description>TSS Schema Retorno</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/ep2/axrep012.p</AdapterReceiver>
+					<XsdReceiver>ep2/TSSSchemaRet_204_000.xsd</XsdReceiver>															
+				</Transaction>								
+				<Transaction>
+					<Name>UnitOfMeasure</Name>
+					<Description>Unidade de Medida</Description>
+					<AdapterSender>adapters/xml/ma2/axsma002.p</AdapterSender>
+					<XsdSender>ma2/UnitsOfMeasure_204_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/ma2/axrma006.p</AdapterReceiver>
+					<XsdReceiver>ma2/UnitsOfMeasure_204_000.xsd</XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>UpdateItemCost</Name>
+					<Description>Custo Unitário Item</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/ar2/axrar004.p</AdapterReceiver>
+					<XsdReceiver>ar2/UpdateItemCosts_204_000.xsd</XsdReceiver>																				
+				</Transaction>				
+				<Transaction>
+					<Name>UpdStatusPurchaseOrder</Name>
+					<Description>Situação de Pedido de Compra</Description>
+					<AdapterSender>adapters/xml/su2/axqsu901.p</AdapterSender>
+					<XsdSender>su2/UpdStatusPurchaseOrder_204_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>				
+				<Transaction>
+					<Name>VendorItem</Name>
+					<Description>Item Fornecedor</Description>
+					<AdapterSender>adapters/xml/su2/axssu006.p</AdapterSender>
+					<XsdSender>su2/VendorItem_207_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>				
+			</ListOfTransaction>
+		</Product>
+		<Product>
+			<Name>EMS5</Name>
+			<Description>Datasul EMS 5</Description>
+			<ListOfTransaction>
+				<Transaction>
+					<Name>AccountPayableDocument</Name>
+					<Description>Títulos do Contas a Pagar</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/fi5/axrfi001.p</AdapterReceiver>
+					<XsdReceiver>fi5/AccountPayableDocument_506_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>AccountPayableTransaction</Name>
+					<Description>Transações de Títulos a Pagar</Description>
+					<AdapterSender>adapters/xml/fi5/axsfi005.p</AdapterSender>
+					<XsdSender>fi5/AccountPayableTransactions_507A_000.xsd</XsdSender>					
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>AccountReceivableDocument</Name>
+					<Description>Títulos do Contas a Receber</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/fi5/axrfi002.p</AdapterReceiver>
+					<XsdReceiver>fi5/AccountReceivableDocument_507_000.xsd</XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>ACRPosition</Name>
+					<Description>Posição Títulos Contas a Receber</Description>
+					<AdapterSender>adapters/xml/fi5/axsfi002.p</AdapterSender>
+					<XsdSender>fi5/ACRPosition_507_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/fi5/axsfi003.p</AdapterReceiver>
+					<XsdReceiver>fi5/ACRPosition_507_000.xsd</XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>APBPosition</Name>
+					<Description>Posição de Títulos a Pagar</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/fi5/axsfi004.p</AdapterReceiver>
+					<XsdReceiver>fi5/APBPosition_507_000.xsd</XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>AssetDepreciation</Name>
+					<Description>Depreciação por Bem</Description>
+					<AdapterSender>adapters/xml/ct5/axsct002.p</AdapterSender>
+					<XsdSender>ct5/AssetDepreciation_506_001.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>CostCenter</Name>
+					<Description>Centro de Custo – SubConta</Description>
+					<AdapterSender>adapters/xml/ct5/axsct001.p</AdapterSender>
+					<XsdSender>ct5/CostCenter_506_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>CurrencyRate</Name>
+					<Description>Cotações de Indicadores Econômicos </Description>
+					<AdapterSender>adapters/xml/un5/axsun003.p</AdapterSender>
+					<XsdSender>un5/CurrencyRate_507_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>CustomerVendor</Name>
+					<Description>Emitente</Description>
+					<AdapterSender>adapters/xml/un5/axsun001.p</AdapterSender>
+					<XsdSender>un5/CustomerVendor_506_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>EconomyIndicator</Name>
+					<Description>Indicador Econômico</Description>
+					<AdapterSender>adapters/xml/un5/axsun002.p</AdapterSender>
+					<XsdSender>un5/EconomyIndicator_507_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>GLTransaction</Name>
+					<Description>Lançamento Contábil</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/ct5/axrct001.p</AdapterReceiver>
+					<XsdReceiver>ct5\GLTransaction_506_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>PeriodGLBalance</Name>
+					<Description>Saldos Contábeis do Período</Description>
+					<AdapterSender>adapters/xml/ct5/axsct003.p</AdapterSender>
+					<XsdSender>ct5/PeriodGlBalance_506_001.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>
+				<Transaction>
+					<Name>Representative</Name>
+					<Description>Representante EMS5</Description>
+					<AdapterSender>adapters/xml/un5/axsun004.p</AdapterSender>
+					<XsdSender>un5/Representative_504_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>				
+				<Transaction>
+					<Name>SenderGLTransaction</Name>
+					<Description>Envio do Lote Contábil</Description>
+					<AdapterSender>adapters/xml/ct5/axsct004.p</AdapterSender>
+					<XsdSender>ct5/SenderGLTransaction_507_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																				
+				</Transaction>				
+			</ListOfTransaction>
+		</Product>
+		<Product>
+			<Name>HR</Name>
+			<Description>Datasul HCM</Description>
+			<ListOfTransaction>
+				<Transaction>
+					<Name>AllocationUnit</Name>
+					<Description>Unidade Lotação</Description>
+					<AdapterSender>adapters/xml/pgm/axspg013.p</AdapterSender>
+					<XsdSender>pgm/AllocationUnit_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pj2/axrpj002.p</AdapterReceiver>
+					<XsdReceiver>pgm/AllocationUnit_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>CalculatedTrans</Name>
+					<Description>Movimento do Cálculo de Funcionários</Description>
+					<AdapterSender>adapters/xml/pgm/axspg009.p</AdapterSender>
+					<XsdSender>pgm/CalculatedTrans_209_001.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																									
+				</Transaction>
+				<Transaction>
+					<Name>CalculatedVacationTrans</Name>
+					<Description>Movimento Calculado de Férias</Description>
+					<AdapterSender>adapters/xml/pgm/axspg030.p</AdapterSender>
+					<XsdSender>pgm/CalculatedVacationTrans_209_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>																									
+				</Transaction>		
+				<Transaction>
+					<Name>CandidateResume</Name>
+					<Description>Resumo do Candidato</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/do/axrdo007.p</AdapterReceiver>
+					<XsdReceiver>pgm/CandidateResume_209_000.xsd</XsdReceiver>																									
+				</Transaction>						
+				<Transaction>
+					<Name>Carriers</Name>
+					<Description>Agenciadores e turmas</Description>
+					<AdapterSender>adapters/xml/pgm/axspg004.p</AdapterSender>
+					<XsdSender>pgm/Carriers_209_001.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pgm/axrpg004.p</AdapterReceiver>
+					<XsdReceiver>pgm/Carriers_209_001.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>CompanyCitizen</Name>
+					<Description>Pessoa Jurídica</Description>
+					<AdapterSender>adapters/xml/pgm/axspg011.p</AdapterSender>
+					<XsdSender>pgm\CompanyCitizen_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pj2/axrpj003.p</AdapterReceiver>
+					<XsdReceiver>pgm\CompanyCitizen_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>CompanyCitizen</Name>
+					<Description>Pessoa Jurídica</Description>
+					<AdapterSender>adapters/xml/pgm/axspg020.p</AdapterSender>
+					<XsdSender>pgm/CompanyCitizen_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pgm/axrpg020.p</AdapterReceiver>
+					<XsdReceiver>pgm/CompanyCitizen_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Customer</Name>
+					<Description>Tomador de Serviço</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/pgm/axrpg022.p</AdapterReceiver>
+					<XsdReceiver>pgm/Customer_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Dependent</Name>
+					<Description>Dependentes</Description>
+					<AdapterSender>adapters/xml/pgm/axspg015.p</AdapterSender>
+					<XsdSender>pgm/Dependent_209_000.xsd</XsdSender>					
+					<AdapterReceiver>adapters/xml/pgm/axrpg015.p</AdapterReceiver>
+					<XsdReceiver>pgm/Dependent_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Divergences</Name>
+					<Description>Divergências</Description>
+					<AdapterSender>adapters/xml/pgm/axspg017.p</AdapterSender>
+					<XsdSender>pgm/Divergences_209_000.xsd</XsdSender>					
+					<AdapterReceiver>adapters/xml/pgm/axrpg017.p</AdapterReceiver>
+					<XsdReceiver>pgm/Divergences_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Employee</Name>
+					<Description>Funcionário</Description>
+					<AdapterSender>adapters/xml/pgm/axspg002.p</AdapterSender>
+					<XsdSender>pgm/Employee_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pgm/axrpg002.p</AdapterReceiver>
+					<XsdReceiver>pgm/Employee_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>EmployeeResume</Name>
+					<Description>Resumo do Funcionário</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>
+					<AdapterReceiver>adapters/xml/pgm/axrdo006.p</AdapterReceiver>
+					<XsdReceiver>pgm/EmployeeResume_209_000.xsd</XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>Events</Name>
+					<Description>Eventos</Description>
+					<AdapterSender>adapters/xml/pgm/axspg008.p</AdapterSender>
+					<XsdSender>pgm/Event_209_001.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>										
+				</Transaction>
+				<Transaction>
+					<Name>GoalTargets</Name>
+					<Description>Pontos de Controle</Description>
+					<AdapterSender>adapters/xml/do2/axsdo001.p</AdapterSender>
+					<XsdSender>do\GoalTargets_209_001.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/do2/axrdo001.p</AdapterReceiver>
+					<XsdReceiver>do\GoalTargets_209_001.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>HRServices</Name>
+					<Description>Serviços do HR</Description>
+					<AdapterSender>adapters/xml/pgm/axspg010.p</AdapterSender>
+					<XsdSender>pgm/Service_209_001.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>															
+				</Transaction>
+				<Transaction>
+					<Name>LaborTypeSource</Name>
+					<Description>Origem Mão-de-Obra</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>					
+					<AdapterReceiver>adapters/xml/pgm/axrpg028.p</AdapterReceiver>
+					<XsdReceiver>pgm/LaborTypeSource_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Markings</Name>
+					<Description>Marcações Ponto (Acerto Divergências)</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg019.p</AdapterReceiver>
+					<XsdReceiver>pgm/Markings_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>OutsideStaffTrainning</Name>
+					<Description>Pessoa Externa</Description>
+					<AdapterSender>adapters/xml/do2/axsdo005.p</AdapterSender>
+					<XsdSender>do/OutsideStaffTrainning_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pj2/axrpj009.p</AdapterReceiver>
+					<XsdReceiver>pgm/OutsideStaffTrainning_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>OvertimeAuthorization</Name>
+					<Description>Autorização Horas Extras</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg018.p</AdapterReceiver>
+					<XsdReceiver>pgm/OvertimeAuthorization_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Position</Name>
+					<Description>Cargos</Description>
+					<AdapterSender>adapters/xml/pgm/axspg006.p</AdapterSender>
+					<XsdSender>pgm/Position_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pj2/axrpj004.p</AdapterReceiver>
+					<XsdReceiver>pgm/Position_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Positions</Name>
+					<Description>Cargos</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg006.p</AdapterReceiver>
+					<XsdReceiver>pgm/Position_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>PrivateCitizen</Name>
+					<Description>Pessoa Física</Description>
+					<AdapterSender>adapters/xml/pgm/axspg003.p</AdapterSender>
+					<XsdSender>pgm/PrivateCitizen_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pgm/axrpg003.p</AdapterReceiver>
+					<XsdReceiver>pgm/PrivateCitizen_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ReportStructurePlan</Name>
+					<Description>Plano estrutura de Reporte</Description>
+					<AdapterSender>adapters/xml/do2/axsdo002.p</AdapterSender>
+					<XsdSender>do/ReportStructurePlan_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pj2/axrpj006.p</AdapterReceiver>
+					<XsdReceiver>do/ReportStructurePlan_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ReportStructurePos</Name>
+					<Description>Estrutura de Reporte</Description>
+					<AdapterSender>adapters/xml/do2/axsdo003.p</AdapterSender>
+					<XsdSender>do/ReportStructurePos_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pj2/axrpj007.p</AdapterReceiver>
+					<XsdReceiver>do/ReportStructurePos_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ReportStructurePosCit</Name>
+					<Description>Estrutura de Reporte Posição Pessoa</Description>
+					<AdapterSender>adapters/xml/do2/axsdo004.p</AdapterSender>
+					<XsdSender>do/ReportStructurePosCit_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pj2/axrpj008.p</AdapterReceiver>
+					<XsdReceiver>do/ReportStructurePosCit_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Resum</Name>
+					<Description>Resumo</Description>
+					<AdapterSender>adapters/xml/do2/axsdo006.p</AdapterSender>
+					<XsdSender>pgm/Resume_209_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>RuralMovements</Name>
+					<Description>Movimento Produção Agrícola</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg007.p</AdapterReceiver>
+					<XsdReceiver>pgm/RuralMovement_209_001.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>SalaryCategory</Name>
+					<Description>Categoria Salarial</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg023.p</AdapterReceiver>
+					<XsdReceiver>pgm/SalaryCategory_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>ShiftCategory</Name>
+					<Description>Turno Categoria Salarial</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg024.p</AdapterReceiver>
+					<XsdReceiver>pgm/ShiftCategory_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Site</Name>
+					<Description>Estabelecimento</Description>
+					<AdapterSender>adapters/xml/pgm/axspg012.p</AdapterSender>
+					<XsdSender>pgm/Site_209_000.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pgm/axrpg021.p</AdapterReceiver>
+					<XsdReceiver>pgm/Site_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>SiteAllocationPlan</Name>
+					<Description>Plano Lotação Estabelecimento</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg029.p</AdapterReceiver>
+					<XsdReceiver>pgm/SiteAllocationPlan_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>SiteSecurity</Name>
+					<Description>Segurança do Estabelecimento</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg026.p</AdapterReceiver>
+					<XsdReceiver>pgm/SiteSecurity_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Situations</Name>
+					<Description>Histórico de situações dos Funcionários</Description>
+					<AdapterSender>adapters/xml/pgm/axspg001.p</AdapterSender>
+					<XsdSender>pgm/Situations_209_001.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pgm/axrpg001.p</AdapterReceiver>
+					<XsdReceiver>pgm/Situations_209_001.xsd</XsdReceiver>
+				</Transaction>
+				<Transaction>
+					<Name>UnionSite</Name>
+					<Description>Sindicato x Estabelecimento</Description>
+					<AdapterSender></AdapterSender>
+					<XsdSender></XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg025.p</AdapterReceiver>
+					<XsdReceiver>pgm/UnionSite_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>Unions</Name>
+					<Description>Sindicatos</Description>
+					<AdapterSender>adapters/xml/pgm/axspg005.p</AdapterSender>
+					<XsdSender>pgm/Unions_209_001.xsd</XsdSender>
+					<AdapterReceiver>adapters/xml/pgm/axrpg005.p</AdapterReceiver>
+					<XsdReceiver>pgm/Unions_209_001.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>VacationPlanning</Name>
+					<Description>Programação de Férias</Description>
+					<AdapterSender>adapters/xml/pgm/axspg016.p</AdapterSender>
+					<XsdSender>pgm/VacationPlanning_209_000.xsd</XsdSender>										
+					<AdapterReceiver>adapters/xml/pgm/axrpg016.p</AdapterReceiver>
+					<XsdReceiver>pgm/VacationPlanning_209_000.xsd</XsdReceiver>					
+				</Transaction>
+				<Transaction>
+					<Name>VacationDetail</Name>
+					<Description>Detalhe de Férias</Description>
+					<AdapterSender>adapters/xml/pgm/axrpg031.p</AdapterSender>
+					<XsdSender>pgm/VacationDetail_209_000.xsd</XsdSender>										
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>					
+				</Transaction>				
+				<Transaction>
+					<Name>WorkShift</Name>
+					<Description>Turno/Jornada/Intervalos/Escalas/Turmas</Description>
+					<AdapterSender>adapters/xml/pgm/axspg014.p</AdapterSender>
+					<XsdSender>pgm/WorkShift_209_000.xsd</XsdSender>
+					<AdapterReceiver></AdapterReceiver>
+					<XsdReceiver></XsdReceiver>										
+				</Transaction>
+			</ListOfTransaction>
+		</Product>
+	</ListOfProduct>
+</DatasulTransactions>

@@ -1,0 +1,7 @@
+
+DEFINE TEMP-TABLE tt-mdfe-seguro NO-UNDO
+     FIELD cod-averbacao   AS CHAR FORMAT "x(40)".
+
+DEFINE TEMP-TABLE tt-mdfe-ciot NO-UNDO
+     FIELD ciot    AS CHAR FORMAT "x(12)"
+     FIELD cgcCiot AS CHAR FORMAT "x(14)".

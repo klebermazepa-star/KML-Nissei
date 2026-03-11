@@ -1,0 +1,82 @@
+/******************************************************************************
+**  Include.: FT0603.I2 - usado pelo programa FT0603 e FT1099
+**  Data....: Marco de 1.992
+**  Objetivo: Fazer o simulacao do melhor registro de comissao
+******************************************************************************/
+
+/*----------------------- Monta Tabela para Pesquisa -----------------------*/
+      
+/* REGIAO 32/32 */
+do  i-tab =  1 to 32:
+    assign c-reg-tab[i-tab] = nota-fiscal.nome-ab-reg.
+end.
+
+/* REPRESENTANTE 16/16 */
+do  i-tab =  1 to 16:
+    assign i-rep-tab[i-tab] = i-cod-rep.
+end.
+do  i-tab = 33 to 48:
+    assign i-rep-tab[i-tab] = i-cod-rep.
+end.
+
+/* COND. PAGTO 8/8 */
+do  i-tab =  1 to  8 :
+    assign i-cpg-tab[i-tab] = nota-fiscal.cod-cond-pag.
+end.
+do  i-tab = 17 to 24 :
+    assign i-cpg-tab[i-tab] = nota-fiscal.cod-cond-pag.
+end.
+do  i-tab = 33 to 40 :
+    assign i-cpg-tab[i-tab] = nota-fiscal.cod-cond-pag.
+end.
+do  i-tab = 49 to 56 :
+    assign i-cpg-tab[i-tab] = nota-fiscal.cod-cond-pag.
+end.
+
+/* FAMILIA MATERIAIS */
+do  i-tab = 1 to 64 by 8:
+    assign c-fam-tab[i-tab] = item.fm-codigo.
+end.
+do  i-tab = 2 to 64 by 8:
+    assign c-fam-tab[i-tab] = item.fm-codigo.
+end.
+do  i-tab = 3 to 64 by 8:
+    assign c-fam-tab[i-tab] = item.fm-codigo.
+end.
+do  i-tab = 4 to 64 by 8:
+    assign c-fam-tab[i-tab] = item.fm-codigo.
+end.
+
+/* FAMILIA COMERCIAL 2/2 */
+do  i-tab = 1 to 64 by 4:
+    assign c-fmcom-tab[i-tab] = item.fm-cod-com.
+end.
+do  i-tab = 2 to 64 by 4:
+    assign c-fmcom-tab[i-tab] = item.fm-cod-com.
+end.
+
+/* GRUPO DE CLIENTE 2/2 */
+do  i-tab = 1 to 64 by 2:
+    assign i-grp-tab[i-tab] =  i-emitente-cod-gr-cli.
+end.
+
+/*--------------- Pesquisa da Tabela no Arquivo de Comissoes ---------------*/
+
+do  i-co-tab = 1 to 64:
+    find       comissao 
+         where comissao.situacao     = 1
+         and   comissao.nome-ab-reg  = c-reg-tab[i-pos[i-co-tab]]
+         and   comissao.cod-rep      = i-rep-tab[i-pos[i-co-tab]]
+         and   comissao.cod-cond-pag = i-cpg-tab[i-pos[i-co-tab]]
+         and   comissao.fm-codigo    = c-fam-tab[i-pos[i-co-tab]]
+         and   comissao.cod-gr-cli   = i-grp-tab[i-pos[i-co-tab]]
+         and   comissao.fm-cod-com   = c-fmcom-tab[i-pos[i-co-tab]]
+         no-lock no-error.
+    if  avail comissao then
+        assign l-achou  = yes
+               i-co-tab = 64.
+    else
+        next.
+end.
+
+/* FT0603.I2 */

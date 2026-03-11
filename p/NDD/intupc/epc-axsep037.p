@@ -1,0 +1,756 @@
+/********************************************************************************
+** Programa: EPC-axsep037 - EPC Envio Nota Fiscal NDD
+**
+** Versao : 12 - 01/04/2016 - Alessandro V Baccin
+**
+********************************************************************************/
+{cdp/cdcfgdis.i}
+{include/i-epc200.i} 
+{utp/ut-glob.i}
+{method/dbotterr.i}
+
+define input        param p-ind-event  as char no-undo.
+define input-output param table for tt-epc.
+define new global shared variable r-rowid-axsep037 as rowid no-undo.
+define new global shared variable h-epc-axsep037 as handle no-undo.
+
+define variable httMed as handle.
+define variable httNfe as handle.
+define variable httDet as handle.
+define variable httRastro as handle.
+
+define variable bhttMed as handle.
+define variable bhttNfe as handle.
+define variable bhttDet as handle.
+define variable bhttRastro as handle.
+
+define variable qhttMed as handle.
+define variable qhttNfe as handle.
+define variable qhttDet as handle.
+define variable qhttRastro as handle.
+
+define variable hField  as handle.
+
+define variable c-cod-estabel like nota-fiscal.cod-estabel.
+define variable c-serie       like nota-fiscal.serie.
+define variable c-nr-nota-fis like nota-fiscal.nr-nota-fis.
+define variable c-it-codigo   like it-nota-fisc.it-codigo.
+define variable i-nr-seq-fat  like it-nota-fisc.nr-seq-fat.
+define variable de-quantidade like it-nota-fisc.qt-faturada[1].
+
+DEFINE VARIABLE c-infAdProd-aux AS CHARACTER   NO-UNDO.
+DEFINE VARIABLE c-serie-aux     AS CHARACTER   NO-UNDO.
+
+define variable l-ok          as logical no-undo.
+
+define temp-table tt-lote no-undo like int_ds_pedido_retorno 
+    field tipo as char
+    index chave 
+        ppr_produto_n 
+        rpp_quantidade_n
+        rpp_lote_s
+        tipo.
+
+define buffer btt-epc for tt-epc.
+
+define temp-table tt_log_erro no-undo 
+     field ttv_des_msg_ajuda as character initial ?
+     field ttv_des_msg_erro  as character initial ?
+     field ttv_num_cod_erro  as integer   initial ? .
+
+/* Variaveis e fun‡äes para tratamento de XML - NDD Web */
+{xmlinc/xmlndd.i}
+
+/*
+if p-ind-event = "TrataSerieNfe" then do:
+    if valid-handle (h-epc-axsep037) then delete procedure h-epc-axsep037.
+end.
+*/
+
+if p-ind-event = "AtualizaDadosNFe" then do:
+
+    for first btt-epc where 
+        btt-epc.cod-event     = "AtualizaDadosNFe":U and   
+        btt-epc.cod-parameter = "ttMed":U:
+        assign httMed = handle(btt-epc.val-parameter).
+        bhttMed = httMed:DEFAULT-BUFFER-HANDLE.
+    end.
+    for first btt-epc where 
+        btt-epc.cod-event     = "AtualizaDadosNFe":U and   
+        btt-epc.cod-parameter = "ttRastro":U:
+        assign httRastro = handle(btt-epc.val-parameter).
+        bhttRastro = httRastro:DEFAULT-BUFFER-HANDLE.
+
+    end.
+    for first btt-epc where 
+        btt-epc.cod-event     = "AtualizaDadosNFe":U and   
+        btt-epc.cod-parameter = "ttDet":U:
+        assign httDet = handle(btt-epc.val-parameter).
+        bhttDet = httDet:DEFAULT-BUFFER-HANDLE.
+    end.
+
+    for first btt-epc where 
+        btt-epc.cod-event     = "AtualizaDadosNFe":U and   
+        btt-epc.cod-parameter = "ttNfe":U:
+        .MESSAGE "14 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+        assign httNfe = handle(btt-epc.val-parameter).
+        bhttNfe = httNfe:DEFAULT-BUFFER-HANDLE.
+
+        create query qhttNfe.
+        qhttNfe:set-buffers(bhttNfe).
+        qhttNfe:query-prepare("PRESELECT EACH " + "ttNfe" + " INDEXED-REPOSITION").
+        qhttNfe:query-open().
+
+        if qhttNfe:num-results > 0 then repeat:
+            qhttNfe:get-next().
+            .MESSAGE "13 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+            if qhttNfe:query-off-end then do:
+                /* retornando nota apra o buffer utiliado em axsep037 */
+                qhttNfe:get-first().
+                leave.
+            end.
+            assign hField = bhttNfe:buffer-field('CodEstabelNF')
+                   c-cod-estabel = hField:buffer-value.
+            assign hField = bhttNfe:buffer-field('SerieNF')
+                   c-serie = hField:buffer-value.
+            assign hField = bhttNfe:buffer-field('NrNotaFisNF')
+                   c-nr-nota-fis = hField:buffer-value.
+
+            /*put c-cod-estabel " " c-serie " " c-nr-nota-fis " " skip.*/
+            .MESSAGE "12 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.   
+            for first nota-fiscal no-lock where
+                nota-fiscal.cod-estabel = c-cod-estabel and
+                nota-fiscal.serie       = c-serie and
+                nota-fiscal.nr-nota-fis = c-nr-nota-fis
+
+                query-tuning(no-lookahead):
+                for first estabelec no-lock of nota-fiscal: end.
+                
+                /*
+                put unformatted c-cod-estabel " " c-serie " " c-nr-nota-fis " ok" skip.
+                */
+                .MESSAGE "11 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                for each tt-lote query-tuning(no-lookahead). delete tt-lote. end.
+                .MESSAGE "10 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                for each int_ds_pedido_retorno no-lock where
+                    int_ds_pedido_retorno.ped_codigo_n = int(nota-fiscal.nr-pedcli)
+                    query-tuning(no-lookahead):
+                    create tt-lote.
+                    buffer-copy int_ds_pedido_retorno to tt-lote.
+
+                    IF tt-lote.rpp_validade_d < TODAY THEN DO:
+                        ASSIGN tt-lote.rpp_validade_d = TODAY + 365.
+                    END.
+/*                                                                            */
+/*                     IF int_ds_pedido_retorno.ppr_produto_n = 6967 THEN DO: */
+/*                         .MESSAGE int_ds_pedido_retorno.ppr_produto_n SKIP  */
+/*                                 int_ds_pedido_retorno.rpp_lote SKIP        */
+/*                                 int_ds_pedido_retorno.rpp_validade_d       */
+/*                             VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.      */
+/*                     END.                                                   */
+                    .MESSAGE "9 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                     find FIRST it-carac-tec no-lock 
+                         where it-carac-tec.it-codigo = string(int_ds_pedido_retorno.ppr_produto_n)
+                           AND it-carac-tec.cd-folha = "CADITEM" 
+                           AND it-carac-tec.cd-comp = "430" no-error.
+                     IF AVAIL it-carac-tec 
+                         AND length(trim(it-carac-tec.observacao)) > 2 then DO:
+                     .MESSAGE "8 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                        IF length(trim(int_ds_pedido_retorno.rpp_lote)) < 2 THEN DO:
+    
+/*                             .MESSAGE "criou lote" SKIP                                   */
+/*                                     "c-it-codigo - " int_ds_pedido_retorno.ppr_produto_n */
+/*                                 VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.                */
+
+                            ASSIGN tt-lote.rpp_lote         = "805426"
+                                   tt-lote.rpp_validade_d   = TODAY + 365
+                                    .
+                        END.
+                    END.
+                    .MESSAGE "7 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                    if estabelec.cgc = nota-fiscal.cgc then do: /* Balan‡o */
+                       assign de-quantidade = int_ds_pedido_retorno.rpp_quantidade_n - int_ds_pedido_retorno.rpp_qtd_inventario_n.
+                       if de-quantidade < 0 then do:
+                            assign  tt-lote.rpp_quantidade = de-quantidade * -1
+                                    tt-lote.tipo = "S".
+                       end.
+                       else do:
+                            assign  tt-lote.rpp_quantidade = de-quantidade
+                                    tt-lote.tipo = "E".
+                       end.
+                    end.
+                    /*display tt-lote with width 550 stream-io.*/
+                end.
+                .MESSAGE "6 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                create query qhttDet.
+                qhttDet:set-buffers(bhttDet).
+                qhttDet:query-prepare("PRESELECT EACH " + "ttDet" + " INDEXED-REPOSITION").
+                qhttDet:query-open().
+
+                /*
+                put unformatted  " Notas: " qhttNfe:num-results skip .
+                put unformatted  " Det: " qhttDet:num-results skip .
+                */
+
+                if qhttDet:num-results > 0 then repeat:
+                    qhttDet:get-next().
+                    if qhttDet:query-off-end then leave.
+
+                    assign hField = bhttDet:buffer-field('ItCodigoNF')
+                           c-it-codigo = trim(hField:buffer-value).
+                    assign hField = bhttDet:buffer-field('NrSeqFatNF')
+                           i-nr-seq-fat = hField:buffer-value.
+                    .MESSAGE "5 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                    for first item no-lock where 
+                        item.it-codigo = c-it-codigo /*and
+                        item.ind-imp-desc = 9*/
+                        query-tuning(no-lookahead):
+
+                       .MESSAGE "4 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                        for first it-nota-fisc no-lock of nota-fiscal where
+                            it-nota-fisc.nr-seq-fat = i-nr-seq-fat and
+                            it-nota-fisc.it-codigo  = c-it-codigo
+                            query-tuning(no-lookahead):
+
+                            IF nota-fiscal.serie = "402" OR
+                               estabelec.cgc = nota-fiscal.cgc /* Balan‡o */ THEN DO:
+                             .MESSAGE "3 axsep" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                                find FIRST it-carac-tec no-lock 
+                                    where it-carac-tec.it-codigo = it-nota-fisc.it-codigo
+                                      AND it-carac-tec.cd-folha = "CADITEM" 
+                                      AND it-carac-tec.cd-comp = "430" no-error.
+                                 IF AVAIL it-carac-tec 
+                                     AND length(trim(it-carac-tec.observacao)) > 2 then DO:
+                                        
+                                    create tt-lote.
+
+                                    assign  tt-lote.ppr_produto_n   = int(it-nota-fisc.it-codigo) 
+                                            tt-lote.rpp_quantidade = IF de-quantidade < 0 THEN de-quantidade * -1 ELSE de-quantidade
+                                            tt-lote.tipo = "S"
+                                            tt-lote.rpp_lote         = "805426"
+                                            tt-lote.rpp_validade_d   = TODAY + 365.
+
+
+                                                    
+                
+                                END.
+
+                            END.
+                            .MESSAGE "2" skip it-nota-fisc.cod-estabel skip
+                                             it-nota-fisc.serie       skip
+                                             it-nota-fisc.nr-nota-fis skip
+                                             it-nota-fisc.it-codigo   skip
+                                             it-nota-fisc.nr-seq-fat
+                             VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                             
+                             /*---------------------------
+                              Informacao
+                              ---------------------------
+                              2 
+                              973 
+                              14 
+                              0360847 
+                              1001878 
+                              10
+                              ---------------------------
+                              OK   
+                              ---------------------------*/
+                             
+                             
+                             
+                            FOR FIRST esp-item-nfs-st NO-LOCK
+                                WHERE esp-item-nfs-st.cod-estab-nfs         = it-nota-fisc.cod-estabel
+                                AND   esp-item-nfs-st.cod-ser-nfs           = it-nota-fisc.serie
+                                AND   esp-item-nfs-st.cod-docto-nfs         = it-nota-fisc.nr-nota-fis
+                                AND   esp-item-nfs-st.cod-item              = it-nota-fisc.it-codigo
+                                AND   esp-item-nfs-st.num-seq-nfs           = it-nota-fisc.nr-seq-fat:
+
+                                // ##CHAVENATURAL=1122222222222222334445555555556##
+                                // 1 - UF
+                                // 2 - CNPJ/CPF
+                                // 3 - MODELO DOCUMENTO
+                                // 4 -SERIE
+                                // 5 - NUMERO DOCUMENTO
+                                // 6 - TIPO DO AMBIENTE
+
+                                // ##nItem=NNN##
+                                // N - sequencia do item na NFe
+
+
+
+                                ASSIGN c-infAdProd-aux = "".
+                                
+                                .MESSAGE "1 axsep"
+                                        VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                                        
+                                FOR FIRST docum-est NO-LOCK
+                                    WHERE docum-est.serie-docto  = esp-item-nfs-st.cod-ser-entr
+                                    AND   docum-est.nro-docto    = esp-item-nfs-st.cod-nota-entr
+                                    AND   docum-est.cod-emitente = INT(esp-item-nfs-st.cod-emitente-entr)
+                                    AND   docum-est.nat-operacao = esp-item-nfs-st.cod-natur-operac-entr,
+                                    FIRST unid-feder NO-LOCK
+                                    WHERE unid-feder.estado = docum-est.uf,
+                                    FIRST emitente NO-LOCK
+                                    WHERE emitente.cod-emitente = docum-est.cod-emitente,
+                                    FIRST estabelec NO-LOCK
+                                    WHERE estabelec.cod-estabel = docum-est.cod-estabel,
+                                    FIRST natur-oper NO-LOCK
+                                    WHERE natur-oper.nat-operacao = docum-est.nat-operacao:
+
+                                    ASSIGN c-serie-aux = TRIM(STRING(docum-est.serie-docto,"X(3)"))
+                                           c-serie-aux = IF LENGTH(c-serie-aux) < 3 THEN FILL("0",3 - LENGTH(c-serie-aux)) + c-serie-aux ELSE c-serie-aux.
+
+
+                                    .MESSAGE "criando chave natural"
+                                        VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+                                    ASSIGN c-infAdProd-aux = " ##CHAVENATURAL="
+                                                           + STRING(unid-feder.cod-uf-ibge,"99")
+                                                           + STRING(emitente.cgc,"99999999999999")
+                                                           + STRING(natur-oper.cod-model-nf-eletro,"X(2)")
+                                                           + c-serie-aux
+                                                           + STRING(DEC(docum-est.nro-docto),"999999999")
+                                                           + (IF estabelec.idi-tip-emis-nf-eletro = 3 THEN "1" ELSE "2")
+                                                           + "## ##nItem="
+                                                           + STRING(esp-item-nfs-st.num-seq-item-entr / 10,"999")
+                                                           + "##".
+
+                                END.
+
+                                IF c-infAdProd-aux <> "" THEN
+                                    bhttDet:BUFFER-FIELD('infAdProd'):BUFFER-VALUE = bhttDet:buffer-field('infAdProd'):BUFFER-VALUE + c-infAdProd-aux.
+                            END.
+
+                            find it-carac-tec no-lock where 
+                                 it-carac-tec.it-codigo = c-it-codigo and
+                                 it-carac-tec.cd-folha = "CADITEM" and
+                                 it-carac-tec.cd-comp = "430" no-error.
+                             if  not avail it-carac-tec or
+                                 length(trim(it-carac-tec.observacao)) < 2 then next.
+                             IF AVAIL it-carac-tec AND length(trim(it-carac-tec.observacao)) > 2 THEN DO:
+
+                                 for first tt-lote where 
+                                    tt-lote.ppr_produto_n   = int(c-it-codigo) : END.
+                                 IF NOT AVAIL tt-lote THEN DO:
+
+/*                                  IF it-nota-fisc.it-codigo = "6967"  THEN DO:     */
+/*                                     MESSAGE it-nota-fisc.it-codigo SKIP           */
+/*                                             de-quantidade                         */
+/*                                         VIEW-AS ALERT-BOX INFORMATION BUTTONS OK. */
+/*                                  END.                                             */
+
+                                      create tt-lote.
+                                      assign tt-lote.ppr_produto_n   = int(it-nota-fisc.it-codigo) 
+                                             tt-lote.rpp_quantidade = IF de-quantidade < 0 THEN de-quantidade * -1 ELSE de-quantidade
+                                             tt-lote.tipo = "S"
+                                             tt-lote.rpp_lote         = "805426"
+                                             tt-lote.rpp_validade_d   = TODAY + 365.
+
+
+                                 END.
+
+
+                             END.
+    
+                            /*
+                            put unformatted item.it-codigo " " item.ind-imp-desc " ok" skip .
+                            */
+
+                            l-ok = no.
+                            if estabelec.cgc = nota-fiscal.cgc then do: /* Balan‡o */
+                                for first tt-lote where 
+                                    tt-lote.ppr_produto_n   = int(c-it-codigo)            and
+                                   // tt-lote.rpp_quantidade  = it-nota-fisc.qt-faturada[1] and
+                                    tt-lote.rpp_lote       <> ?                           and
+                                    tt-lote.rpp_lote       <> ""                          and
+                                    tt-lote.tipo            = "S"                         AND
+                                    tt-lote.rpp_lote       <> "0"                         AND
+                                    tt-lote.rpp_validade_d <> ?                           AND
+                                    tt-lote.rpp_validade_d >= TODAY query-tuning(no-lookahead):
+                     
+/*                                     IF it-nota-fisc.it-codigo = "6967"  THEN DO:      */
+/*                                         MESSAGE "balanco"                             */
+/*                                             VIEW-AS ALERT-BOX INFORMATION BUTTONS OK. */
+/*                                     END.                                              */
+                                    run pi-cria-tt-med-rastro.
+                                end.
+                            end. /* do */
+                            /* demais notas */
+                            else do:
+                                for first tt-lote where 
+                                    tt-lote.ppr_produto_n  = int(c-it-codigo)                    and 
+                                //    tt-lote.rpp_quantidade = it-nota-fisc.qt-faturada[1]         and 
+                                    /* uma nota por caixa - caixa informada na nota */
+                                    tt-lote.rpp_caixa      = it-nota-fisc.nr-seq-ped /* caixa */ and
+                                    tt-lote.rpp_lote       <> ?                                  and
+                                    tt-lote.rpp_lote       <> ""                                 AND
+                                    tt-lote.rpp_lote       <> "0"                                AND
+                                    tt-lote.rpp_validade_d <> ?                                  AND
+                                    tt-lote.rpp_validade_d >= TODAY query-tuning(no-lookahead):
+/*                                     IF it-nota-fisc.it-codigo = "6967"  THEN DO:      */
+/*                                         MESSAGE "com caixa"                           */
+/*                                             VIEW-AS ALERT-BOX INFORMATION BUTTONS OK. */
+/*                                     END.                                              */
+                                    run pi-cria-tt-med-rastro.
+                                end.
+                                /* notas fiscais sem caixa */
+                                if not l-ok then do:
+                                    for first tt-lote where 
+                                        tt-lote.ppr_produto_n   = int(c-it-codigo)                    and  
+                                   //     tt-lote.rpp_quantidade  = it-nota-fisc.qt-faturada[1]         and  
+                                        tt-lote.rpp_lote       <> ?                                   and
+                                        tt-lote.rpp_lote       <> ""                                  AND
+                                        tt-lote.rpp_lote       <> "0"                                 AND
+                                        tt-lote.rpp_validade_d <> ?                                   AND
+                                        tt-lote.rpp_validade_d >= TODAY query-tuning(no-lookahead):
+
+/*                                         IF it-nota-fisc.it-codigo = "6967"  THEN DO:      */
+/*                                             MESSAGE "sem caixa"                           */
+/*                                                 VIEW-AS ALERT-BOX INFORMATION BUTTONS OK. */
+/*                                         END.                                              */
+                                        run pi-cria-tt-med-rastro.
+                                        l-ok = yes.
+                                    end.
+                                end. /* not l-ok */
+
+                            end. /*else do*/
+                        end. /* it-nota-fisc */
+                    end. /* item */
+                end.
+
+                qhttDet:query-close().
+
+            end. /* nota-fiscal */
+
+        end. /* num-results */
+        qhttNfe:query-close().
+    
+        if valid-handle(qhttNfe) then delete object qhttNfe.
+        if valid-handle(bhttNfe) then delete object httNfe.
+        if valid-handle(httNfe)  then delete object httNfe.
+
+        if valid-handle(qhttDet) then delete object qhttDet.
+        if valid-handle(bhttDet) then delete object httDet.
+        if valid-handle(httDet)  then delete object httDet.
+
+        if valid-handle(qhttMed) then delete object qhttMed.
+        if valid-handle(bhttMed) then delete object httMed.
+        if valid-handle(httMed)  then delete object httMed.
+
+        if valid-handle(qhttRastro) then delete object qhttRastro.
+        if valid-handle(bhttRastro) then delete object httRastro.
+        if valid-handle(httRastro)  then delete object httRastro.
+
+        if valid-handle(hField) then  DELETE OBJECT hField.
+    end.
+end.
+
+/* evitar gera‡Æo do XML mais de uma vez */
+if valid-handle(h-epc-axsep037) then do:
+    return "OK".
+end.
+
+for first tt-epc where 
+    tt-epc.cod-event     = "before-cria-imposto":U and   
+    tt-epc.cod-parameter = "rowid-itnotafisc":U:
+    //cXML = "".
+    r-rowid-axsep037 = to-rowid(tt-epc.val-parameter).
+    
+    for first it-nota-fisc no-lock where rowid(it-nota-fisc) = r-rowid-axsep037 query-tuning(no-lookahead):
+        
+        for first nota-fiscal no-lock of it-nota-fisc query-tuning(no-lookahead):
+            for first ser-estab no-lock where
+                ser-estab.cod-estabel = nota-fiscal.cod-estabel AND
+                ser-estab.serie = nota-fiscal.serie
+                query-tuning(no-lookahead):
+                if ser-estab.forma-emis = 2 /* Manual */ then RETURN "NOK".
+            end.
+            if not can-find (first int_ndd_envio USE-INDEX nota where 
+                                   int_ndd_envio.cod_estabel = nota-fiscal.cod-estabel and 
+                                   int_ndd_envio.serie       = nota-fiscal.serie and 
+                                   int_ndd_envio.nr_nota_fis = nota-fiscal.nr-nota-fis and 
+                                   int_ndd_envio.dt_envio    = today and 
+                                   int_ndd_envio.hr_envio   >= TIME - 300 /* 5 minutos */) then do
+                on error undo, leave:
+
+
+                if  not valid-handle(h-epc-axsep037) then do:
+                    run adapters/xml/ep2/axsep037.p persistent set h-epc-axsep037.
+    
+                    RUN PITransUpsert IN h-epc-axsep037 (input "upd":U,
+                                                         input  "InvoiceNFe":U,
+                                                         input  rowid(nota-fiscal),
+                                                         output table tt_log_erro).
+                    RUN pi-retornaXMLNFe IN h-epc-axsep037 (output cXML).
+                end.
+            end.
+            if cXML <> "" then do:
+
+               FIND FIRST es-param-integracao-estab
+                    WHERE es-param-integracao-estab.cod-estabel =  nota-fiscal.cod-estabel 
+                    AND   es-param-integracao-estab.empresa-integracao = 2
+                    NO-LOCK NO-ERROR.
+
+                ASSIGN i-job-ndd = 1. /* Produ‡Æo */
+                FIND FIRST estabelec WHERE
+                           estabelec.cod-estabel = nota-fiscal.cod-estabel NO-LOCK NO-ERROR.
+                IF AVAIL estabelec THEN DO:
+                   IF estabelec.idi-tip-emis-nf-eletro = 2 THEN
+                      ASSIGN i-job-ndd = 2. /* Homologa‡Æo */
+                   IF estabelec.idi-tip-emis-nf-eletro = 3 THEN
+                      ASSIGN i-job-ndd = 1. /* Produ‡Æo */
+                END.
+
+                ASSIGN c-job-ndd = nota-fiscal.cod-estabel.
+                IF i-job-ndd = 1 THEN DO:
+                   /*IF nota-fiscal.cod-estabel <> "973" THEN*/
+                      ASSIGN c-job-ndd = "PD_" + nota-fiscal.cod-estabel.
+                   /*ELSE 
+                      ASSIGN c-job-ndd = nota-fiscal.cod-estabel.*/
+                END.
+                IF i-job-ndd = 2 THEN DO:
+                   /*IF nota-fiscal.cod-estabel <> "973" THEN*/
+                      ASSIGN c-job-ndd = "HM_" + nota-fiscal.cod-estabel.
+                   /*ELSE 
+                      ASSIGN c-job-ndd = nota-fiscal.cod-estabel.*/
+                END.
+
+                IF AVAIL es-param-integracao-estab THEN do:
+
+                   for last int_ndd_envio exclusive-lock where
+                       int_ndd_envio.STATUSNUMBER = 10 /* A enviar */   and
+                       int_ndd_envio.JOB          = c-job-ndd           and
+                       int_ndd_envio.DOCUMENTUSER = c-seg-usuario       and
+                       int_ndd_envio.KIND         = 2 /* XML */         and
+                       int_ndd_envio.cod_estabel  = nota-fiscal.cod-estabel and
+                       int_ndd_envio.serie        = nota-fiscal.serie       and
+                       int_ndd_envio.nr_nota_fis  = nota-fiscal.nr-nota-fis and
+                       int_ndd_envio.protocolo    = "": end.
+
+                   if not avail int_ndd_envio then do:
+                       /* Base Progress nÆo tem trigger para incremento autom tico */
+                       iId = next-value(seq-int-ndd-envio).
+                       create int_ndd_envio.
+                       assign int_ndd_envio.ID           = iId /* base Progress */
+                              int_ndd_envio.STATUSNUMBER = 10  /* enviado */
+                              int_ndd_envio.JOB          = c-job-ndd 
+                              int_ndd_envio.DOCUMENTUSER = c-seg-usuario
+                              int_ndd_envio.KIND         = 1 /* XML */
+                              int_ndd_envio.cod_estabel  = nota-fiscal.cod-estabel 
+                              int_ndd_envio.serie        = nota-fiscal.serie 
+                              int_ndd_envio.nr_nota_fis  = nota-fiscal.nr-nota-fis.
+                   end.
+                   copy-lob cXML to int_ndd_envio.DOCUMENTDATA.
+
+                   IF (SESSION:DISPLAY-TYPE  = 'gui':U OR OPSYS = "WIN32") THEN do: //sendo executado do Windows
+                      RUN int\wsinventti0002.p  (INPUT  ROWID(nota-fiscal)).
+                      cCodigoErro = ''. cMensagem = "Nota envia para Inventti".
+                   END.
+                   ELSE do:
+                      FIND FIRST es-nota-fiscal-inventti
+                           WHERE es-nota-fiscal-inventti.cod-estabel     = nota-fiscal.cod-estabel    
+                           AND   es-nota-fiscal-inventti.serie           = nota-fiscal.serie          
+                           AND   es-nota-fiscal-inventti.nr-nota-fiscal  = nota-fiscal.nr-nota-fis
+                           EXCLUSIVE-LOCK NO-ERROR.
+                     
+                      IF NOT AVAIL es-nota-fiscal-inventti THEN DO:
+                          CREATE es-nota-fiscal-inventti.
+                          ASSIGN es-nota-fiscal-inventti.cod-estabel     = nota-fiscal.cod-estabel
+                                 es-nota-fiscal-inventti.serie           = nota-fiscal.serie      
+                                 es-nota-fiscal-inventti.nr-nota-fiscal  = nota-fiscal.nr-nota-fis
+                                 es-nota-fiscal-inventti.situacao-integracao = 0.
+                                 
+                      END.
+                      copy-lob cXML TO  es-nota-fiscal-inventti.xml-nfe.
+                      cCodigoErro = '9999'. cMensagem = "Aguardando envio para  Inventti)".
+                   END.
+
+                   run pi-cria-ret-nf-eletro-1 (nota-fiscal.cod-estabel,
+                                           nota-fiscal.serie,
+                                           nota-fiscal.nr-nota-fis,
+                                           "").
+
+                  
+                   /* Guardar Protocolo para Consulta Posterior */
+                   assign  int_ndd_envio.protocolo    = cProtocolo
+                           int_ndd_envio.dt_envio     = today
+                           int_ndd_envio.hr_envio     = time.
+
+                END.
+                ELSE do:
+                   /* AVB19/01/2019 - criar envio pendente para integra‡Æo WebService Posterior */
+                   for last int_ndd_envio exclusive-lock where
+                       int_ndd_envio.STATUSNUMBER = -1 /* A enviar */   and
+                       int_ndd_envio.JOB          = c-job-ndd           and
+                       int_ndd_envio.DOCUMENTUSER = c-seg-usuario       and
+                       int_ndd_envio.KIND         = 1 /* XML */         and
+                       int_ndd_envio.cod_estabel  = nota-fiscal.cod-estabel and
+                       int_ndd_envio.serie        = nota-fiscal.serie       and
+                       int_ndd_envio.nr_nota_fis  = nota-fiscal.nr-nota-fis and
+                       int_ndd_envio.protocolo    = "": end.
+                   if not avail int_ndd_envio then do:
+                       /* Base Progress nÆo tem trigger para incremento autom tico */
+                       iId = next-value(seq-int-ndd-envio).
+                       create int_ndd_envio.
+                       assign int_ndd_envio.ID           = iId /* base Progress */
+                              int_ndd_envio.STATUSNUMBER = -1 /* A enviar */
+                              int_ndd_envio.JOB          = c-job-ndd 
+                              int_ndd_envio.DOCUMENTUSER = c-seg-usuario
+                              int_ndd_envio.KIND         = 1 /* XML */
+                              int_ndd_envio.cod_estabel  = nota-fiscal.cod-estabel 
+                              int_ndd_envio.serie        = nota-fiscal.serie 
+                              int_ndd_envio.nr_nota_fis  = nota-fiscal.nr-nota-fis.
+                   end.
+                   copy-lob cXML to int_ndd_envio.DOCUMENTDATA.
+                   /* Guardar Protocolo para Consulta Posterior */
+                   assign  int_ndd_envio.protocolo    = cProtocolo
+                           int_ndd_envio.dt_envio     = today
+                           int_ndd_envio.hr_envio     = time.
+
+                   cCodigoErro = '9999'. cMensagem = "Aguardando envio envio p/WebService (int022)".
+                   run pi-cria-ret-nf-eletro (nota-fiscal.cod-estabel,
+                                              nota-fiscal.serie,
+                                              nota-fiscal.nr-nota-fis,
+                                              "000000000000000").
+                END. //NDD FIM
+            end.
+        end.
+        if not avail nota-fiscal then do:
+            create btt-epc.
+            assign btt-epc.cod-event     = "AtualizaDadosNFe":U
+                   btt-epc.cod-parameter = "GeraTT_LOG_ERRO":U.
+            &if "{&bf_dis_versao_ems}":U >= "2.07":U &then
+            for first cadast_msg no-lock where 
+                cadast_msg.cdn_msg = 3084:
+                assign btt-epc.val-parameter = cadast_msg.des_text_msg.
+            end.
+            &else
+            for first cad-msgs no-lock where 
+                cad-msgs.cd-msg = 3084:
+                assign btt-epc.val-parameter = cad-msgs.texto-msg.
+            end.
+            &endif
+        end.
+
+    end.
+    if not avail it-nota-fisc then do:
+        create btt-epc.
+        assign btt-epc.cod-event     = "AtualizaDadosNFe":U
+               btt-epc.cod-parameter = "GeraTT_LOG_ERRO":U.
+        &if "{&bf_dis_versao_ems}":U >= "2.07":U &then
+        for first cadast_msg no-lock where 
+            cadast_msg.cdn_msg = 3084:
+            assign btt-epc.val-parameter = cadast_msg.des_text_msg.
+        end.
+        &else
+        for first cad-msgs no-lock where 
+            cad-msgs.cd-msg = 3084:
+            assign btt-epc.val-parameter = cad-msgs.texto-msg.
+        end.
+        &endif
+    end.
+ 
+    create btt-epc.
+    assign btt-epc.cod-event     = "AtualizaDadosNFe":U
+           btt-epc.cod-parameter = "XMLEspec":U.
+
+end.
+
+if valid-handle (h-epc-axsep037) then delete procedure h-epc-axsep037.
+return "OK".
+
+procedure pi-cria-tt-med-rastro:
+
+    bhTTRastro:BUFFER-CREATE().
+    assign hField = bhTTRastro:buffer-field('CodEstabelNF')
+           hField:buffer-value = c-cod-estabel.
+    assign hField = bhTTRastro:buffer-field('SerieNF')
+           hField:buffer-value = c-serie.
+    assign hField = bhTTRastro:buffer-field('NrNotaFisNF')
+           hField:buffer-value = c-nr-nota-fis.
+    assign hField = bhTTRastro:buffer-field('ItCodigoNF')
+           hField:buffer-value = c-it-codigo.
+    assign hField = bhTTRastro:buffer-field('NrSeqFatNF')
+           hField:buffer-value = i-nr-seq-fat.
+    assign hField = bhTTRastro:buffer-field('dFab')
+           hField:buffer-value = if   (tt-lote.rpp_validade_d - 365) <= today 
+                                 then (tt-lote.rpp_validade_d - 365) else today - 60.
+    assign hField = bhTTRastro:buffer-field('dVal')
+           hField:buffer-value = tt-lote.rpp_validade_d.
+    assign hField = bhTTRastro:buffer-field('nLote')
+           hField:buffer-value = tt-lote.rpp_lote.
+    assign hField = bhTTRastro:buffer-field('qLote')
+           hField:buffer-value = tt-lote.rpp_quantidade_n.
+
+    bhTTMed:BUFFER-CREATE().
+    assign hField = bhTTMed:buffer-field('CodEstabelNF')
+           hField:buffer-value = c-cod-estabel.
+    assign hField = bhTTMed:buffer-field('SerieNF')
+           hField:buffer-value = c-serie.
+    assign hField = bhTTMed:buffer-field('NrNotaFisNF')
+           hField:buffer-value = c-nr-nota-fis.
+    assign hField = bhTTMed:buffer-field('ItCodigoNF')
+           hField:buffer-value = c-it-codigo.
+    assign hField = bhTTMed:buffer-field('NrSeqFatNF')
+           hField:buffer-value = i-nr-seq-fat.
+    assign hField = bhTTMed:buffer-field('cProdANVISA')
+           hField:buffer-value = if it-carac-tec.tipo-result = 4 
+                                 then trim(it-carac-tec.observacao)
+                                 else trim(string(it-carac-tec.vl-result)).
+
+    for first unid-feder no-lock where
+        unid-feder.estado = nota-fiscal.estado:
+
+        assign hField = bhTTMed:buffer-field('vPMC')
+               hField:buffer-value = 0.
+
+        for last ems2dis.preco-item no-lock where
+            preco-item.nr-tabpre = unid-feder.nr-tb-pauta and
+            preco-item.it-codigo = c-it-codigo and
+            preco-item.situacao  = 1:
+
+            assign hField = bhTTMed:buffer-field('vPMC')
+                   hField:buffer-value = preco-item.preco-fob.
+        end.
+
+    end.
+
+  //  delete tt-lote.
+    l-ok = yes.
+end.
+
+
+procedure pi-cria-ret-nf-eletro-1:
+
+    define input parameter pcod-estabel as char no-undo.
+    define input parameter pserie       as char no-undo.
+    define input parameter pnr-nota-fis as char no-undo.
+    define input parameter pnProt       as char no-undo.
+
+    for last ret-nf-eletro exclusive-lock where 
+        ret-nf-eletro.cod-estabel = pcod-estabel and 
+        ret-nf-eletro.cod-serie   = pserie       and 
+        ret-nf-eletro.nr-nota-fis = pnr-nota-fis and 
+        ret-nf-eletro.cod-msg     = cCodigoErro  and 
+        ret-nf-eletro.dat-ret     = today        /*and
+        ret-nf-eletro.cod-livre-2 = cMensagem*/
+        query-tuning(no-lookahead): end.
+
+    if not avail ret-nf-eletro then do:
+        create  ret-nf-eletro.
+        assign  ret-nf-eletro.cod-estabel = pcod-estabel
+                ret-nf-eletro.cod-serie   = pserie
+                ret-nf-eletro.nr-nota-fis = pnr-nota-fis
+                ret-nf-eletro.dat-ret     = today
+                ret-nf-eletro.cod-msg     = cCodigoErro.
+    end.
+    assign  ret-nf-eletro.hra-ret     = replace(string(time, "HH:MM:SS"),":","")
+            ret-nf-eletro.cod-livre-2 = cMensagem
+            ret-nf-eletro.log-ativo   = yes.
+    &if "{&bf_dis_versao_ems}" >= "2.07" &then 
+        ret-nf-eletro.cod-protoc  = pnProt.
+    &else
+        ret-nf-eletro.cod-livre-1 = pnProt.
+    &endif
+
+    release ret-nf-eletro.
+end.

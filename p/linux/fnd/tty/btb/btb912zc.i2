@@ -1,0 +1,91 @@
+/********************************************************************************
+**                                                                             **
+**  btb912zc.i - Include com as defini‡äes das temp-tables utilizadas na       **
+**               cria‡Æo do pedido de execu‡Æo                                 **
+**             - C¢pia do btb912zc.i, por‚m com a inclusÆo do atributo         **
+**               tt_ped_exec.ttv_des_inf_aplic                                 **
+**                                                                             **
+********************************************************************************/
+
+def temp-table tt_param_segur no-undo
+    field tta_num_vers_integr_api          as integer   format "999"
+    field tta_cod_aplicat_dtsul_corren     as character format "x(3)"
+    field tta_cod_ccusto_corren            as character format "x(11)"
+    field tta_cod_dwb_user                 as character format "x(12)"
+    field tta_cod_empres_usuar             as character format "x(3)"
+    field tta_cod_estab_usuar              as character format "x(3)"
+    field tta_cod_funcao_negoc_empres      as character format "x(50)"
+    field tta_cod_grp_usuar_lst            as character format "x(3)"
+    field tta_cod_idiom_usuar              as character format "x(8)"
+    field tta_cod_modul_dtsul_corren       as character format "x(3)"
+    field tta_cod_modul_dtsul_empres       as character format "x(100)"
+    field tta_cod_pais_empres_usuar        as character format "x(3)"
+    field tta_cod_plano_ccusto_corren      as character format "x(8)"
+    field tta_cod_unid_negoc_usuar         as character format "x(3)"
+    field tta_cod_usuar_corren             as character format "x(12)"
+    field tta_cod_usuar_corren_criptog     as character format "x(16)"
+    field tta_num_ped_exec_corren          as integer   format ">>>>>>>>9"
+    field tta_rec_ped_exec                 as recid     format ">>>>>>9"
+    field ttv_num_msg_erro                 as integer   format ">>>>>>9"
+    field ttv_des_msg                      as character format "x(2000)".
+  
+def temp-table tt_ped_exec_aux_2 no-undo
+    field tta_num_seq                      as integer   format ">>>,>>9"    initial 0
+    field tta_num_ped_exec                 as integer   format ">>>>>>>>9"      initial 0 
+    field tta_cod_usuario                  as character format "x(12)"
+    field tta_cod_prog_dtsul               LIKE prog_dtsul.cod_prog_dtsul
+    field tta_cod_prog_dtsul_rp            as character format "x(100)"
+    field tta_cod_release_prog_dtsul       as character format "x(9)"
+    field tta_dat_exec_ped_exec            as date      format "99/99/9999" initial ?
+    field tta_hra_exec_ped_exec            as Character format "99:99:99"
+    field tta_num_ped_exec_pai             as integer   format ">>>>>>>>9"      initial 0
+    field tta_log_exec_prog_depend         as logical   format "Sim/NÆo"    initial no
+    field tta_cod_servid_exec              as character format "x(8)"
+    field tta_cdn_estil_dwb                as Integer   format ">>9"        initial 0
+    field ttv_num_msg_erro                 as integer   format ">>>>>>9"
+    field ttv_cod_msg_parameters           as character format "x(2000)"
+    field tta_cod_orig_ped_exec            as character format "x(8)"
+    field ttv_log_envia_email              as logical   format "Sim/NÆo"    initial no
+    field ttv_des_inf_aplic                as character format "x(100)"
+    index tt_ped_exec_id                   is primary unique
+          tta_num_seq                      ascending.
+
+def temp-table tt_ped_exec_param no-undo       
+    field tta_num_seq                      as integer   format ">>>,>>9" initial 0
+    field tta_cod_dwb_parameters           as character format "x(2000)"
+    field tta_cod_dwb_file                 as character format "x(50)"
+    field tta_cod_dwb_output               as character format "x(10)"
+    field tta_cod_dwb_order                as character format "x(2000)"
+    field tta_nom_dwb_printer              as character format "x(12)"
+    field tta_cod_dwb_print_layout         as character format "x(20)"
+    field tta_log_dwb_print_parameters     as logical   format "Sim/NÆo" initial no
+    field tta_raw_param_ped_exec           as raw
+    index tt_ped_exec_param                is primary
+          tta_num_seq                      ascending.
+
+def temp-table tt_ped_exec_param_aux no-undo       
+    field tta_num_seq                      as integer   format ">>>,>>9"  initial 0
+    field tta_num_dwb_order                as integer   format ">>>>,>>9" initial 0
+    field tta_cod_dwb_parameters           as character format "x(2000)"
+    field tta_raw_param_ped_exec           as raw
+    index tt_ped_exec_param_aux            is primary unique
+          tta_num_seq                      ascending
+          tta_num_dwb_order                ascending.
+
+def temp-table tt_ped_exec_sel no-undo       
+    field tta_num_seq                      as integer   format ">>>,>>9"  initial 0
+    field tta_num_dwb_order                as integer   format ">>>>,>>9" initial 0
+    field tta_ind_dwb_set_type             as character format "X(09)"    initial "Regra"
+    field tta_cod_dwb_set                  as character format "x(25)"
+    field tta_cod_dwb_set_initial          as character format "x(50)"
+    field tta_cod_dwb_set_final            as character format "x(50)"
+    field tta_cod_dwb_set_single           as character format "x(60)"
+    field tta_cod_dwb_set_parameters       as character format "x(2000)"
+    field tta_log_dwb_rule                 as logical   format "Sim/NÆo"  initial no
+    index tt_ped_exec_sel_id               is primary unique
+          tta_num_seq                      ascending
+          tta_num_dwb_order                ascending.
+          
+def temp-table tt_erros_envio_email no-undo
+    field ttv_cod_erro                     as integer
+    field ttv_des_erro                     as char format "x(255)".

@@ -1,0 +1,36 @@
+/********************************************************************
+** 
+** cd7300.i1 - Definicao de Temp-Tables e Variaveis de controle para 
+**             Integracao entre o Multiplanta e os demais Modulos 
+**
+********************************************************************/
+
+/*------------------ Definicao das Temp-Tables --------------------*/
+
+{mpp/mpapi001.i1}
+{mpp/mpapi001.i2}
+{mpp/mpapi002.i}     
+
+
+/*-------------------- Variaveis de Controle ----------------------*/
+
+def var i-seq                 as integer              no-undo. 
+def var i-maq-local           as integer              no-undo.
+def var c-transacao           as char format "x(8)"   no-undo. 
+def var c-conteudo            as char format "x(60)"  no-undo.
+def var c-desc-erro           like tt-integracao.desc-erro.
+def var cod-versao-integracao as integer format "999" no-undo.
+def var ind-tipo-movto        as integer format "999" no-undo.
+&IF "{&mguni_version}" >= "2.071" &THEN
+def var c-estabel-dest        like estabelec.cod-estabel initial "".
+&ELSE
+def var c-estabel-dest        as char  initial "" no-undo.
+&ENDIF
+def var c-lista-dest          as char  initial "" no-undo.
+
+&if  defined(i-erro) = 0 &then
+     def var i-erro               NO-UNDO like tt-integracao.cod-erro.
+     &global-define i-erro
+&endif
+
+/* Fim do Include */

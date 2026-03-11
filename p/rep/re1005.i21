@@ -1,0 +1,233 @@
+/***********************************************************************************************
+**
+**  RE1005.I21 - Procedures internas retiradas do re1005a.p.
+**
+************************************************************************************************/
+
+/* Atualiza Contas a Receber */
+procedure pi-atualiza-cr:
+
+    def output param l-erro-cr  as logical                  no-undo.
+
+    def var l-atualiza-cr       as logical                  no-undo.
+    def var c-serie             like docum-est.serie-docto  no-undo.
+    def var c-nro-docto         like docum-est.nro-docto    no-undo.
+    def var l-ems50-cr          as logical                  no-undo.
+    DEF VAR l-ativo             AS LOG                      NO-UNDO.
+    def var i-nr-fatura         like nota-fiscal.nr-fatura             no-undo.   
+    
+    assign l-erro-cr = no.
+
+
+    &IF DEFINED (bf_mat_estorno_devol) &THEN
+    
+            FOR EACH tt-tot-tit WHERE tt-tot-tit.cotacao-dia <> 1 AND tt-tot-tit.cotacao-dia <> 0: /*caracteriza exportaá∆o*/
+                
+                        ASSIGN tt-tot-tit.tot-baixa   = tt-tot-tit.tot-baixa * tt-tot-tit.cotacao-dia.
+                
+            END.
+
+        /* Atualiza a tabela tt-tot-tit-devol para fazer o rastreamento da nota de devoluá∆o que originou a nota de crÇdito.
+           V†lido somente para integraá∆o com EMS 5.00, EMS 2.06B, ou se for EMS 2.04, com a funá∆o SPP-INTEGRA-RE-CR ativa. */ 
+            IF  l-acr-ems2 THEN DO:
+                for each tt-tot-tit:
+                
+                   if (emitente.natureza = 3 or emitente.natureza = 4) 
+                   and param-global.modulo-ex then do:
+                        FIND FIRST item-doc-est WHERE item-doc-est.cod-emitente = docum-est.cod-emitente
+                                             and item-doc-est.nat-operacao = docum-est.nat-operacao
+                                             and item-doc-est.serie-docto = docum-est.serie-docto
+                                             and item-doc-est.nro-docto = docum-est.nro-docto NO-LOCK NO-ERROR.
+                        
+                        find nota-fiscal 
+                        where nota-fiscal.cod-estabel = docum-est.cod-estabel 
+                        and nota-fiscal.serie         = item-doc-est.serie-comp 
+                        and nota-fiscal.nr-nota-fis   = item-doc-est.nro-comp no-lock no-error.
+                        
+                        i-nr-fatura  = if ( nota-fiscal.ind-tip-nota = 1       /* Sistema */
+                                   or   nota-fiscal.ind-tip-nota = 3       /* Diferenca Preco */
+                                   or   nota-fiscal.ind-tip-nota = 4 )     /* Complementar */
+                                   and  emitente.natureza = 3               /* Estrangeiro */
+                                   and  nota-fiscal.nr-proc-exp > " "
+                                   and  para-fat.ind-docum-fatura = 2 then
+                                        nota-fiscal.nr-proc-exp
+                                   else 
+                                        nota-fiscal.nr-fatura.
+                                  
+                        
+                        create tt-tot-tit-devol.
+                        buffer-copy tt-tot-tit to tt-tot-tit-devol
+                        assign tt-tot-tit-devol.serie-nota    = docum-est.serie-docto
+                               tt-tot-tit-devol.nr-docto-nota = i-nr-fatura
+                               tt-tot-tit-devol.nat-operacao  = docum-est.nat-operacao.
+                   end.
+                   else do:
+                        create tt-tot-tit-devol.
+                        buffer-copy tt-tot-tit to tt-tot-tit-devol
+                        assign tt-tot-tit-devol.serie-nota    = docum-est.serie-docto
+                               tt-tot-tit-devol.nr-docto-nota = docum-est.nro-docto
+                               tt-tot-tit-devol.nat-operacao  = docum-est.nat-operacao.
+                   end.
+                   /* Atualiza os campos de conta e centro de custo da tt de devoluá∆o */
+                   assign tt-tot-tit-devol.conta-devol        = tt-tot-tit.ct-devol
+                          tt-tot-tit-devol.cod-ccusto         = tt-tot-tit.sc-devol
+                          tt-tot-tit-devol.cod-plano-ccusto   = ""
+                          tt-tot-tit-devol.cod-plano-cta-ctbl = "".                          
+                          
+                end.
+            END.
+    &ENDIF
+    
+        
+    if  param-global.modulo-cr then do:
+    
+
+        /* Calcula valores para Estorno do Contas a Receber */
+
+
+            if can-find(funcao where funcao.cd-funcao = "adm-acr-ems-5.00"
+                                 and funcao.ativo = yes
+                                 and funcao.log-1 = yes) then do: 
+
+                if  search("prgfin/acr/acr779za.r") = ? 
+                and search("prgfin/acr/acr779za.py") = ? then do:
+                      run pi-erro-nota ( 6246, "prgfin/acr/acr779za.py").
+                      return.
+                end.
+                else do:
+                    run pi-verifica-ems50-CR (input table tt-tot-tit,
+                                              input table tt-titulo,
+                                              input-output table tt-un-devol,
+                                              output table tt-erro).
+
+                    assign docum-est.cr-atual = not l-erro /* se nao ocorreu erro seta como atualizado.  */
+                           l-ems50-cr         = YES.
+                end.                        
+            end.
+            else do:
+                run crp/crapi017.p ( input table tt-tot-tit,
+                                     input table tt-titulo,
+                                     input table tt-tot-tit-imp,
+                                     input table tt-tot-tit-ext,
+                                     output table tt-erro ).
+            end.
+
+            /* Somente gera relatorio de erros se a variavel foi parametrizada para tanto. */
+            IF  l-rel-erros THEN DO:
+            
+                /*  SETA DOCUMENTO COMO ATUALIZADO NO CONTAS A RECEBER */
+                for each tt-erro break by tt-erro.cd-erro:
+                    if line-counter > 62 then
+                       page.
+    
+                    if line-counter <= 5 then do:
+                        put c-cabec1 at 0 skip.
+                        put c-cabec2 at 0 skip.
+                    end.
+    
+                    if  first(tt-erro.cd-erro) then do:
+                        put docum-est.serie-docto at 1.
+                        put docum-est.nro-docto   at 7.
+                        put string(docum-est.cod-emitente) at 24 format "X(9)".
+                        put docum-est.nat-operacao at 35.
+                    end.
+    
+                    put string(tt-erro.cd-erro,">>>>>9") at 43.
+                    run pi-print-editor (input tt-erro.mensagem, input 78).
+                    for each tt-editor:
+                        put tt-editor.conteudo at 53 format "X(78)" skip.
+                    end.
+    
+                    if  tt-erro.i-sequen = ? then 
+                        assign l-erro-cr = yes.
+                end.
+            END.
+
+             /* se nao ocorreu erro na integr com EMS 2 seta como atualizado. */
+             /* Erros do EMS 5 sao tratados na pi-verifica-ems50-CR  */
+            IF NOT l-ems50-cr THEN
+                assign docum-est.cr-atual = not l-erro-cr.
+
+    end. /* if  param-global.modulo-cr */
+
+    assign c-transacao = "MAT037".
+
+    {cdp/cd7300.i5 "001" c-transacao}
+
+    if  param-global.modulo-mp 
+    and not param-global.modulo-cr /* para n∆o gerar log duplicado - ver crapi009.p chamado no cd9130 */
+    and tt-replica-msg.log-replica-msg  = yes then do: 
+
+        for each tt-tot-tit:
+             run pi-envia-tt-tot-tit.  
+        end.
+        for each tt-titulo:
+
+            find first tt-tot-tit
+                where tt-tot-tit.sequencia = tt-titulo.sequencia no-error.
+
+             run pi-envia-tt-titulo.  
+        end.
+
+        if  l-unid-neg-devol-cli then 
+            for each tt-un-devol:
+                run pi-envia-tt-un-devol.
+            end.
+
+        {cdp/cd7300.i6 "001" c-transacao}
+
+        /*ap¢s gerar a mensagem de envio, seta o documento como atualizado no M¢dulo CR*/
+        assign docum-est.cr-atual = yes.
+    end.
+
+End Procedure.
+
+Procedure pi-envia-tt-tot-tit:
+
+    create tt-dados-env.                  
+    assign tt-dados-env.num-sequencia  = i-seq 
+           tt-dados-env.cod-tipo-reg   = 118
+           tt-dados-env.ind-tipo-movto = 11 
+           tt-dados-env.identif-msg    = string(tt-tot-tit.serie)     + " , " +
+                                         string(tt-tot-tit.nr-docto)  + " , " +
+                                         string(tt-tot-tit.cod-esp)   + " , " +
+/*                                         string(tt-tot-tit.tot-saldo) + " , " +*/
+                                         string(tt-tot-tit.tot-baixa).
+    raw-transfer tt-tot-tit to tt-dados-env.conteudo-msg.                                     
+    assign i-seq = i-seq + 1. 
+
+End Procedure. /*pi-envia-tt-tot-tit*/
+
+Procedure pi-envia-tt-titulo:
+
+    create tt-dados-env.                  
+    assign tt-dados-env.num-sequencia  = i-seq 
+           tt-dados-env.cod-tipo-reg   = 211
+           tt-dados-env.ind-tipo-movto = 11
+
+           tt-dados-env.identif-msg    = string(tt-tot-tit.serie)     + " , " +
+                                         string(tt-tot-tit.nr-docto)  + " , " +
+                                         string(tt-tot-tit.cod-esp)   + " , " +
+/*                                         string(tt-tot-tit.tot-saldo) + " , " +*/
+                                         string(tt-tot-tit.tot-baixa) + " , " +
+                                         string(tt-tot-tit.ct-devol)  + " , " +
+                                         string(tt-tot-tit.sc-devol).
+
+    raw-transfer tt-titulo to tt-dados-env.conteudo-msg.                                     
+    assign i-seq = i-seq + 1. 
+
+End Procedure. /*pi-envia-tt-titulo*/
+
+procedure pi-envia-tt-un-devol:
+    create tt-dados-env.
+    assign tt-dados-env.num-sequencia  = i-seq
+           tt-dados-env.cod-tipo-reg   = 310
+           tt-dados-env.ind-tipo-movto = 11
+           tt-dados-env.identif-msg    = string(tt-un-devol.sequencia) + " , " +
+                                         string(tt-un-devol.parcela)   + " , " +
+                                         string(tt-un-devol.cod-un).
+    raw-transfer tt-un-devol to tt-dados-env.conteudo-msg.                                     
+    assign i-seq = i-seq + 1. 
+end.
+
+/* Fim da Include */

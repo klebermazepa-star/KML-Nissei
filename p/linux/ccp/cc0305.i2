@@ -1,0 +1,109 @@
+/****************************************************************************
+**
+**  cc0305.i2 - Define frame de parametros e variaveis para traducao
+**
+****************************************************************************/
+
+def var l-param         like param-global.exp-cep no-undo.
+def var c-lb-total      as char no-undo format "x(11)".
+def var c-lb-ordem      as char no-undo format "x(5)".
+def var c-lb-item-for   as char no-undo format "x(18)".
+def var c-lb-item       as char no-undo format "x(4)".
+def var c-lb-ct-cont    as char no-undo format "x(13)".
+def var c-lb-c-custo    as char no-undo format "x(12)".
+def var c-lb-desc       as char no-undo format "x(5)".
+def var c-lb-taxa       as char no-undo format "x(9)".
+def var c-lb-ipi        as char no-undo format "x(6)".
+def var c-lb-vl-ipi     as char no-undo format "x(12)".
+def var c-lb-pa         as char no-undo format "x(2)".
+def var c-lb-qtde       as char no-undo format "x(10)".
+def var c-lb-un         as char no-undo format "x(2)".
+def var c-lb-prc-unit   as char no-undo format "x(14)".
+def var c-lb-vl-desc    as char no-undo format "x(12)".
+def var c-lb-vl-enc     as char no-undo format "x(12)".
+def var c-lb-prc-tot    as char no-undo format "x(11)".
+def var c-lb-data       as char no-undo format "x(10)".
+def var c-lb-ref        as char no-undo format "x(3)".
+def var c-lb-inc        as char no-undo format "x(7)".
+def var c-lb-cond-pag   as char no-undo format "x(21)".
+def var c-lb-msg        as char no-undo format "x(18)".
+def var c-lb-coment     as char no-undo format "x(20)".
+def var c-lb-tit-par    as char no-undo.
+def var c-lb-tit-sel    as char no-undo.
+def var c-lb-tit-imp    as char no-undo.
+def var c-lb-pedido     as char no-undo.
+def var c-lb-destino    as char no-undo.
+def var c-lb-usuario    as char no-undo.
+def var c-lb-narra-it   as char no-undo.
+def var c-lb-narra-ord  as char no-undo.
+def var c-lb-descr      as char no-undo.
+def var c-lb-bus-to-bus as char no-undo.
+
+{utp/ut-liter.i Total_Geral * r}
+assign c-lb-total = trim(return-value).
+{utp/ut-liter.i Ordem * r}
+assign c-lb-ordem = trim(return-value).
+{utp/ut-liter.i Item_do_Fornecedor * r}
+assign c-lb-item-for = trim(return-value).
+{utp/ut-liter.i Item * r}
+assign c-lb-item = trim(return-value).
+{utp/ut-liter.i Conta * r}
+assign c-lb-ct-cont = trim(return-value).
+{utp/ut-liter.i Centro_Custo * r}
+assign c-lb-c-custo = trim(return-value).
+{utp/ut-liter.i Desc. * r}
+assign c-lb-desc = trim(return-value).
+{utp/ut-liter.i Taxa_Enc. * r}
+assign c-lb-taxa = trim(return-value).
+{utp/ut-liter.i I.P.I. * r}
+assign c-lb-ipi = trim(return-value).
+{utp/ut-liter.i Valor_I.P.I. * r}
+assign c-lb-vl-ipi = trim(return-value).
+{utp/ut-liter.i Pa * r}
+assign c-lb-pa = trim(return-value).
+{utp/ut-liter.i Quantidade * r}
+assign c-lb-qtde = trim(return-value).
+{utp/ut-liter.i Un * r}
+assign c-lb-un = trim(return-value).
+{utp/ut-liter.i Preco_Unitario * r}
+assign c-lb-prc-unit = trim(return-value).
+{utp/ut-liter.i Val.Desconto * r}
+assign c-lb-vl-desc = trim(return-value).
+{utp/ut-liter.i Val.Enc.Fin. * r}
+assign c-lb-vl-enc = trim(return-value).
+{utp/ut-liter.i Preco_Total * r}
+assign c-lb-prc-tot = trim(return-value).
+{utp/ut-liter.i Dt.Entrega * r}
+assign c-lb-data = trim(return-value).
+{utp/ut-field.i mgind prazo-compra cod-refer 1}
+assign c-lb-ref = trim(return-value).
+{utp/ut-liter.i Incluso * r}
+assign c-lb-inc = trim(return-value).
+{utp/ut-liter.i Condi‡Æo_de_Pagamento * r}
+assign c-lb-cond-pag = trim(return-value).
+{utp/ut-liter.i Mensagem_do_Pedido * r}
+assign c-lb-msg = trim(return-value).
+{utp/ut-liter.i Coment rio_do_Pedido * r}
+assign c-lb-coment = trim(return-value).
+{utp/ut-liter.i PARAMETROS * r}
+assign c-lb-tit-par = trim(return-value).
+{utp/ut-liter.i SELE€ÇO * r}
+assign c-lb-tit-sel = trim(return-value).
+{utp/ut-liter.i IMPRESSÇO * r}
+assign c-lb-tit-imp = trim(return-value).
+{utp/ut-liter.i Pedido * r}
+assign c-lb-pedido = trim(return-value).
+{utp/ut-liter.i Destino * r}
+assign c-lb-destino = trim(return-value).
+{utp/ut-liter.i Usuario * r}
+assign c-lb-usuario = trim(return-value).
+{utp/ut-liter.i Narrativa_do_Item_da_Ordem_de_Compra * r}
+assign c-lb-narra-it = trim(return-value).
+{utp/ut-liter.i Narrativa_da_Ordem_de_Compra * r}
+assign c-lb-narra-ord = trim(return-value).
+{utp/ut-liter.i Descri‡Æo * r}
+assign c-lb-descr = trim(return-value).
+{utp/ut-liter.i Business-to-Business * r}
+assign c-lb-bus-to-bus = trim(return-value).
+
+/* fim include */

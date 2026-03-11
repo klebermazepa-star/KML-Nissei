@@ -1,0 +1,102 @@
+/*############################################################################
+## 
+##  IMPORTANTE: Para executar esta procedure o programa chamador precisa ter
+##              definido as vari veis i-teren, i-terab, c-cod-est, h-acomp,
+##              i-num-pag, c-cod-est.
+##
+##############################################################################*/
+
+/******************************************************************************
+**
+**  Objetivo: Verifica se imprime termo de abertura/encerramento
+**
+**   Utilizacao dos parametros:
+**   parametro i-line       : recebe o valor do line-counter do prog. origem.
+**     "       i-line-print : recebe o numero de linhas a imprimir.
+**  OBS: este programa esta preparado para DISPLAY SIMPLES e o comando PUT.
+**       NAO FUNCIONA o controle de impressao para frames do tipo DOWN.
+******************************************************************************/
+
+procedure pi-imprime-termo:
+
+    def input param i-line       as int no-undo. /* valor de line-counter */
+    def input param i-line-print as int no-undo. /* valor de linhas a imprimir */
+    
+    def buffer b-termo for termo.
+    
+    if  not avail param-of
+    or  param-of.cod-estabel <> c-cod-est then
+        for first param-of fields ( cod-estabel nr-pag-ap-icms reinicia-fecha ) 
+            where param-of.cod-estabel = c-cod-est no-lock.
+        end.
+
+    /*if  (i-line + i-line-print) > page-size then do:*/
+    if  line-counter >= page-size then do:
+        assign i-num-pag = i-num-pag + 1.
+
+        IF  line-counter < page-size THEN DO:
+            do while line-counter < page-size:
+                put c-linha-branco at 1 format "x(132)".
+            end.
+            PUT SKIP.
+        END.
+
+        page.
+
+        if i-num-pag modulo (param-of.nr-pag-ap-icms +
+                                if l-tem-funcao
+                                then 1
+                                else 0 ) = 0 then do:    
+    
+           for first b-termo fields ( te-codigo texto descricao )
+               where b-termo.te-codigo = i-teren no-lock.
+           end.
+           
+           if  c-sep <> "" then do:
+               HIDE frame f-diag.
+               HIDE FRAM  f-sdiag.
+           end.    
+           else do:
+               hide frame f-cab no-pause.
+               hide frame f-cab-2.
+               hide frame f-cab-3.      
+               HIDE frame f-cabec.
+           end.  
+           
+           run pi-acompanhar in h-acomp ( input b-termo.te-codigo ).
+
+           {intprg/ni0302.i1 "b-termo"}
+            
+           page.
+    
+           for first b-termo fields ( te-codigo texto descricao )
+               where b-termo.te-codigo = i-terab no-lock.
+           end.
+                
+           {intprg/ni0302.i1 "b-termo"}
+    
+           if l-tem-funcao
+           then assign i-num-pag = if param-of.reinicia-fecha = no
+                                   then i-num-pag
+                                   else 1.
+           else assign i-num-pag = if param-of.reinicia-fecha = no
+                                   then i-num-pag + 2
+                                   else 2.
+
+           disp with frame f-cab.   
+           view frame f-cab.                        
+
+           if  c-sep = "" then do:
+               disp with frame f-cabec.
+               view frame f-cabec.
+           END.
+           ELSE DO:
+               disp with frame f-diag.
+               view frame f-diag.
+           END.
+
+
+         end.
+    end.
+
+end.

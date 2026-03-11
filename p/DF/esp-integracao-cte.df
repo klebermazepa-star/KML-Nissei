@@ -1,0 +1,46 @@
+ADD TABLE "esp-integracao-cte"
+  AREA "Schema Area"
+  DUMP-NAME "esp-integracao-cte"
+
+ADD FIELD "item-fora" OF "esp-integracao-cte" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  POSITION 2
+  MAX-WIDTH 2000
+  ORDER 20
+
+ADD FIELD "Nat-operacao-fora" OF "esp-integracao-cte" AS character 
+  FORMAT "x(6)"
+  INITIAL ""
+  POSITION 3
+  MAX-WIDTH 2000
+  ORDER 30
+
+ADD FIELD "item-Dentro" OF "esp-integracao-cte" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  POSITION 4
+  MAX-WIDTH 2000
+  ORDER 40
+
+ADD FIELD "Nat-operacao-dentro" OF "esp-integracao-cte" AS character 
+  FORMAT "x(6)"
+  INITIAL ""
+  POSITION 5
+  MAX-WIDTH 2000
+  ORDER 50
+
+ADD INDEX "idx-integracao-2" ON "esp-integracao-cte" 
+  AREA "Schema Area"
+  PRIMARY
+  INDEX-FIELD "item-Dentro" ASCENDING 
+
+ADD INDEX "idx-integracao-1" ON "esp-integracao-cte" 
+  AREA "Schema Area"
+  INDEX-FIELD "item-fora" ASCENDING 
+
+.
+PSC
+cpstream=ibm850
+.
+0000000914

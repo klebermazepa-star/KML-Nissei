@@ -1,0 +1,16 @@
+/******************************************************************************
+**
+** ftp/ft2010.i1 - Definicao da tabela temporaria tt-notas-geradas
+**
+******************************************************************************/
+
+/* Esta temp-table sera usada para gravar o numero da fatura nas notas 
+   anteriores quando o fechamento de duplicatas (para-fat) estiver
+   parametrizado por pedido */
+
+def temp-table tt-notas-geradas no-undo
+    field rw-nota-fiscal as   rowid
+    field nr-nota        like nota-fiscal.nr-nota-fis.
+
+/* ftp/ft2010.i1 */
+

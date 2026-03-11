@@ -1,0 +1,18 @@
+/*******************************************************************************
+**
+**  cdp/cdapi013mp.i1 - Defini‡Æo da temp-table tt-maq-ep-est-aux
+**
+*******************************************************************************/
+
+def temp-table tt-maq-ep-est-aux no-undo
+        field cd-maquina            as integer  format "9999"
+        &IF "{&mguni_version}" >= "2.071" &THEN
+        field ep-codigo             like ems2mult.empresa.ep-codigo
+        field cod-estabel           like ems2mult.estabelec.cod-estabel
+        &ELSE
+        field ep-codigo             as integer  format "999"
+        field cod-estabel           as char     format "x(03)"
+        &ENDIF
+        field tp-conexao            as integer  format "99".
+
+/* fim cdp/cdapi013mp.i1 */

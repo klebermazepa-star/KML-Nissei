@@ -1,0 +1,23 @@
+/***************************************************************************
+**
+**    OF0717.I6 - Grava numero da pagina atual
+**
+*****************************************************************************/
+
+if  i-pag-aux <> i-num-pag THEN DO:
+    IF  l-separadores THEN DO:
+         view frame f-diag.
+    END.
+    ELSE DO:
+         view frame f-cabec.
+    END.
+    disp c-tipo 
+         c-tit1
+         c-tit2
+         c-tit3 with frame f-sdiag.
+END.
+
+assign i-pag-aux = 0.
+
+/* OF0717.I6 */
+

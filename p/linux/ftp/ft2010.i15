@@ -1,0 +1,61 @@
+/******************************************************************************
+**
+** ftp/ft2010.i15 - Copiar campos: tt-rateio-it-duplic para rateio-it-duplic 
+**
+******************************************************************************/
+
+&IF DEFINED(BF_DIS_VERSAO_EMS) &THEN
+    &IF '{&BF_DIS_VERSAO_EMS}' = "2.02" &THEN
+  
+        find rateio-it-duplic
+            where rateio-it-duplic.cod-estabel = nota-fiscal.cod-estabel
+            and   rateio-it-duplic.serie       = nota-fiscal.serie
+            and   rateio-it-duplic.nr-nota-fis = nota-fiscal.nr-nota-fis
+            and   rateio-it-duplic.nr-fatura   = nota-fiscal.nr-fatura
+            and   rateio-it-duplic.parcela     = tt-rateio-it-duplic.parcela
+            and   rateio-it-duplic.nr-seq-fat  = it-nota-fisc.nr-seq-fat
+            and   rateio-it-duplic.it-codigo   = it-nota-fisc.it-codigo
+            exclusive-lock no-error.
+        
+        if  not avail rateio-it-duplic then do:        
+            create rateio-it-duplic.
+            assign rateio-it-duplic.cod-estabel = nota-fiscal.cod-estabel
+                   rateio-it-duplic.serie       = nota-fiscal.serie
+                   rateio-it-duplic.nr-fatura   = nota-fiscal.nr-fatura
+                   rateio-it-duplic.nr-nota-fis = nota-fiscal.nr-nota-fis
+                   rateio-it-duplic.parcela     = tt-rateio-it-duplic.parcela
+                   rateio-it-duplic.nr-seq-fat  = it-nota-fisc.nr-seq-fat
+                   rateio-it-duplic.it-codigo   = it-nota-fisc.it-codigo.
+        end.           
+
+        assign rateio-it-duplic.valor = rateio-it-duplic.valor-rateio + tt-rateio-it-duplic.valor.
+
+    &ENDIF
+
+    &IF '{&BF_DIS_VERSAO_EMS}' = "2.03" &THEN
+
+        find rateio-it-duplic
+            where rateio-it-duplic.cod-estabel = nota-fiscal.cod-estabel
+            and   rateio-it-duplic.serie       = nota-fiscal.serie
+            and   rateio-it-duplic.nr-fatura   = nota-fiscal.nr-fatura
+            and   rateio-it-duplic.parcela     = tt-rateio-it-duplic.parcela
+            and   rateio-it-duplic.nr-seq-fat  = it-nota-fisc.nr-seq-fat
+            and   rateio-it-duplic.it-codigo   = it-nota-fisc.it-codigo
+            exclusive-lock no-error.
+
+        if  not avail rateio-it-duplic then do:        
+            create rateio-it-duplic.
+            assign rateio-it-duplic.cod-estabel = nota-fiscal.cod-estabel
+                   rateio-it-duplic.serie       = nota-fiscal.serie
+                   rateio-it-duplic.nr-fatura   = nota-fiscal.nr-fatura
+                   rateio-it-duplic.parcela     = tt-rateio-it-duplic.parcela
+                   rateio-it-duplic.nr-seq-fat  = it-nota-fisc.nr-seq-fat
+                   rateio-it-duplic.it-codigo   = it-nota-fisc.it-codigo.
+        end.
+
+        assign rateio-it-duplic.valor = rateio-it-duplic.valor-rateio + tt-rateio-it-duplic.valor.
+
+    &ENDIF
+&ENDIF
+
+/*FT2010.i15*/

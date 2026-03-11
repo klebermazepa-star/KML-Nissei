@@ -1,0 +1,40 @@
+
+{cdp/cdcfgdis.i}
+{include/i-epc200.i} 
+{utp/ut-glob.i}
+{method/dbotterr.i}
+
+DEFINE VARIABLE c-xml   AS CHARACTER   NO-UNDO.
+DEFINE VARIABLE c-danfe AS CHARACTER   NO-UNDO.
+
+DEFINE INPUT  PARAMETER p-tipo        AS INTEGER     NO-UNDO.
+DEFINE INPUT  PARAMETER p-cod-estabel AS CHARACTER   NO-UNDO.
+DEFINE INPUT  PARAMETER p-serie       AS CHARACTER   NO-UNDO.
+DEFINE INPUT  PARAMETER p-nr-nota-fis AS CHARACTER   NO-UNDO.
+DEFINE OUTPUT PARAMETER p-arquivo     AS CHARACTER   NO-UNDO.
+
+//{intprg/int-rpw.i}
+
+/* Variaveis e procedures para tratamento de XML - NDD Web */
+{xmlinc/xmlndd.i}
+
+/* Carrega API auxiliar processamento de XML */
+{xmlinc/xmlloadgenxml.i &GenXml="hGenXML" &GXReturnValue="cReturnValue"}
+
+DEFINE VARIABLE contador AS INTEGER     NO-UNDO.
+
+/* consultar status SEFAZ dos protocolos retornados  */
+FOR FIRST nota-fiscal NO-LOCK
+    WHERE nota-fiscal.cod-estabel = p-cod-estabel
+    AND   nota-fiscal.serie       = p-serie      
+    AND   nota-fiscal.nr-nota-fis = p-nr-nota-fis:
+
+    ASSIGN cColdID = "107".
+    RUN pi-altera-tiposervico-consult-cold (INPUT p-tipo). /** XML **/
+    RUN pi-ConsultarColdSincrono (INPUT nota-fiscal.cod-chave-aces-nf-eletro).
+    RUN pi-retorna-document (OUTPUT p-arquivo).
+
+END.
+run pi-desconectaWebServer.
+
+if valid-handle(hGenXML) then delete object hGenXML no-error.

@@ -1,0 +1,16 @@
+/***************************************************************************
+** 
+**  mpapi001.i1: Definicao da temp-table padrao utilizada para integracao 
+**               dos modulos com o Multiplanta.
+**                
+**************************************************************************/
+
+def temp-table tt-integracao no-undo
+       field cod-versao-integracao as integer format "999"
+       field cod-transacao         as char    format "x(8)" 
+       field cod-erro              as integer format "99999"
+       field desc-erro             as char    format "x(60)"
+       field conteudo-erro         as char    format "x(60)".
+       
+   
+/*** Fim do Include ***/ 

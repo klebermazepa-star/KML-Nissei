@@ -1,0 +1,19 @@
+DEFINE TEMP-TABLE tt-param NO-UNDO
+    FIELD no-ab-reppri-ini LIKE ped-venda.no-ab-reppri
+    FIELD no-ab-reppri-fim LIKE ped-venda.no-ab-reppri
+    FIELD cod-estabel-ini  LIKE ped-venda.cod-estabel
+    FIELD cod-estabel-fim  LIKE ped-venda.cod-estabel
+    FIELD nr-pedido-ini    LIKE ped-venda.nr-pedido
+    FIELD nr-pedido-fim    LIKE ped-venda.nr-pedido
+    FIELD nome-abrev-ini   LIKE ped-venda.nome-abrev
+    FIELD nome-abrev-fim   LIKE ped-venda.nome-abrev                                                                                                           
+    FIELD nr-nota-fis-ini  LIKE nota-fiscal.nr-nota-fis
+    FIELD nr-nota-fis-fim  LIKE nota-fiscal.nr-nota-fis
+    FIELD dt-implant-ini   LIKE ped-venda.dt-implant
+    FIELD dt-implant-fim   LIKE ped-venda.dt-implant
+    FIELD dt-emis-nota-ini LIKE nota-fiscal.dt-emis-nota
+    FIELD dt-emis-nota-fim LIKE nota-fiscal.dt-emis-nota
+    FIELD cod-sit-ped      LIKE ped-venda.cod-sit-ped
+    FIELD ind-status-ped   AS INTEGER
+    FIELD ind-sit-nota     LIKE nota-fiscal.ind-sit-nota
+    .

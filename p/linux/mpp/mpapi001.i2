@@ -1,0 +1,13 @@
+/***************************************************************************
+** 
+**  mpapi001.i2: Definicao da temp-table padrao utilizada para verificar 
+**               replicacao das mensagens para uma planta remota.
+** 
+**************************************************************************/
+
+def temp-table tt-replica-msg no-undo
+       field log-replica-msg       as logical     
+       field cd-maquina-local      as integer format "999".
+       
+      
+/*** Fim do Include ***/      

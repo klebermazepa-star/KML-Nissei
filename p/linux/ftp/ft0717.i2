@@ -1,0 +1,58 @@
+/*************************************************************************
+**
+** FT0717.i2 - Include para criacao do sumar-ft e criacao do tt-ped-curva.
+**
+*************************************************************************/
+
+assign i-valor-selec = {2}.
+
+if l-indicador then do:
+
+    /*** Se a fun‡Æo de unidade de neg¢cio estiver ativa, procura sumar-ft com base na unidade de negocio. ***/
+    if  l-unidade-negocio then
+        find sumar-ft 
+            where sumar-ft.cod-estabel    = nota-fiscal.cod-estabel  
+              and sumar-ft.dt-movto       = nota-fiscal.dt-emis-nota 
+              and sumar-ft.ct-conta       = {1}                      
+              and sumar-ft.sc-conta       = {4}
+              and sumar-ft.serie          = nota-fiscal.serie        
+              and sumar-ft.tp-imposto     = int({3})
+              and sumar-ft.nr-nota-fis    = nota-fiscal.nr-nota-fis    
+              and sumar-ft.cod-unid-negoc = {5}  EXCLUSIVE-LOCK NO-ERROR.
+    else
+        find sumar-ft where
+                 sumar-ft.cod-estabel = nota-fiscal.cod-estabel  and
+                 sumar-ft.dt-movto    = nota-fiscal.dt-emis-nota and
+                 sumar-ft.ct-conta    = {1}                      and
+                 sumar-ft.sc-conta    = {4}                      and
+                 sumar-ft.serie       = nota-fiscal.serie        and
+                 sumar-ft.tp-imposto  = INT({3})                 and
+                 sumar-ft.nr-nota-fis = nota-fiscal.nr-nota-fis EXCLUSIVE-LOCK NO-ERROR.
+
+    if not avail sumar-ft then do:
+        create sumar-ft.
+        assign sumar-ft.cod-estabel = nota-fiscal.cod-estabel
+               sumar-ft.dt-movto    = nota-fiscal.dt-emis-nota
+               sumar-ft.ct-conta    = {1}
+               sumar-ft.sc-conta    = {4}
+               sumar-ft.tp-imposto  = INT({3})
+               sumar-ft.serie       = nota-fiscal.serie
+               sumar-ft.nr-nota-fis = nota-fiscal.nr-nota-fis.
+    
+        /*** Se a fun‡Æo de unidade de neg¢cio estiver ativa, salva unidade de negocio no sumar-ft. ***/
+        if  l-unidade-negocio then
+            assign sumar-ft.cod-unid-negoc = {5}.
+
+        create w-sumar-rej.
+        assign w-sumar-rej.registro = rowid(sumar-ft).
+    end.
+
+    assign sumar-ft.vl-contab = sumar-ft.vl-contab + {2}.
+
+    run pi-epc (input {2}) no-error.
+end.
+else do:
+    {ftp/ft0904l.i {1} "i-valor-selec" {5} {4} }
+end.
+
+/*ftp/ft0717.I2*/

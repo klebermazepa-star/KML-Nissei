@@ -1,0 +1,242 @@
+/***
+**** Multiplanta
+***/
+&if defined(bf_mat_contratos) &then /* EMS 202 */
+for each tt-erro:
+    delete tt-erro.
+end.
+
+create tt-param-mp.
+assign tt-param-mp.i-ordem-ini       = tt-param.i-ordem-ini
+       tt-param-mp.i-ordem-fim       = tt-param.i-ordem-fim
+       tt-param-mp.sit-ordem-contrat = tt-param.i-param-c.
+
+raw-transfer tt-param-mp to raw-param-mp.
+
+run ccp/ccapi200a.p (input "Pedido-compr":U,
+                     input rowid(pedido-compr),
+                     input 2,
+                     input raw-param-mp,
+                     input-output table tt-erro).
+find first tt-erro no-lock no-error. 
+if  avail tt-erro THEN  
+    run cdp/cd0666.w (input table tt-erro).
+&else /* EMS 201 */
+if  pedido-compr.situacao    = 1
+and pedido-compr.nr-contrato = "" then do:
+    assign i-tipo-movto = 1.
+end.
+
+if  pedido-compr.situacao     = 1
+and pedido-compr.nr-contrato <> "" then
+    assign i-tipo-movto = 2.
+assign c-estabel-dest = pedido-compr.end-entrega
+       c-transacao    = "mat006".
+if  param-compra.compra-centr
+and (i-tipo-movto = 1 or i-tipo-movto = 2) then do:  
+    {cdp/cd7300.i3 "001" c-transacao}
+
+    assign l-multiplanta = no.
+    find first ordem-compra where ordem-compra.num-pedido = pedido-compr.num-pedido no-lock no-error.
+
+    if  available ordem-compra then do:
+        find first comprador where comprador.cod-comprado = ordem-compra.cod-comprado no-lock no-error.
+        if  available comprador
+        and param-compra.compra-centr
+        and pedido-compr.end-entrega <> " " then
+            assign l-multiplanta = yes.
+    end.
+
+    run pi-cria-tt-maq-ep-est. 
+    find first tt-maq-ep-est where tt-maq-ep-est.cod-estabel = c-estabel-dest no-lock no-error.
+    for each tt-param-maq-ep-est:
+        delete tt-param-maq-ep-est.
+    end. 
+
+    if  avail tt-maq-ep-est and tt-maq-ep-est.tp-conexao <> 1 then do:
+        if  l-multiplanta  then do:
+            find first ordem-compra where ordem-compra.num-pedido = pedido-compr.num-pedido
+                 no-lock no-error.
+            if  avail ordem-compra then do:
+                find first comprador where comprador.cod-comprado = ordem-compra.cod-comprado
+                     no-lock no-error.
+                if  param-global.modulo-mp    
+                and avail comprador
+                and comprador.corporativo     
+                and param-compra.compra-centr = no
+                and i-tipo-movto              = 2 then do:
+                    /* Executa pre-api do Multiplanta para verificar o log-envio e maq-destino */
+                    run ccp/cc9998.p (input  pedido-compr.cod-maq-origem,
+                                      input  pedido-compr.num-processo-mp,
+                                      input-output table tt-erro).
+                    page.
+                    for each tt-erro no-lock:
+                        disp tt-erro.cd-erro  @ i-erro
+                             tt-erro.mensagem @ c-desc-erro
+                             with stream-io frame f-cabec-erro.
+                        delete tt-erro.
+                    end.
+                end.
+            end.
+            /*****
+            ****** Pedido-compr
+            *****/
+            create tt-dados-env.
+            assign tt-dados-env.num-sequencia  = i-seq
+                   tt-dados-env.cod-tipo-reg   = 88
+                   tt-dados-env.ind-tipo-movto = i-tipo-movto
+                   tt-dados-env.identif-msg    = string(pedido-compr.num-pedido).
+            create tt-pedido-compr-aux.
+            buffer-copy pedido-compr to tt-pedido-compr-aux.
+            raw-transfer tt-pedido-compr-aux to tt-dados-env.conteudo-msg.
+            /*****
+            ****** Ordem-compra
+            *****/
+            for each  ordem-compra  
+                where ordem-compra.num-pedido = pedido-compr.num-pedido no-lock:
+
+                /* Integraá∆o M¢dulo de Contratos */
+                &if defined(bf_mat_contratos) &then
+                if param-global.modulo-cn and ordem-compra.nr-contrato <> 0 then do:
+                &else
+                if param-global.modulo-cn and ordem-compra.nr-contrato <> "" then do:
+                &endif
+                    if  ordem-compra.numero-ordem < tt-param.i-ordem-ini
+                    or  ordem-compra.numero-ordem > tt-param.i-ordem-fim then next.
+
+                    find contrato-for where contrato-for.nr-contrato = ordem-compra.nr-contrato
+                         exclusive-lock no-error.
+                    if  avail contrato-for then do:
+                        if  tt-param.i-param-c = 1
+                        and ordem-compra.sit-ordem-contrat <> 2 then next.
+                        else
+                            if  tt-param.i-param-c = 2
+                            and ordem-compra.sit-ordem-contrat <> 1 then next.
+                            else      
+                                if  tt-param.i-param-c = 3
+                                and ordem-compra.sit-ordem-contrat = 3 then next.           
+                    end.
+                end.
+                /* Fim Integraá∆o contratos */
+                
+                &if defined(bf_mat_contratos) &then
+                &else
+                assign ordem-compra.int-1 = 2.
+                &endif
+                
+                /*****
+                ****** Item-fornec
+                ******
+                find item-fornec
+                     where item-fornec.it-codigo = ordem-compra.it-codigo
+                     and   item-fornec.cod-emitente = ordem-compra.cod-emitente
+                     no-lock no-error.
+                if  available item-fornec then do:
+                    assign i-seq = i-seq + 1.
+                    create tt-dados-env.
+                    assign tt-dados-env.num-sequencia  = i-seq
+                           tt-dados-env.cod-tipo-reg   = 47
+                           tt-dados-env.ind-tipo-movto = 1 /*** Inclus∆o ***/
+                           tt-dados-env.identif-msg    = item-fornec.it-codigo
+                                                       + " , " + string(item-fornec.cod-emitente).
+                    create tt-item-fornec-aux.
+                    buffer-copy item-fornec to tt-item-fornec-aux.
+                    raw-transfer tt-item-fornec-aux to tt-dados-env.conteudo-msg.
+                end.
+                *****/
+                /*****
+                ****** Prazo-compra
+                *****/
+                for each  prazo-compra
+                    where prazo-compra.numero-ordem = ordem-compra.numero-ordem no-lock:
+                    assign i-seq = i-seq + 1.
+                    create tt-dados-env.
+                    assign tt-dados-env.num-sequencia  = i-seq
+                           tt-dados-env.cod-tipo-reg   = 65
+                           tt-dados-env.ind-tipo-movto = 2 /*** Alteraá∆o ***/
+                           tt-dados-env.identif-msg    = string(prazo-compra.numero-ordem)
+                                                       + " , " + string(prazo-compra.parcela).
+                    create tt-prazo-compra-aux.
+                    buffer-copy prazo-compra to tt-prazo-compra-aux.
+                    raw-transfer tt-prazo-compra-aux to tt-dados-env.conteudo-msg.
+                end.
+                /*****
+                ****** Cotacao-item
+                *****/
+                for each  cotacao-item
+                    where cotacao-item.numero-ordem = ordem-compra.numero-ordem
+                    and   cotacao-item.it-codigo    = ordem-compra.it-codigo
+                    and   cotacao-item.cot-aprovada  no-lock:
+                    assign i-seq = i-seq + 1.
+                    create tt-dados-env.
+                    assign tt-dados-env.num-sequencia  = i-seq
+                           tt-dados-env.cod-tipo-reg   = 114
+                           tt-dados-env.ind-tipo-movto = 1 /*** Inclus∆o ***/
+                           tt-dados-env.identif-msg    = string(cotacao-item.numero-ordem)
+                                                       + " , " + string(cotacao-item.cod-emitente)
+                                                       + " , " + string(cotacao-item.it-codigo)
+                                                       + " , " + string(cotacao-item.seq-cotac).
+                    create tt-cotacao-item-aux.
+                    buffer-copy cotacao-item to tt-cotacao-item-aux.
+                    raw-transfer tt-cotacao-item-aux to tt-dados-env.conteudo-msg.
+                end.
+                /*****
+                ****** Ordem-compra
+                *****/
+                assign i-seq = i-seq + 1.
+                create tt-dados-env.
+                assign tt-dados-env.num-sequencia  = i-seq
+                       tt-dados-env.cod-tipo-reg   = 64
+                       tt-dados-env.ind-tipo-movto = 2 /*** Alteraá∆o ***/
+                       tt-dados-env.identif-msg    = string(ordem-compra.numero-ordem).
+                create tt-ordem-compra-aux.
+                buffer-copy ordem-compra to tt-ordem-compra-aux.
+                raw-transfer tt-ordem-compra-aux to tt-dados-env.conteudo-msg.
+                /*****
+                ****** Cond-especif
+                ******/
+                find cond-especif where cond-especif.num-pedido = pedido-compr.num-pedido
+                      no-lock no-error.
+                if  available cond-especif then do:
+                    assign i-seq = i-seq + 1.
+                    create tt-dados-env.
+                    assign tt-dados-env.num-sequencia  = i-seq
+                           tt-dados-env.cod-tipo-reg   = 16
+                           tt-dados-env.ind-tipo-movto = 1 /*** Inclus∆o ***/
+                           tt-dados-env.identif-msg    = string(ordem-compra.numero-ordem).
+                    create tt-cond-especif-aux.
+                    buffer-copy cond-especif to tt-cond-especif-aux.
+                    raw-transfer tt-cond-especif-aux to tt-dados-env.conteudo-msg.
+                end.
+                /***** Recebimento ***** 146 */
+                /***** Alt-Ped ***** ? */
+            end.
+        
+            assign i-seq          = i-seq + 1.
+
+            /* comentarios em 23/07 - versao 010035 -----------
+            find first ordem-compra where ordem-compra.num-pedido = pedido-compr.num-pedido
+                 no-lock no-error.
+            assign c-estabel-dest = " ".
+            find first comprador where comprador.cod-comprado = ordem-compra.cod-comprado
+                 no-lock no-error.
+            if  avail ordem-compra 
+            and avail comprador
+            and comprador.corporativo     = no
+            and param-compra.compra-centr 
+            and ordem-compra.cod-estabel <> " " then
+                assign c-estabel-dest = ordem-compra.cod-estabel.
+            ---------------------------------------------------- */
+        
+            assign c-estabel-dest = pedido-compr.end-entrega.
+        
+            for each tt-control-env:
+                delete tt-control-env.
+            end.
+            {cdp/cd7300.i4 "001" c-transacao}
+        end.
+    end.
+end.
+/**************** Fim *****************/
+
+&endif  /*EMS 201 */

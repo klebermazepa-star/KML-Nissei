@@ -1,0 +1,57 @@
+
+/******************************************************************************
+**
+** CD4313.I1 - Definicoes da tabela temporaria tt-cond-pag e tt-fat-duplic.
+**
+** OBS: - Include elaborado especificamente para versao I.
+**
+** Programas que utilizam essa include:
+** - CD4313.P
+**
+******************************************************************************/
+
+def temp-table tt-cond-pag
+    
+    field seq-tt-cond-pag as int
+    field seq-tt-docto    as int
+    field cod-cond-pag    like cond-pagto.cod-cond-pag       
+    field cod-vencto      like cond-pagto.cod-vencto        
+    field dia-mes-base    like cond-pagto.dia-mes-base      
+    field dia-sem-base    like cond-pagto.dia-sem-base      
+    field dia-mes-venc    like cond-pagto.dia-mes-venc      
+    field dia-sem-venc    like cond-pagto.dia-sem-venc      
+    field num-parcelas    like cond-pagto.num-parcelas      
+    field nr-dias-ante    like cond-pagto.nr-dias-ante      
+    field nr-dupdes       like cond-pagto.nr-dupdes         
+    field descricao       like cond-pagto.descricao         
+    field per-des-pgan    like cond-pagto.per-des-pgan        
+    field nr-tab-finan    like cond-pagto.nr-tab-finan      
+    field nr-ind-finan    like cond-pagto.nr-ind-finan
+    field cod-ven-par     like cond-pagto.cod-ven-par extent 99
+    field prazos          like cond-pagto.prazos extent 99
+    field per-pg-dup      like cond-pagto.per-pg-dup decimals 10 extent 99
+    index seq is unique
+          seq-tt-cond-pag.
+
+def temp-table tt-fat-duplic
+
+    field seq-tt-fat-duplic as int
+    field seq-tt-docto      as int
+    field cod-vencto        like fat-duplic.cod-vencto   
+    field dt-venciment      like fat-duplic.dt-venciment 
+    field dt-desconto       like fat-duplic.dt-desconto  
+    field vl-desconto       like fat-duplic.vl-desconto  
+    field parcela           like fat-duplic.parcela format "99"      
+    field vl-parcela        like fat-duplic.vl-parcela   
+    field vl-comis          like fat-duplic.vl-comis     
+    field vl-acum-dup       like fat-duplic.vl-acum-dup  
+    field cod-esp           like fat-duplic.cod-esp      
+
+    index codigo is primary
+          seq-tt-docto
+          parcela
+     
+    index seq is unique
+          seq-tt-fat-duplic.
+
+/*  CD4313.I1  */

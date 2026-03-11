@@ -1,0 +1,248 @@
+/******************************************************************************
+**
+** ftp/ft2010.i2 - Copiar campos: tt-docto para nota-fiscal 
+**
+******************************************************************************/
+
+create nota-fiscal.
+assign nota-fiscal.cod-des-merc       = tt-docto.cod-des-merc              
+       nota-fiscal.cod-emitente       = tt-docto.cod-emitente              
+       nota-fiscal.cod-estabel        = tt-docto.cod-estabel               
+       nota-fiscal.estado             = tt-docto.estado                    
+       nota-fiscal.nat-operacao       = tt-docto.nat-operacao              
+       nota-fiscal.nome-ab-cli        = tt-docto.nome-abrev                
+       nota-fiscal.nr-nota-fis        = c-nr-nota                   
+       nota-fiscal.pais               = tt-docto.pais                      
+       nota-fiscal.perc-desco1        = tt-docto.perc-desco1               
+       nota-fiscal.perc-desco2        = tt-docto.perc-desco2               
+       nota-fiscal.serie              = tt-docto.serie                     
+       nota-fiscal.bairro             = tt-docto.bairro                    
+       nota-fiscal.cep                = tt-docto.cep                       
+       nota-fiscal.cgc                = tt-docto.cgc                       
+       nota-fiscal.cidade             = tt-docto.cidade                    
+       nota-fiscal.cidade-cif         = tt-docto.cidade-cif                
+       nota-fiscal.cod-cond-pag       = tt-docto.cod-cond-pag              
+       nota-fiscal.cod-entrega        = tt-docto.cod-entrega
+       nota-fiscal.dt-emis-nota       = tt-docto.dt-emis-nota              
+       nota-fiscal.dt-prvenc          = tt-docto.dt-prvenc                 
+       nota-fiscal.endereco           = tt-docto.endereco                  
+       nota-fiscal.esp-docto          = tt-docto.esp-docto                 
+       nota-fiscal.ins-estadual       = tt-docto.ins-estadual              
+       nota-fiscal.marca-volume       = tt-docto.marca-volume              
+       nota-fiscal.peso-bru-tot       = tt-docto.peso-bru-tot
+       nota-fiscal.peso-liq-tot       = tt-docto.peso-liq-tot
+       nota-fiscal.no-ab-reppri       = tt-docto.no-ab-reppri              
+       nota-fiscal.nome-tr-red        = tt-docto.nome-tr-red               
+       nota-fiscal.nome-transp        = tt-docto.nome-transp               
+       nota-fiscal.nivel-restituicao  = tt-docto.nivel-rest          
+       nota-fiscal.nr-fatura          = c-nr-fatura                 
+       nota-fiscal.cdd-embarq         = tt-docto.cdd-embarq
+       nota-fiscal.nr-pedcli          = tt-docto.nr-pedcli                 
+       nota-fiscal.nr-resumo          = tt-docto.nr-resumo                 
+       nota-fiscal.nr-tabpre          = tt-docto.nr-tabpre                 
+       nota-fiscal.nr-volumes         = tt-docto.nr-volumes                
+       nota-fiscal.pc-restituicao     = tt-docto.pc-rest                   
+       nota-fiscal.ind-lib-nota       = tt-docto.ind-lib-nota                  
+       nota-fiscal.cod-rota           = tt-docto.cod-rota                       
+       nota-fiscal.cod-mensagem       = tt-docto.cod-msg                        
+       nota-fiscal.vl-taxa-exp        = tt-docto.vl-taxa-exp                    
+       nota-fiscal.nr-proc-exp        = tt-docto.nr-proc-exp                    
+       nota-fiscal.nr-tab-finan       = tt-docto.nr-tab-finan                   
+       nota-fiscal.nr-ind-finan       = tt-docto.nr-ind-finan                   
+       nota-fiscal.cod-portador       = tt-docto.cod-portador                   
+       nota-fiscal.modalidade         = tt-docto.modalidade      
+       nota-fiscal.zip-code           = tt-docto.zip-code
+       nota-fiscal.cod-rep            = if avail repres then repres.cod-rep
+                                        else 0
+       nota-fiscal.distancia          = if  avail estab-cli 
+                                        then estab-cli.distancia
+                                        else 0
+       nota-fiscal.mercado            = natur-oper.mercado
+       nota-fiscal.nome-ab-reg        = if avail repres then repres.nome-ab-reg
+                                        else ""
+       nota-fiscal.tp-pedido          = if  tt-docto.nr-pedcli <> ""
+                                        then ped-venda.tp-pedido
+                                        else ""
+       nota-fiscal.tp-preco           = if  tt-docto.nr-pedcli <> ""
+                                        then ped-venda.tp-preco
+                                        else if  tt-docto.nr-tabpre <> ""
+                                             then 2
+                                             else 1
+       nota-fiscal.placa              = tt-docto.placa
+       nota-fiscal.uf-placa           = tt-docto.uf-placa
+       nota-fiscal.user-calc          = {cdp/cd7777.i}
+       nota-fiscal.ind-contabil       = if  natur-oper.tipo = 1 /* Entrada */
+                                        then ?
+                                        else no
+       nota-fiscal.cod-dep-ext        = if  avail pre-fatur
+                                        then pre-fatur.cod-dep-ext
+                                        else ""
+       nota-fiscal.identific          = if   avail pre-fatur
+                                        then pre-fatur.identific
+                                        else "" 
+       nota-fiscal.int-2              = tt-docto.nr-prog
+       nota-fiscal.char-1             = tt-docto.char-1
+       nota-fiscal.observ-nota        = tt-docto.obs
+       nota-fiscal.cond-redespa       = tt-docto.cond-redespa
+       nota-fiscal.cod-canal-venda    = tt-docto.cod-canal-venda
+       nota-fiscal.dt-embarque        = tt-docto.dt-embarque
+       nota-fiscal.nr-siscomex        = tt-docto.nr-siscomex
+       nota-fiscal.serie-orig         = tt-docto.serie-dif
+       nota-fiscal.nro-nota-orig      = tt-docto.nr-nota-dif
+       nota-fiscal.tipo-fat           = 2 /* teste do programa FT2010.P
+                                             que define o tipo de faturamento da 
+                                             nota fiscal */
+       nota-fiscal.dt-cancela         = tt-docto.dt-cancela
+       nota-fiscal.desc-cancela       = tt-docto.motvo-cance
+
+       /* Projeto 751 - Confer¼ncia de Dados de Integra»’o */
+       nota-fiscal.hr-atualiza = STRING(TIME,"HH:MM")
+
+       &IF "{&BF_DIS_VERSAO_EMS}" < "2.071" &THEN
+           nota-fiscal.data-1 = TODAY
+       &else
+           nota-fiscal.dt-atualiza = TODAY
+       &endif
+       /* Projeto 751 - Confer¼ncia de Dados de Integra»’o */
+
+       /* Projeto 90 - Gestao Caixas HIS x EMS */
+       nota-fiscal.num-cx-financ      = tt-docto.num-cx-financ
+       nota-fiscal.num-process-negoc  = tt-docto.num-process-negoc
+       /* Fim Projeto 90 - Gestão de Caixas*/
+       .
+       
+assign nota-fiscal.ind-tip-nota = 
+              if  tt-docto.ind-tip-nota = 1 /* Sistema */
+              then 1 /* Sistema */
+              else if  tt-docto.ind-tip-nota = 2 /* Manual */
+                   then 2 /* Manual */
+                   else if  tt-docto.ind-tip-nota = 3  /* Dif Preco c/ NF Base    */
+                        or  tt-docto.ind-tip-nota = 51 /* Dif Preco s/ NF Base    */
+                        or  tt-docto.ind-tip-nota = 52 /* Dif Preco (dif cambial) */
+                        then 3  /* Dif de Preco */
+                        else if tt-docto.ind-tip-nota = 8 /* Recebimento */
+                             then 8 /* Recebimento */
+                             else if tt-docto.ind-tip-nota = 11 /*Importada*/ 
+                                  then 11  /*Importada*/                              
+                                  else 4. /* Complementar Mercadoria */.
+
+if  i-pais-impto-usuario <> 1 then /* Brasil */
+    assign nota-fiscal.ind-tip-nota = 
+               if  nota-fiscal.ind-tip-nota = 3 /* Dif de Preco */
+               then 9 /* nota de D‚bito */
+               else if  nota-fiscal.ind-tip-nota = 4 /* Comp Merc */
+                    then 10 /* Nota de Cr‚dito */
+                    else nota-fiscal.ind-tip-nota.
+
+assign nota-fiscal.ind-sit-nota = if  nota-fiscal.ind-tip-nota = 2 /* NF Manual */
+                                  or  tt-docto.ind-tip-nota = 11 /* Importa‡Æo*/
+                                  then 2
+                                  else 1.
+if i-pais-impto-usuario <> 1 then do:   
+   assign nota-fiscal.ind-contabil = no                                  
+          nota-fiscal.val-desp-outros = dec(substring(tt-docto.char-1,37,14)).
+end.   
+
+
+
+if l-spp-nfe and
+   l-importa-nfe then do:
+   
+    &IF '{&BF_DIS_VERSAO_EMS}' >= '2.07' &THEN
+        ASSIGN nota-fiscal.cod-chave-aces-nf-eletro = SUBSTR(tt-docto.char-1,112,60)       /* chave acesso  */
+               nota-fiscal.idi-sit-nf-eletro        = INT(SUBSTR(tt-docto.char-1,172,2))   /* situa‡Æo      */
+               nota-fiscal.idi-forma-emis-nf-eletro = INT(SUBSTR(tt-docto.char-1,174,1))   /* tipo emissÆo */
+               nota-fiscal.cod-protoc               = SUBSTR(tt-docto.char-1,175,15)  /*protocolo */ 
+               OVERLAY(nota-fiscal.char-1,112,60)   = ""
+               OVERLAY(nota-fiscal.char-1,172,2)    = ""
+               OVERLAY(nota-fiscal.char-1,174,1)    = "".
+    &ELSE
+    
+        FIND FIRST sit-nf-eletro EXCLUSIVE-LOCK 
+             WHERE sit-nf-eletro.cod-estabel       = nota-fiscal.cod-estabel 
+               AND sit-nf-eletro.cod-serie         = nota-fiscal.serie       
+               AND sit-nf-eletro.cod-nota-fisc     = nota-fiscal.nr-nota-fis NO-ERROR.
+    
+        IF NOT AVAILABLE sit-nf-eletro THEN DO:
+           CREATE sit-nf-eletro.
+           ASSIGN sit-nf-eletro.cod-estabel   = nota-fiscal.cod-estabel
+                  sit-nf-eletro.cod-serie     = nota-fiscal.serie
+                  sit-nf-eletro.cod-nota-fisc = nota-fiscal.nr-nota-fis
+                  sit-nf-eletro.dt-emis-nota  = nota-fiscal.dt-emis-nota.
+        END.
+    
+        ASSIGN OVERLAY(nota-fiscal.char-2,3,60)   = SUBSTR(tt-docto.char-1,112,60)     /* chave acesso  */
+               sit-nf-eletro.idi-sit-nf-eletro    = INT(SUBSTR(tt-docto.char-1,172,2)) /* situa‡Æo      */
+               OVERLAY(nota-fiscal.char-2,65,2)   = SUBSTR(tt-docto.char-1,174,1)      /* tipo emissÆo */
+               OVERLAY(nota-fiscal.char-1,112,60) = ""
+               OVERLAY(nota-fiscal.char-1,172,2)  = ""
+               OVERLAY(nota-fiscal.char-1,174,1)  = "".
+    &ENDIF
+end.
+
+/*Finalidade NF-e*/
+ASSIGN OVERLAY(nota-fiscal.char-2,211,2) = SUBSTRING(tt-docto.char-2,1,2).
+
+/*Modalidade de Frete*/
+ASSIGN &IF '{&BF_DIS_VERSAO_EMS}' >= '2.09'
+       &THEN nota-fiscal.cod-modalid-frete
+       &ELSE OVERLAY(nota-fiscal.char-2,201,8) &ENDIF = TRIM(SUBSTRING(tt-docto.char-1,190,8)).
+
+ASSIGN OVERLAY(nota-fiscal.char-1,190,8) = "":U. /* passado o conteudo do tt-docto.char-1 para a nota-fiscal.char-1, porem nao ‚ o correto.
+                                                   A utilizacao do tt-docto.char-1 ‚ apenas para passar da tt-docto para a nota-fiscal*/
+/*FIM Modalidade de Frete*/
+
+/*Tipo CT-e*/
+ASSIGN &IF '{&BF_DIS_VERSAO_EMS}' >= '2.09'
+       &THEN nota-fiscal.cod-tip-cte
+       &ELSE OVERLAY(nota-fiscal.char-2,209,2) &ENDIF = TRIM(SUBSTRING(tt-docto.char-1,198,2)).
+       
+/*Simples Nacional*/
+
+assign de-icms-sn = DECIMAL(SUBSTRING(tt-docto.char-1,200,10)). 
+
+&IF "{&bf_dis_versao_ems}" >= "2.09" &THEN
+    assign = nota-fiscal.val-aliq-simples-nac  = de-icms-sn.
+&else
+    assign overlay(nota-fiscal.char-1, 238,10) = string(de-icms-sn).
+&endif
+
+/*FIM Simples Nacional*/
+
+
+if  lexecutapelore1005c then 
+    assign nota-fiscal.nr-nota-ant = tt-docto.nr-nota . /***** necess rio para NF-e, quando existir upc no adapter encontre 
+                                                         *****  o documento original do recebimento,                          
+                                                         *****  caso tenha alterado o n£mero aqui no ft2010 ******/
+
+/****** PRO-RATA ******/
+&IF DEFINED(bf_dis_gradiente) &THEN
+
+    FOR FIRST tab-finan FIELDS(log-juros-prorate nr-tab-finan)
+        WHERE tab-finan.nr-tab-finan = nota-fiscal.nr-tab-finan NO-LOCK:
+
+        ASSIGN nota-fiscal.log-juros-prorate = tab-finan.log-juros-prorate.
+
+        IF  nota-fiscal.nr-ind-finan <> 0 THEN DO:
+            FOR FIRST tab-finan-indice FIELDS(tab-ind-fin)
+                WHERE tab-finan-indice.nr-tab-finan = tab-finan.nr-tab-finan
+                  AND tab-finan-indice.num-seq      = nota-fiscal.nr-ind-finan NO-LOCK:
+
+                IF  NOT tab-finan.log-juros-prorate THEN
+                    ASSIGN nota-fiscal.tab-ind-fin = tab-finan-indice.tab-ind-fin.
+                ELSE DO:
+                     FOR FIRST cond-pagto FIELDS(qtd-dias-prazo-medio)
+                         WHERE cond-pagto.cod-cond-pag = nota-fiscal.cod-cond-pag NO-LOCK:
+                         ASSIGN nota-fiscal.tab-ind-fin =  EXP ( ( 1 + ( tab-finan-indice.tab-ind-fin / 100 ) ),
+                                                                 ( cond-pagto.qtd-dias-prazo-medio / 30 )).
+                     END.
+                 END.
+            END.
+        END.
+        ELSE
+            ASSIGN nota-fiscal.tab-ind-fin = 1.
+    END.
+&ENDIF
+/**********************/
+
+/*  FT2010.I2  */

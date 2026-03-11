@@ -1,0 +1,55 @@
+/******************************************************************************
+**
+** FT2073.I1 - Definicoes das tabelas temporarias tt-nota-embal e tt-item-embal.
+**
+******************************************************************************/
+
+{cdp/cdcfgdis.i}
+&if defined (bf_dis_versao_ems) &then 
+    
+    &IF integer(entry(1,proversion,".")) >= 9 &THEN
+      def temp-table tt-nota-embal no-undo like nota-embal   
+                     rcode-information  
+                     field seq-tt-docto      as   int
+                     field seq-tt-nota-embal as   int
+                     index seq is unique
+                     seq-tt-nota-embal .
+    &ELSE    
+       def temp-table tt-nota-embal no-undo like nota-embal   
+                      field seq-tt-docto      as   int
+                      field seq-tt-nota-embal as   int
+                      index seq is unique
+                      seq-tt-nota-embal .
+    &ENDIF
+
+ &else 
+  def temp-table tt-nota-embal no-undo like nota-embal   
+                 field seq-tt-docto      as   int
+                 field seq-tt-nota-embal as   int
+                 index seq is unique
+                 seq-tt-nota-embal .        
+&endif          
+
+def temp-table tt-item-embal no-undo
+    field seq-tt-nota-embal as   int
+    field seq-tt-item-embal as   int
+    field volume            like res-emb.qt-volumes
+    field nr-pedcli         like ped-item.nr-pedcli
+    field nr-sequencia      like it-nota-fisc.nr-seq-fat
+    field it-codigo         like it-nota-fisc.it-codigo  
+    field qt-embalada       like it-nota-fisc.qt-faturada[1]
+    index codigo is primary
+          volume
+          seq-tt-nota-embal
+          nr-pedcli
+          nr-sequencia
+          
+    index seq is unique
+          seq-tt-item-embal
+
+    index it-ped-seq
+          it-codigo
+          nr-pedcli
+          nr-sequencia.
+          
+/*  FT2073.I1  */

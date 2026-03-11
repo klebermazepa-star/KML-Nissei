@@ -1,0 +1,23 @@
+/*****************************************************************************
+* Programa: cm9999.I2                                                        *
+* Data....: 23.08.2005                                                       *
+* Autor...: CINGO - Desenvolvimento de Sistemas Sob Encomenda                *
+* Objetivo: Posicionar o registro da tabela cm-param                         *
+*****************************************************************************/
+FIND FIRST cm-param
+     WHERE cm-param.cod-estabel = c-cm-cod-estabel NO-LOCK NO-ERROR.
+IF  AVAIL cm-param THEN DO:
+    ASSIGN c-cm-cod-estabel                  = cm-param.cod-estabel               
+           i-cm-num-dia-atraso               = cm-param.num-dia-atraso            
+           i-cm-num-dia-aviso                = cm-param.num-dia-aviso             
+           d-cm-val-atraso-max               = cm-param.val-atraso-max            
+           d-cm-val-aviso-db                 = cm-param.val-aviso-db              
+           i-cm-num-horiz-fix                = cm-param.num-horiz-fix            
+           l-cm-reabre-aval                  = cm-param.log-reabre-aval               
+           l-cm-log-consid-cr-cr             = cm-param.log-consid-credito-credito
+           l-cm-log-consid-cotas-credito     = cm-param.log-consid-cotas-credito  
+           l-cm-log-consid-desco-credito     = cm-param.log-consid-desco-credito  
+           l-cm-log-consid-precos-credito    = cm-param.log-consid-precos-credito.
+END.
+
+

@@ -1,0 +1,40 @@
+/*************************************************************************
+**
+**          RE1005.I01 - Definiá∆o Vari†veis para Impress∆o
+**
+**************************************************************************/
+
+def var c-cabec1     as char format "X(132)".
+def var c-cabec2     as char format "X(132)".          
+def var c-textolabel as char no-undo.
+def var l-erro-nota  as log initial no no-undo.
+
+assign c-cabec1 = "".
+        
+{utp/ut-liter.i SÇrie *}
+assign c-textolabel = trim(return-value) + "                              ".
+assign c-cabec1 = c-cabec1 + substring(c-textolabel,1,5,"character") + " ".
+
+{utp/ut-liter.i Documento *}
+assign c-textolabel = trim(return-value) + "                              ".
+assign c-cabec1 = c-cabec1 + substring(c-textolabel,1,16,"character") + " ".
+
+{utp/ut-liter.i Emitente *}
+assign c-textolabel = trim(return-value) + "                              ".
+assign c-cabec1 = c-cabec1 + substring(c-textolabel,1,8,"character") + "   ".
+
+{utp/ut-liter.i Nat_Oper *}
+assign c-textolabel = trim(return-value) + "                              ".
+assign c-cabec1 = c-cabec1 + substring(c-textolabel,1,8,"character") + "  ".
+
+{utp/ut-liter.i Erro * R}        
+assign c-cabec1 = c-cabec1 + trim(return-value) + "    ".
+
+{utp/ut-liter.i Mensagem * R}        
+assign c-cabec1 = c-cabec1 + trim(return-value).
+assign c-cabec2 = "----- ---------------- ---------  --------  ------  --------------------------------------------------------------------------------".
+    
+
+&global-define bf_devolucao_exportacao yes
+/* fim do include */
+

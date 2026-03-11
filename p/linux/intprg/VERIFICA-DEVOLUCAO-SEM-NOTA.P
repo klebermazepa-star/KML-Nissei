@@ -1,0 +1,45 @@
+output to T:\DEVOLUCAO-SEM-NOTA.TXT.
+FOR EACH docum-est NO-LOCK WHERE 
+    ESP-DOCTO = 20 AND OF-ATUAL = NO AND CE-ATUAL = NO /*cod-chave-aces-nf-eletro = "" AND NRO-DOCTO = "0001281":*/:
+    FOR FIRST NATUR-OPER NO-LOCK WHERE NATUR-OPER.NAT-OPERACAO = DOCUM-EST.NAT-OPERACAO: END.
+    IF NATUR-OPER.DENOMINACAO MATCHES "*SERVI*" THEN NEXT.
+
+    FOR FIRST NOTA-FISCAL NO-LOCK WHERE
+        nota-fiscal.serie        = docum-est.serie-docto    and
+        nota-fiscal.nr-nota-fis  = docum-est.nro-docto      and
+        nota-fiscal.cod-emitente = docum-est.cod-emitente   and
+        nota-fiscal.nat-operacao = docum-est.nat-operacao:  END.
+
+    IF NOT AVAIL NOTA-FISCAL THEN DO:
+        FOR FIRST ITEM-DOC-EST OF DOCUM-EST NO-LOCK: END.
+        DISPLAY ITEM-DOC-EST.NR-PEDCLI ITEM-DOC-EST.NRO-COMP.
+    
+        if ITEM-DOC-EST.NRO-COMP <> "" then do:
+            FOR FIRST CST-FAT-DEVOL WHERE 
+                CST-FAT-DEVOL.NRO-COMP = ITEM-DOC-EST.NRO-COMP AND
+                CST-FAT-DEVOL.COD-ESTABEL = DOCUM-EST.COD-ESTABEL:
+                /*DISPLAY CST-FAT-DEVOL WITH WIDTH 300.*/
+            END.
+            FOR FIRST INT-DS-DEVOLUCAO-CUPOM WHERE NUMERO_CUP = TRIM(STRING(INT(ITEM-DOC-EST.NRO-COMP),">>>>>9")):
+            END.
+        end.
+    
+        display DOCUM-EST.LOG-1
+                DOCUM-EST.IDI-SIT-NF-ELETRO
+                docum-est.cod-estabel
+                docum-est.serie-docto
+                docum-est.nro-docto
+                docum-est.cod-emitente
+                docum-est.nat-operacao
+                /*NATUR-OPER.DENOMINACAO*/
+                docum-est.dt-trans
+                INT-DS-DEVOLUCAO-CUPOM.SITUACAO WHEN AVAIL INT-DS-DEVOLUCAO-CUPOM
+                CST-FAT-DEVOL.COD-ESP WHEN AVAIL CST-FAT-DEVOL
+            with width 300 stream-io down.    
+    END.
+
+
+
+END.
+
+output close.

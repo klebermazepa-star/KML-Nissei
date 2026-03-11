@@ -1,0 +1,19 @@
+/****************************************************************
+** 
+**   cd7301.i1: Variaveis para API de Atualizacao das Tabelas.
+**
+******************************************************************/
+
+{cdp/cdapi300.i1}
+
+define input  parameter table for tt-versao-integr.
+define output parameter table for tt-erros-geral.
+
+define variable c-ident-api    as char    format "x(08)" no-undo.
+define variable i-versao-integ as integer format "999"   no-undo.
+define variable i-sequencia    as integer format "999"   no-undo.
+    
+
+
+/*** Fim do Include ***/
+

@@ -1,0 +1,45 @@
+/*******************************************************************************
+**
+** Programa : ft0708a.i6 - Programa chamado pelo ft0708a.i1
+**
+** Objetivo :
+**
+*******************************************************************************/
+
+if l-fasb
+or l-cmi
+then do:
+
+    if  {2} = yes then do:
+        assign r-sumar-ft    = rowid(sumar-ft)
+              r-nota         = rowid(nota-fiscal)
+              de-vl-fasb     = 0
+              de-vl-cmi-acum = 0
+              de-vl-anbid    = 0
+              de-vl-alfa1    = {1}.
+
+        run "ftp/ft0708c.p" (input sumar-ft.tp-imposto).
+
+
+
+    end.
+
+    /*********************** MOEDA FASB *************************************/
+    assign sumar-ft.valor-fasb       =
+           sumar-ft.valor-fasb       + if   de-vl-fasb <> ?
+                                    then round(de-vl-fasb,2)
+                                    else 0
+           /********************** MOEDA CMI *******************************/
+           sumar-ft.valor-cmi       =
+           sumar-ft.valor-cmi       + if   de-vl-cmi-acum <> ?
+                                   then round(de-vl-cmi-acum,2)
+                                   else 0
+           sumar-ft.valor-presente  =
+           sumar-ft.valor-presente  + if   de-vl-anbid <> ?
+                                   then round(de-vl-anbid,2)
+                                   else 0 .
+
+
+end.
+
+/* ft0708a.i6 */

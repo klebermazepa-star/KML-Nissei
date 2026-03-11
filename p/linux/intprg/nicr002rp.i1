@@ -1,0 +1,243 @@
+
+PROCEDURE pi-gera-titulo-debito:
+    DEFINE VARIABLE c_cod_refer   AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE d-vl-tot-tit  AS DECIMAL     NO-UNDO.
+    DEFINE VARIABLE i-cod-parcela AS INTEGER     NO-UNDO.
+    DEFINE VARIABLE c-cod-titulo  AS CHARACTER   NO-UNDO.
+
+    /*Transa‡Æo, pois, implanta tudo ou nada*/
+    bloco_trans:
+    DO TRANSACTION ON ERROR UNDO:
+
+        FOR EACH tt-fatura-loja NO-LOCK
+        BREAK BY tt-fatura-loja.cod-estab   
+              BY tt-fatura-loja.cod-emitente
+              BY tt-fatura-loja.dat-emissao 
+              BY tt-fatura-loja.dat-vencto  
+              BY tt-fatura-loja.cod-portador
+              BY tt-fatura-loja.cod-espec   :
+        
+            IF FIRST-OF(tt-fatura-loja.cod-espec)    THEN DO:
+
+                EMPTY TEMP-TABLE tt_integr_acr_item_lote_impl_8 NO-ERROR.
+                EMPTY TEMP-TABLE tt_integr_acr_repres_comis_2   NO-ERROR.
+                EMPTY TEMP-TABLE tt_integr_acr_aprop_ctbl_pend  NO-ERROR.
+                EMPTY TEMP-TABLE tt_log_erros_atualiz           NO-ERROR.
+                EMPTY TEMP-TABLE tt_integr_acr_lote_impl        NO-ERROR.
+
+                EMPTY TEMP-TABLE tt-fatura-loja-aux             NO-ERROR.
+    
+                /*Retorna Matriz Tradu‡Æo Organizacional*/
+                RUN prgint/ufn/ufn908za.py (INPUT "1":u,
+                                            INPUT "15":U,
+                                            OUTPUT v_cod_matriz_trad_org_ext).
+                /*Tradu‡Æo Estabelecimento*/
+                RUN pi-traduz-estab(INPUT v_cod_matriz_trad_org_ext,
+                                    INPUT STRING(tt-fatura-loja.cod-estab), /*Estabelecimento EMS 2*/
+                                    OUTPUT c-estab-ems-5,
+                                    OUTPUT c-erro).
+                /*Tradu‡Æo Empresa*/
+                RUN pi-traduz-empresa(INPUT v_cod_matriz_trad_org_ext,
+                                      INPUT v_cdn_empres_usuar, /*Empresa EMS 2*/
+                                      OUTPUT c-empresa-ems-5,
+                                      OUTPUT c-erro).
+    
+                ASSIGN c_cod_refer = "".
+                RUN pi_retorna_sugestao_referencia (INPUT  "CD",
+                                                    INPUT  TODAY,
+                                                    OUTPUT c_cod_refer,
+                                                    INPUT  "tit_acr",
+                                                    INPUT  STRING(tt-fatura-loja.cod-estab)).
+
+                /* Cria‡Æo do lote cont bil */
+                CREATE tt_integr_acr_lote_impl. 
+                ASSIGN tt_integr_acr_lote_impl.tta_cod_empresa        = c-empresa-ems-5 /*Obrigat½rio*/
+                       tt_integr_acr_lote_impl.ttv_cod_empresa_ext    = string(v_cdn_empres_usuar) /*Obrigat½rio*/
+                       tt_integr_acr_lote_impl.tta_cod_estab          = c-estab-ems-5 /*Obrigat½rio*/
+                       tt_integr_acr_lote_impl.tta_cod_estab_ext      = STRING(tt-fatura-loja.cod-estab) /*Obrigat½rio*/ 
+                       tt_integr_acr_lote_impl.tta_dat_transacao      = tt-fatura-loja.dat-emissao
+                       tt_integr_acr_lote_impl.tta_ind_orig_tit_acr   = "2"
+                       tt_integr_acr_lote_impl.tta_ind_tip_cobr_acr   = "Normal"
+                       tt_integr_acr_lote_impl.tta_log_liquidac_autom = NO
+                       tt_integr_acr_lote_impl.ttv_log_lote_impl_ok   = YES
+                       tt_integr_acr_lote_impl.tta_cod_refer          = c_cod_refer.
+
+                ASSIGN d-vl-tot-tit = 0.
+        
+            END.
+        
+            ASSIGN d-vl-tot-tit = d-vl-tot-tit + tt-fatura-loja.vl-cupom.
+
+            /* INICIO - Atualiza Campo fat-duplic */
+            IF tt-fatura-loja.r-fatduplic <> ? THEN DO:
+                FIND FIRST fat-duplic EXCLUSIVE-LOCK
+                     WHERE ROWID(fat-duplic) = tt-fatura-loja.r-fatduplic NO-ERROR.
+                IF AVAIL fat-duplic THEN DO:
+                    ASSIGN fat-duplic.flag-atualiz = YES.
+                END.
+                RELEASE fat-duplic.
+            END.
+
+            CREATE tt-fatura-loja-aux.
+            BUFFER-COPY tt-fatura-loja TO tt-fatura-loja-aux .
+            /* FIM - Atualiza Campo fat-duplic    */
+        
+            IF LAST-OF(tt-fatura-loja.cod-espec)  THEN DO:
+
+                ASSIGN c-cod-titulo = tt-fatura-loja.prefixo + REPLACE(STRING(tt-fatura-loja.dat-emissao,"99/99/99"),"/","").
+
+                FIND LAST tit_acr
+                    WHERE tit_acr.cod_estab       = tt-fatura-loja.cod-estab
+                      AND tit_acr.cod_espec_docto = "CD"
+                      AND tit_acr.cod_ser_docto   = "015"
+                      AND tit_acr.cod_tit_acr     = c-cod-titulo  NO-LOCK NO-ERROR.
+                IF AVAIL tit_acr THEN DO:
+                    ASSIGN i-cod-parcela = INT(tit_acr.cod_parcela) + 1.
+                END.
+                ELSE DO:
+                    ASSIGN i-cod-parcela = 1.
+                END.
+                
+                CREATE tt_integr_acr_item_lote_impl_8.
+                ASSIGN tt_integr_acr_item_lote_impl_8.ttv_rec_lote_impl_tit_acr      = RECID(tt_integr_acr_lote_impl)
+                       tt_integr_acr_item_lote_impl_8.ttv_rec_item_lote_impl_tit_acr = RECID(tt_integr_acr_item_lote_impl_8)
+                       tt_integr_acr_item_lote_impl_8.tta_cod_refer                  = tt_integr_acr_lote_impl.tta_cod_refer
+                       tt_integr_acr_item_lote_impl_8.tta_cdn_cliente                = tt-fatura-loja.cod-emitente /*Obrigat½rio*/
+                       tt_integr_acr_item_lote_impl_8.tta_num_seq_refer              = 1
+                       tt_integr_acr_item_lote_impl_8.tta_cod_espec_docto            = "CD" /*Obrigat½rio*/ /*Duplicata*/  /*"AN"*/
+                       tt_integr_acr_item_lote_impl_8.tta_ind_tip_espec_docto        = "2" /*Obrigat½rio*/ /*"3"*/  /*Antecipa»’o*/
+                       tt_integr_acr_item_lote_impl_8.tta_cod_ser_docto              = "015" 
+                       tt_integr_acr_item_lote_impl_8.tta_cod_portad_ext             = string(tt-fatura-loja.cod-portador) /*Obrigat½rio*/ 
+                       tt_integr_acr_item_lote_impl_8.tta_cod_modalid_ext            = "6" /*string(nota-fiscal.modalidade)   /*Obrigat½rio*/ */
+                       tt_integr_acr_item_lote_impl_8.tta_cod_tit_acr                = c-cod-titulo   /*Obrigat½rio*/ 
+                       tt_integr_acr_item_lote_impl_8.tta_cod_parcela                = STRING(i-cod-parcela,"99") /*Obrigat½rio*/
+                       tt_integr_acr_item_lote_impl_8.tta_cod_indic_econ             = ""
+                       tt_integr_acr_item_lote_impl_8.tta_cod_cart_bcia              = "CAR" /*"2"*/ /*Verificar este campo*/
+                       tt_integr_acr_item_lote_impl_8.tta_cod_finalid_econ_ext       = "0"
+                       tt_integr_acr_item_lote_impl_8.tta_ind_sit_tit_acr            = "Normal" /*Obrigat½rio*/
+                       tt_integr_acr_item_lote_impl_8.tta_cdn_repres                 = 0        
+                       tt_integr_acr_item_lote_impl_8.tta_dat_vencto_tit_acr         = tt-fatura-loja.dat-vencto /*Obrigat½rio*/ /*tt-fat-duplic.dt-venciment*/
+                       tt_integr_acr_item_lote_impl_8.tta_dat_prev_liquidac          = tt-fatura-loja.dat-vencto /*Obrigat½rio*/ /*tt-fat-duplic.dt-venciment*/
+                       tt_integr_acr_item_lote_impl_8.tta_dat_emis_docto             = tt-fatura-loja.dat-emissao /*tt-nota-fiscal.dt-emis-nota*/
+                       tt_integr_acr_item_lote_impl_8.tta_des_text_histor            = "Integra‡Æo Faturamento EMS2 com Contas Receber - EMS5" 
+                       tt_integr_acr_item_lote_impl_8.tta_cod_cond_pagto             = ""
+                       tt_integr_acr_item_lote_impl_8.tta_val_cotac_indic_econ       = 1
+                       tt_integr_acr_item_lote_impl_8.tta_ind_sit_bcia_tit_acr       = "1"
+                       tt_integr_acr_item_lote_impl_8.tta_ind_ender_cobr             = "1"
+                       tt_integr_acr_item_lote_impl_8.tta_log_liquidac_autom         = NO
+                       tt_integr_acr_item_lote_impl_8.ttv_cod_nota_fisc_faturam      = ""
+                       tt_integr_acr_item_lote_impl_8.tta_val_tit_acr                = d-vl-tot-tit /*Obrigat½rio*/
+                       tt_integr_acr_item_lote_impl_8.tta_val_liq_tit_acr            = d-vl-tot-tit /*Obrigat½rio*/
+                       tt_integr_acr_item_lote_impl_8.tta_des_obs_cobr               = "T¡tulo do agrupamento das cupons ficais de dinheiro do dia " + STRING(tt-fatura-loja.dat-emissao,"99/99/9999").
+        
+                CREATE tt_integr_acr_aprop_ctbl_pend.
+                ASSIGN tt_integr_acr_aprop_ctbl_pend.ttv_rec_item_lote_impl_tit_acr  = tt_integr_acr_item_lote_impl_8.ttv_rec_item_lote_impl_tit_acr
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_plano_cta_ctbl          = "PADRAO"     /*Obrigat½rio*/  /*sch-param-vpi.cod-plano-cta-ctbl*/    /*'schulz'*/
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_cta_ctbl                = tt-fatura-loja.conta /*Obrigat½rio*/
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_cta_ctbl_ext            = "" /*sch-param-vpi.cod-cta-ctbl*/          /*"1121995"*/
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_sub_cta_ctbl_ext        = "" /*sch-param-vpi.cod-ccusto*/ 
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_unid_negoc              = "000" /*Obrigat½rio*/ /*c-unid-negoc*/
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_unid_negoc_ext          = "" /*c-unid-negoc*/
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_plano_ccusto            = "" /* "PADRAO" Obrigat½rio*/ /*sch-param-vpi.cod-plano-ccusto*/      /*''*/ 
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_ccusto                  = "" /*"00697" Obrigat½rio*/ /*sch-param-vpi.cod-ccusto*/   
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_ccusto_ext              = ""                                  /*''*/
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_tip_fluxo_financ        = "107" /*Obrigat½rio*/
+                       tt_integr_acr_aprop_ctbl_pend.tta_cod_fluxo_financ_ext        = ""
+                       tt_integr_acr_aprop_ctbl_pend.tta_log_impto_val_agreg         = NO
+                       tt_integr_acr_aprop_ctbl_pend.tta_val_aprop_ctbl              = tt_integr_acr_item_lote_impl_8.tta_val_tit_acr. /*Obrigat½rio*/
+
+                IF tt-fatura-loja.prefixo = "REDE" THEN
+                     ASSIGN tt_integr_acr_aprop_ctbl_pend.tta_cod_tip_fluxo_financ = "106".
+                ELSE IF tt-fatura-loja.prefixo = "CIEL" THEN
+                     ASSIGN tt_integr_acr_aprop_ctbl_pend.tta_cod_tip_fluxo_financ = "105".
+    
+                ASSIGN d-vl-tot-tit = 0.
+            
+                /*Inicio atualiza‡Æo EMS 5*/
+                RUN prgfin/acr/acr900zi.py persistent set v_hdl_api_integr_acr.
+                RUN pi_main_code_integr_acr_new_9 IN v_hdl_api_integr_acr (INPUT 11,
+                                                                           INPUT v_cod_matriz_trad_org_ext, /*Matriz Trad Org Ext*/
+                                                                           input YES,                       /*Log Atualiz Refer*/
+                                                                           input NO,                       /*Assume Data Emiss*/
+                                                                           INPUT TABLE tt_integr_acr_repres_comis_2,
+                                                                           INPUT-OUTPUT TABLE tt_integr_acr_item_lote_impl_8,
+                                                                           INPUT TABLE tt_integr_acr_aprop_relacto_2).
+
+                DELETE PROCEDURE v_hdl_api_integr_acr.
+    
+                /*Tratamento de erros*/
+                IF CAN-FIND(FIRST tt_log_erros_atualiz) THEN DO:
+                    FOR EACH tt_log_erros_atualiz:
+                        RUN pi-cria-tt-erro(INPUT tt_log_erros_atualiz.tta_num_seq_refer,
+                                            INPUT tt_log_erros_atualiz.ttv_num_mensagem, 
+                                            INPUT tt_log_erros_atualiz.ttv_des_msg_erro,
+                                            INPUT tt_log_erros_atualiz.ttv_des_msg_ajuda).
+                    END.
+    
+                    UNDO bloco_trans, LEAVE bloco_trans.
+                END.
+                ELSE DO:
+                    ASSIGN iNumSeq = 0.
+
+                    FOR EACH tt_integr_acr_item_lote_impl_8 NO-LOCK:
+
+                        CREATE tt-tit-criados.
+                        ASSIGN tt-tit-criados.cod_estab          = tt-fatura-loja.cod-estab
+                               tt-tit-criados.cod_espec_docto    = tt_integr_acr_item_lote_impl_8.tta_cod_espec_docto
+                               tt-tit-criados.cod_ser_docto      = tt_integr_acr_item_lote_impl_8.tta_cod_ser_docto
+                               tt-tit-criados.cod_tit_acr        = tt_integr_acr_item_lote_impl_8.tta_cod_tit_acr
+                               tt-tit-criados.cod_parcela        = tt_integr_acr_item_lote_impl_8.tta_cod_parcela              
+                               tt-tit-criados.cdn_cliente        = tt_integr_acr_item_lote_impl_8.tta_cdn_cliente
+                               tt-tit-criados.cod_portador       = tt_integr_acr_item_lote_impl_8.tta_cod_portad_ext
+                               tt-tit-criados.val_origin_tit_acr = tt_integr_acr_item_lote_impl_8.tta_val_tit_acr
+                               tt-tit-criados.dat_transacao      = tt_integr_acr_item_lote_impl_8.tta_dat_emis_docto    
+                               tt-tit-criados.dat_emis_docto     = tt_integr_acr_item_lote_impl_8.tta_dat_emis_docto    
+                               tt-tit-criados.dat_vencto_tit_acr = tt_integr_acr_item_lote_impl_8.tta_dat_vencto_tit_acr
+                               tt-tit-criados.situacao           = "T¡tulo Gerado"
+                            .
+
+                        FIND FIRST tit_acr NO-LOCK
+                             WHERE tit_acr.cod_estab       = tt-fatura-loja.cod-estab                          
+                               AND tit_acr.cod_espec_docto = tt_integr_acr_item_lote_impl_8.tta_cod_espec_docto
+                               AND tit_acr.cod_ser_docto   = tt_integr_acr_item_lote_impl_8.tta_cod_ser_docto  
+                               AND tit_acr.cod_tit_acr     = tt_integr_acr_item_lote_impl_8.tta_cod_tit_acr    
+                               AND tit_acr.cod_parcela     = tt_integr_acr_item_lote_impl_8.tta_cod_parcela     NO-ERROR.
+                        IF AVAIL tit_acr THEN DO:
+                            FOR EACH tt-fatura-loja-aux: 
+                                ASSIGN iNumSeq = iNumSeq + 1.
+                                FOR FIRST fat-duplic
+                                    WHERE ROWID(fat-duplic) = tt-fatura-loja-aux.r-fatduplic NO-LOCK,
+                                    FIRST nota-fiscal NO-LOCK
+                                    WHERE nota-fiscal.cod-estabel  = fat-duplic.cod-estabel
+                                      AND nota-fiscal.serie        = fat-duplic.serie      
+                                      AND nota-fiscal.nr-fatura    = fat-duplic.nr-fatura,
+                                    FIRST cst-nota-fiscal OF nota-fiscal NO-LOCK:
+    
+                                    CREATE tit_acr_cartao.
+                                    ASSIGN tit_acr_cartao.num_id_tit_acr         = tit_acr.num_id_tit_acr
+                                           tit_acr_cartao.num_seq                = iNumSeq
+                                           tit_acr_cartao.cod_admdra             = cst-nota-fiscal.adm-cartao
+                                           tit_acr_cartao.cod_autoriz_cartao_cr  = IF cst-nota-fiscal.autorizacao = "" OR cst-nota-fiscal.autorizacao = ? THEN "0" ELSE cst-nota-fiscal.autorizacao 
+                                           tit_acr_cartao.cod_comprov_vda        = IF cst-nota-fiscal.nsu-adm = "" OR cst-nota-fiscal.nsu-adm = ? THEN "0" ELSE cst-nota-fiscal.nsu-adm
+                                           tit_acr_cartao.cod_empresa            = tit_acr.cod_empresa
+                                           tit_acr_cartao.cod_estab              = tit_acr.cod_estab
+                                           tit_acr_cartao.cod_parc               = tit_acr.cod_parcela 
+                                           tit_acr_cartao.dat_atualiz            = TODAY
+                                           tit_acr_cartao.dat_cred_cartao_cr     = ?
+                                           tit_acr_cartao.dat_vda_cartao_cr      = tit_acr.dat_emis_docto 
+                                           tit_acr_cartao.hra_atualiz            = REPLACE(STRING(TIME, "HH:MM:SS"), ":","")
+                                           tit_acr_cartao.val_comprov_vda        = fat-duplic.vl-parcela
+                                           tit_acr_cartao.val_des_admdra         = cst-nota-fiscal.taxa-admin
+                                        .
+                                END.
+                            END.
+                            ASSIGN iNumSeq = 0.
+                        END.    
+                    END.
+                END. /* ELSE Erros Importa‡Æo*/
+        
+            END.
+        END.
+    END. /*Bloco Transa‡Æo*/
+
+END PROCEDURE.

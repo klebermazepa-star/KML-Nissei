@@ -1,0 +1,35 @@
+/********************************************************************************
+*
+*    BOIN176.I5 - Definicao TEMP-TABLE {1}
+*                 Utilizado na Geracao de Itens a Partir do saldo-terc
+*
+*********************************************************************************/
+
+def temp-table {1} no-undo
+    field rw-saldo-terc   as rowid
+    field quantidade      like saldo-terc.quantidade
+    field preco-total     like componente.preco-total extent 0
+    field desconto        like componente.desconto    extent 0    
+    field cod-depos       like saldo-terc.cod-depos
+    field nr-ord-prod     like saldo-terc.nr-ord-prod
+    FIELD nat-of          LIKE item-doc-est.nat-of.
+
+def temp-table tt-item-saldo-terc-aux
+    field rw-saldo-terc   as rowid
+    field quantidade      like saldo-terc.quantidade
+    field preco-total     like componente.preco-total extent 0
+    field desconto        like componente.desconto    extent 0    
+    field cod-depos       like saldo-terc.cod-depos
+    field nr-ord-prod     like saldo-terc.nr-ord-prod
+    FIELD nat-of          LIKE item-doc-est.nat-of
+    field item-pai        like reservas.item-pai   
+    field cod-roteiro     like reservas.cod-roteiro
+    field op-codigo       like reservas.op-codigo
+    field sequencia       as int
+    field char-1          as char
+    field int-i           as int
+    field log-1           as log
+    field date-1          as date.
+
+
+/* fim da include */    

@@ -1,0 +1,45 @@
+/********************************************************************************
+** Copyright DATASUL S.A. (1997)
+** Todos os Direitos Reservados.
+**
+** Este fonte e de propriedade exclusiva da DATASUL, sua reproducao
+** parcial ou total por qualquer meio, so podera ser feita mediante
+** autorizacao expressa.
+**
+**  Programa.: CDAPI825.i1
+**  Data.....: Jan/10
+**  Autor....: Datasul S.A. - EMS 2.0
+**  Objetivo.: Avaliacao de Credito x Graos - Verifica se o m¢dulo de grÆos est 
+**             implantado.
+*******************************************************************************/
+
+/*** Verificar se o modulo de grãos está implantado no EMS2 (l-modul-graos) e se a rotina de avaliação de crédito do EMS é utilizada pelo cliente e
+     não a rotina de avaliação do módulo de grãos (l-funcao-ativa) ***/
+
+DEF VAR h-ggapi106      AS HANDLE  NO-UNDO.
+DEF VAR l-modul-graos   AS LOG     NO-UNDO.
+DEF VAR l-funcao-ativa  AS LOG     NO-UNDO.
+DEF VAR l-graos-ativo   AS LOG     NO-UNDO.
+
+ASSIGN l-modul-graos  = no
+       l-funcao-ativa = no
+       l-graos-ativo  = no.
+
+/*TEQAXB*/
+FIND FIRST param-global NO-LOCK NO-ERROR. 
+IF  AVAIL param-global
+AND param-global.log-modul-gg THEN DO: /*TEQAXB*/
+    IF NOT VALID-HANDLE(h-ggapi106) THEN DO:
+       RUN ggp/ggapi106.p PERSISTENT SET h-ggapi106.
+       RUN piVerificaModulFuncao IN h-ggapi106 (OUTPUT l-modul-graos,
+                                                OUTPUT l-funcao-ativa).
+    END.
+    
+    ASSIGN l-graos-ativo = IF l-modul-graos AND l-funcao-ativa THEN yes ELSE no.
+    
+    IF VALID-HANDLE (h-ggapi106) THEN
+       DELETE PROCEDURE h-ggapi106.
+
+/*TEQAXB*/
+END.
+/*TEQAXB*/

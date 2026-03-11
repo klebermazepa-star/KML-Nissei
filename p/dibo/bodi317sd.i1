@@ -1,0 +1,49 @@
+/***********************************************************************************
+**
+** BODI317SD.I1 - Defini‡Æo da tabela tempor ria para itens de devolu‡Æo.
+**
+************************************************************************************/
+
+def temp-table tt-itens-devol no-undo
+    field serie-docto       like item-doc-est.serie-docto 
+    field cod-emitente      like item-doc-est.cod-emitente
+    field nro-docto         like item-doc-est.nro-docto   
+    field nat-operacao      like item-doc-est.nat-operacao
+    field sequencia         like item-doc-est.sequencia
+    field it-codigo         like item-doc-est.it-codigo
+    field cod-refer         like item-doc-est.cod-refer
+    field desc-nar          like item.desc-item
+    field quantidade        like item-doc-est.quantidade
+    field preco-total       like item-doc-est.preco-total[1]
+    field qt-ja-devolvida   like item-doc-est.quantidade
+    field qt-a-devolver     like item-doc-est.quantidade
+    field qt-a-devolver-inf like item-doc-est.quantidade
+    field selecionado       as log
+    index codigo 
+          serie-docto
+          nro-docto    
+          cod-emitente 
+          nat-operacao 
+          sequencia
+    index selecionado
+          selecionado.
+
+def temp-table tt-it-terc-nf no-undo
+    field rw-saldo-terc     as rowid
+    field sequencia         like saldo-terc.sequencia
+    field it-codigo         like saldo-terc.it-codigo
+    field cod-refer         like saldo-terc.cod-refer
+    field desc-nar          like item.desc-item
+    field quantidade        like saldo-terc.quantidade
+    field qt-alocada        like saldo-terc.quantidade
+    field qt-disponivel     like saldo-terc.quantidade
+    field qt-disponivel-inf like saldo-terc.quantidade
+    field preco-total       like componente.preco-total[1]
+    field preco-total-inf   like componente.preco-total[1]
+    field selecionado       as log
+    index codigo 
+          sequencia
+    index selecionado
+          selecionado.
+
+/*  BODI317SD.I1  */

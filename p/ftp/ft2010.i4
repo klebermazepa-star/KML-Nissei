@@ -1,0 +1,22 @@
+/******************************************************************************
+**
+** ftp/ft2010.i4 - Copiar campos: tt-it-docto.narrativa para nar-it-nota 
+**
+******************************************************************************/
+
+if  tt-it-docto.narrativa <> "" then do:
+
+    create nar-it-nota.
+    assign nar-it-nota.cod-estabel   = nota-fiscal.cod-estabel
+           nar-it-nota.serie         = nota-fiscal.serie
+           nar-it-nota.nr-nota-fis   = nota-fiscal.nr-nota-fis
+           nar-it-nota.nr-sequencia  = it-nota-fisc.nr-seq-fat
+           nar-it-nota.it-codigo     = it-nota-fisc.it-codigo
+           nar-it-nota.narrativa     = tt-it-docto.narrativa.
+    release nar-it-nota.
+   
+end.           
+           
+/* ftp/ft2010.i4 */
+
+

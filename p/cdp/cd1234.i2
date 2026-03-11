@@ -1,0 +1,40 @@
+/******************************************************************************
+**
+**  Include.: cd1234.i2 
+**  Objetivo: Funá∆o de convers∆o de moedas em Portugal 
+**  13.03.2000
+******************************************************************************/
+
+&if defined (BF_FIN_203) &then 
+    def new global shared temp-table tt-mo-portugal
+        field cod-moeda         as integer
+        field ind-fator-md      as logical.
+&endif
+
+function FN_CONV_MOEDAS returns decimal (p-valor      as decimal,
+                                         p-cotacao    as decimal,
+                                         p-mo-origem  as integer,
+                                         p-mo-destino as integer).
+                                         
+
+    &if defined (BF_FIN_CONV_MOEDAS) &then
+            {cdp/cd1234.i3}
+         
+    &elseif defined (BF_FIN_203) &then
+        if can-find (first funcao where funcao.cd-funcao = "spp-conv_moedas" 
+                                  and   funcao.ativo     = yes) then do:
+            {cdp/cd1234.i3}
+        end.
+        else do:
+            if p-mo-destino = 0 then 
+                 return (p-valor * p-cotacao).
+             else
+                 return (p-valor / p-cotacao).
+        end.                 
+    &else                           
+        if p-mo-destino = 0 then 
+             return (p-valor * p-cotacao).
+        else
+             return (p-valor / p-cotacao).
+    &endif
+end function.

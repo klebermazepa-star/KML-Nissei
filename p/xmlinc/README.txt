@@ -1,0 +1,1 @@
+Copiado do P:\Ems5 para Y:\EMSCUSTOM

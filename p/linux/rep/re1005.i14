@@ -1,0 +1,146 @@
+/************************************************************
+**
+**   Procedures de Integraá∆o com o EMS 5.00
+**
+************************************************************/
+Procedure Pi-conecta-ems50:
+    def input param i-conect as integer no-undo.
+    
+    if not valid-handle (h-btb009za) or
+       h-btb009za:TYPE <> "PROCEDURE":U or
+       h-btb009za:FILE-NAME <> "btb/btb009za.p":U  then
+       RUN btb/btb009za.p PERSISTENT SET h-btb009za.
+    
+    if i-conect = 1 then do:
+       if not connected("emsbas") or 
+          not connected("emsuni") or 
+          not connected("emsfin") then do:          
+         
+            if  valid-handle (h-btb009za) AND
+               h-btb009za:TYPE = "PROCEDURE":U AND
+               h-btb009za:FILE-NAME = "btb/btb009za.p":U then do:
+               run pi-conecta-bco IN h-btb009za (Input 1,                         /*contem a vers“o de integraÓ“o da Api*/
+                                                 Input i-conect,                  /*contem a opÓ“o desejada (1-Conex“o, 2-Desconex“o)*/
+                                                 Input param-global.empresa-prin, /*contem o cÆdigo da empresa*/
+                                                 Input "all",                     /*contem o cÆdigo do banco externo*/ 
+                                                 Output Table tt_erros_conexao).  /*retorna erros caso existam*/
+                 for each tt_erros_conexao:
+                     if return-value <> "OK":U then do:
+                        if line-counter > 62 then
+                           page.
+                        put string(tt_erros_conexao.cd-erro,">>>>>9") at 44.
+                        put tt_erros_conexao.mensagem at 53 format "X(78)" skip.
+                        if tt_erros_conexao.param-1 <> " " and 
+                           tt_erros_conexao.cd-erro <> 6003 or tt_erros_conexao.cd-erro <> 2 then
+                           put tt_erros_conexao.param-1 at 01 format "X(132)" skip.
+                        assign l-erro = yes.
+                        undo, return "NOK".                                              
+                     end.
+                 end.    
+            end.
+        end.
+        else
+            assign l-ja-conectado = yes.
+    end.
+    else do:
+        if l-ja-conectado = no then do:
+            if connected("emsbas") or 
+               connected("emsfin") or 
+               connected("emsuni") then do:
+               
+                if  valid-handle (h-btb009za) AND
+                   h-btb009za:TYPE = "PROCEDURE":U AND
+                   h-btb009za:FILE-NAME = "btb/btb009za.p":U then do:
+                 
+                   run pi-conecta-bco IN h-btb009za (Input 1,                         /*contem a vers“o de integraÓ“o da Api*/
+                                                     Input i-conect,                  /*contem a opÓ“o desejada (1-Conex“o, 2-Desconex“o)*/
+                                                     Input param-global.empresa-prin, /*contem o cÆdigo da empresa*/
+                                                     Input "all",                     /*contem o cÆdigo do banco externo*/ 
+                                                     Output Table tt_erros_conexao).  /*retorna erros caso existam*/
+                  
+                       for each tt_erros_conexao:
+                           if return-value <> "OK":U then do:
+                               if line-counter > 62 then
+                                  page.
+                               put string(tt_erros_conexao.cd-erro,">>>>>9") at 44.
+                               put tt_erros_conexao.mensagem at 53 format "X(78)" skip.
+                               if  tt_erros_conexao.param-1 <> " " and 
+                                   tt_erros_conexao.cd-erro <> 6003 or tt_erros_conexao.cd-erro <> 2 then
+                                   put tt_erros_conexao.param-1 at 01 format "X(132)" skip.
+                               assign l-erro = yes.
+                               undo, return "NOK".                                              
+                           end.
+                       end.
+                end.
+            end.    
+        end.    
+    end.
+    
+    if valid-handle(h-btb009za) then do:
+        delete procedure h-btb009za no-error.
+        assign h-btb009za = ?.
+    end.
+End Procedure. /*Pi-conecta-ems50*/
+
+Procedure Pi-verifica-EMS50:
+    def input        param  c-cod-estabel   like docum-est.cod-estabel.
+    def input        param  c-cod-forn-ac   like despesa-aces.cod-forn-ac.
+    def input        param  c-cod-esp       like despesa-aces.cod-esp.
+    def input        param  c-ser-docto-ac  like despesa-aces.ser-docto-ac.
+    def input        param  c-nro-docto-ac  like despesa-aces.nro-docto-ac.
+    def input        param  c-parcela       like dupli-apagar.parcela.
+    def output       param  l-existe         as logical no-undo.
+    def output       param  l-erro-ems50     as logical no-undo.
+    
+
+
+assign l-erro-ems50 = no
+       l-existe     = yes.
+
+    run prgint/dcf/dcf900za.r (input 001,
+                                input "1", /* Foresight "APB", */
+                                input string(c-cod-estabel) + "," +  
+                                      string(c-cod-forn-ac)  + "," + 
+                                      string(c-cod-esp)      + "," +
+                                      string(c-ser-docto-ac) + "," +
+                                      string(c-nro-docto-ac) + "," +
+                                      string(c-parcela) ,        
+                                input no,
+                                output l-existe,
+                                output c-parcela,
+                                input-output table tt-erro,
+                                output l-erro-ems50).
+
+End Procedure. /*Pi-verifica-EMS50*/
+
+
+procedure pi-erro-ems5: 
+
+{rep/re1005.i01}
+
+    def input parameter cod-mensag  as integer                      no-undo.
+    def input parameter c-complem   as char                         no-undo.
+
+    run utp/ut-msgs.p ( input "msg",
+                        input cod-mensag,
+                        input c-complem  ).  
+
+    create tt-erro.
+    assign tt-erro.cd-erro  = cod-mensag
+           tt-erro.mensagem = return-value
+           l-erro           = yes.
+
+    if line-counter > 62 then
+        page.
+
+    if line-counter <= 5 then do:
+        put c-cabec1 at 0 skip.
+        put c-cabec2 at 0 skip.
+    end.
+
+    put string(cod-mensag,">>>>>9") at 43.
+    put tt-erro.mensagem at 53 format "X(78)" skip.
+                                                            
+End Procedure. /*Pi-erro-EMS50*/
+
+/**** Fim do Programa *******/

@@ -1,0 +1,63 @@
+09:08:59 Looking for *.p in /totvs/datasul/totvs12/_custom_prod/NDD
+Compiling ndd_entryintegration.p
+** Opcao INPUT/OUTPUT invalida. (262)
+** /totvs/datasul/totvs12/_custom_prod/NDD/ndd_entryintegration.p Nao entendi a linha 1. (196)
+09:08:59 Looking for adapters/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+09:08:59 Looking for adapters/xml/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+09:08:59 Looking for adapters/xml/NDD/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+Compiling adapters/xml/NDD/intndd002.p
+Compiling adapters/xml/NDD/intndd003.p
+09:08:59 Looking for ftp/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+Compiling ftp/ftapi512.p
+09:08:59 Looking for intprg/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+Compiling intprg/int022a.p
+Compiling intprg/int500a.p
+Compiling intprg/int022rp.p
+09:08:59 Looking for intupc/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+Compiling intupc/epc-axsep018.p
+Compiling intupc/epc-axsep037.p
+Compiling intupc/upc-ft0909.p
+Compiling intupc/upc-ft0909a.p
+09:09:00 Looking for tmp/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for tmp/bkp/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for utils/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for wsdl/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for wsdl/CD/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for wsdl/LOJA/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for xmlinc/*.p in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for *.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for adapters/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for adapters/xml/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for adapters/xml/NDD/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for ftp/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for intprg/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+Compiling intprg/int550.w
+** Nao entendi apos: "" + tt-arquivos.arquivo.    copy-lob FILE cFile TO cReturnValue.    run pi-processa-retorno-cold (input no).    RUN pi-openQueryNotas.END./* _UIB-CODE-BLOCK-END */&ANALYZE-RESUME&Scoped-define BROWSE-NAME brNotas&Scoped-define SELF-NAME brNotas&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL brNotas wWindowON MOUSE-SELECT-DBLCLICK OF brNotas IN FRAME fPage1DO:    if avail tt-NDD_ENTRYINTEGRATION then do:        edXML:screen-value in frame fPage2 = ".        /* gravar arquivo para tela quando
+** /totvs/datasul/totvs12/_custom_prod/NDD/intprg/int550.w Nao entendi a linha 523. (198)
+** /totvs/datasul/totvs12/_custom_prod/NDD/intprg/int550.w Linha 532 -- Esta' sobrando um ou mais END. (197)
+** /totvs/datasul/totvs12/_custom_prod/NDD/intprg/int550.w Nao entendi a linha 532. (196)
+Compiling intprg/int560-query.w
+Compiling intprg/int560-viewer.w
+Compiling intprg/int560.w
+09:09:00 Looking for intupc/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for tmp/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for tmp/bkp/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for utils/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for wsdl/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for wsdl/CD/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for wsdl/LOJA/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for xmlinc/*.w in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for *.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for adapters/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for adapters/xml/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for adapters/xml/NDD/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for ftp/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for intprg/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for intupc/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for tmp/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for tmp/bkp/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for utils/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for wsdl/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for wsdl/CD/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for wsdl/LOJA/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD
+09:09:00 Looking for xmlinc/*.cls in /totvs/datasul/totvs12/_custom_prod/NDD

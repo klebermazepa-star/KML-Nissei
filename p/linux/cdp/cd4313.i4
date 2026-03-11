@@ -1,0 +1,10 @@
+
+/*&IF DEFINED(bf_dis_unid_neg) &THEN*/
+    define temp-table tt-rateio-it-duplic no-undo 
+        field seq-tt-docto 	   as int
+        field parcela         as char
+        field nr-seq-fat      as int
+	 field seq-tt-it-docto as int
+        field it-codigo       as char
+        field valor           as deci.
+/*&ENDIF*/

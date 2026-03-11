@@ -1,0 +1,161 @@
+/* Cria‡Æo dos registros com o valor ASC e tamanho do caracter para utiliza‡Æo na procedure 
+   (ft0518f1.p) de quebra de linha das colunas do quadro de produtos.
+   
+   O tamanho de cada caracter (do c¢digo ASC 32 ao 127 - aceitos pela SEFAZ) foram estimados 
+   para a fonte Times New Roman.
+*/
+
+RUN piCriaTtCaracteres( 32, 0.269). /*   */
+RUN piCriaTtCaracteres( 33, 0.368). /* ! */
+RUN piCriaTtCaracteres( 34, 0.437). /* " */
+RUN piCriaTtCaracteres( 35, 0.538). /* # */
+RUN piCriaTtCaracteres( 36, 0.538). /* $ */
+RUN piCriaTtCaracteres( 37, 1.000). /* % */
+RUN piCriaTtCaracteres( 38, 0.875). /* & */
+RUN piCriaTtCaracteres( 39, 0.194). /* ' */
+RUN piCriaTtCaracteres( 40, 0.368). /* ( */
+RUN piCriaTtCaracteres( 41, 0.368). /* ) */
+RUN piCriaTtCaracteres( 42, 0.538). /* * */
+RUN piCriaTtCaracteres( 43, 0.636). /* + */
+RUN piCriaTtCaracteres( 44, 0.269). /* , */
+RUN piCriaTtCaracteres( 45, 0.368). /* - */
+RUN piCriaTtCaracteres( 46, 0.269). /* . */
+RUN piCriaTtCaracteres( 47, 0.304). /* / */
+RUN piCriaTtCaracteres( 48, 0.538). /* 0 */
+RUN piCriaTtCaracteres( 49, 0.538). /* 1 */
+RUN piCriaTtCaracteres( 50, 0.538). /* 2 */
+RUN piCriaTtCaracteres( 51, 0.538). /* 3 */
+RUN piCriaTtCaracteres( 52, 0.538). /* 4 */
+RUN piCriaTtCaracteres( 53, 0.538). /* 5 */
+RUN piCriaTtCaracteres( 54, 0.538). /* 6 */
+RUN piCriaTtCaracteres( 55, 0.538). /* 7 */
+RUN piCriaTtCaracteres( 56, 0.538). /* 8 */
+RUN piCriaTtCaracteres( 57, 0.538). /* 9 */
+RUN piCriaTtCaracteres( 58, 0.304). /* : */
+RUN piCriaTtCaracteres( 59, 0.304). /* ; */
+RUN piCriaTtCaracteres( 60, 0.636). /* < */
+RUN piCriaTtCaracteres( 61, 0.636). /* = */
+RUN piCriaTtCaracteres( 62, 0.636). /* > */
+RUN piCriaTtCaracteres( 63, 0.500). /* ? */
+RUN piCriaTtCaracteres( 64, 1.000). /* @ */
+RUN piCriaTtCaracteres( 65, 0.777). /* A */
+RUN piCriaTtCaracteres( 66, 0.777). /* B */
+RUN piCriaTtCaracteres( 67, 0.777). /* C */
+RUN piCriaTtCaracteres( 68, 0.777). /* D */
+RUN piCriaTtCaracteres( 69, 0.700). /* E */
+RUN piCriaTtCaracteres( 70, 0.636). /* F */
+RUN piCriaTtCaracteres( 71, 0.777). /* G */
+RUN piCriaTtCaracteres( 72, 0.777). /* H */
+RUN piCriaTtCaracteres( 73, 0.368). /* I */
+RUN piCriaTtCaracteres( 74, 0.411). /* J */
+RUN piCriaTtCaracteres( 75, 0.777). /* K */
+RUN piCriaTtCaracteres( 76, 0.700). /* L */
+RUN piCriaTtCaracteres( 77, 1.000). /* M */
+RUN piCriaTtCaracteres( 78, 0.777). /* N */
+RUN piCriaTtCaracteres( 79, 0.777). /* O */
+RUN piCriaTtCaracteres( 80, 0.636). /* P */
+RUN piCriaTtCaracteres( 81, 0.777). /* Q */
+RUN piCriaTtCaracteres( 82, 0.777). /* R */
+RUN piCriaTtCaracteres( 83, 0.636). /* S */
+RUN piCriaTtCaracteres( 84, 0.700). /* T */
+RUN piCriaTtCaracteres( 85, 0.777). /* U */
+RUN piCriaTtCaracteres( 86, 0.777). /* V */
+RUN piCriaTtCaracteres( 87, 1.000). /* W */
+RUN piCriaTtCaracteres( 88, 0.777). /* X */
+RUN piCriaTtCaracteres( 89, 0.777). /* Y */
+RUN piCriaTtCaracteres( 90, 0.700). /* Z */
+RUN piCriaTtCaracteres( 91, 0.368). /* [ */
+RUN piCriaTtCaracteres( 92, 0.304). /* ~\ */
+RUN piCriaTtCaracteres( 93, 0.368). /* ] */
+RUN piCriaTtCaracteres( 94, 0.500). /* ^ */
+RUN piCriaTtCaracteres( 95, 0.538). /* _ */
+RUN piCriaTtCaracteres( 96, 0.368). /* ` */
+RUN piCriaTtCaracteres( 97, 0.500). /* a */
+RUN piCriaTtCaracteres( 98, 0.538). /* b */
+RUN piCriaTtCaracteres( 99, 0.500). /* c */
+RUN piCriaTtCaracteres(100, 0.538). /* d */
+RUN piCriaTtCaracteres(101, 0.500). /* e */
+RUN piCriaTtCaracteres(102, 0.368). /* f */
+RUN piCriaTtCaracteres(103, 0.538). /* g */
+RUN piCriaTtCaracteres(104, 0.538). /* h */
+RUN piCriaTtCaracteres(105, 0.304). /* i */
+RUN piCriaTtCaracteres(106, 0.304). /* j */
+RUN piCriaTtCaracteres(107, 0.538). /* k */
+RUN piCriaTtCaracteres(108, 0.304). /* l */
+RUN piCriaTtCaracteres(109, 0.875). /* m */
+RUN piCriaTtCaracteres(110, 0.538). /* n */
+RUN piCriaTtCaracteres(111, 0.538). /* o */
+RUN piCriaTtCaracteres(112, 0.538). /* p */
+RUN piCriaTtCaracteres(113, 0.538). /* q */
+RUN piCriaTtCaracteres(114, 0.368). /* r */
+RUN piCriaTtCaracteres(115, 0.411). /* s */
+RUN piCriaTtCaracteres(116, 0.304). /* t */
+RUN piCriaTtCaracteres(117, 0.538). /* u */
+RUN piCriaTtCaracteres(118, 0.538). /* v */
+RUN piCriaTtCaracteres(119, 0.777). /* w */
+RUN piCriaTtCaracteres(120, 0.538). /* x */
+RUN piCriaTtCaracteres(121, 0.538). /* y */
+RUN piCriaTtCaracteres(122, 0.500). /* z */
+RUN piCriaTtCaracteres(123, 0.538). /* { */
+RUN piCriaTtCaracteres(124, 0.212). /* | */
+RUN piCriaTtCaracteres(125, 0.538). /* } */
+RUN piCriaTtCaracteres(126, 0.583). /* ~ */
+RUN piCriaTtCaracteres(178, 0.538). /* ý */
+RUN piCriaTtCaracteres(179, 0.583). /* ü */
+
+/* Carregar tempor ria com os valores do tamanho de cada coluna para 
+   o layout Retrato e Paisagem.
+    
+   Caso necessite customizar o DANFE e alterar o tamanho de coluna, 
+   dever  ser reajustado os valores abaixo, sendo que para chegar ao 
+   valor deve-se verificar quantos caracteres "-" cabem dentro das 
+   colunas, e multiplicar esse valor pelo tamanho que o "-" ocupa 
+   (no caso de 'Times New Roman - Tamanho 6' ocupa 0.368), o resultado
+   obtido deve ser trucado em 1 casa decimal (ex: 6.957 = 6.9).
+   
+   Para colunas novas, abaixo deve ser informado o caracter identificador 
+   dela juntamente com sua descri‡Æo e tamanho (retrato e paisagem).
+   Depois deve ser tratado a impressÆo da mesma no programa ft0518f1.p.
+*/
+
+RUN piCriaTtColunasDANFE ("$a":U, "CodProduto":U,     6.9,  6.9).
+RUN piCriaTtColunasDANFE ("$b":U, "DescProduto":U,   30.5, 46.0).
+RUN piCriaTtColunasDANFE ("$c":U, "NCM":U,            5.1,  5.3).
+RUN piCriaTtColunasDANFE ("$d":U, "CST":U,            1.8,  2.6).
+RUN piCriaTtColunasDANFE ("$e":U, "CFOP":U,           2.9,  3.2).
+RUN piCriaTtColunasDANFE ("$f":U, "Un":U,             1.8,  1.8).
+RUN piCriaTtColunasDANFE ("$g":U, "Quantidade":U,     5.9,  5.65).
+RUN piCriaTtColunasDANFE ("$h":U, "ValorUni":U,       5.9,  5.65).
+RUN piCriaTtColunasDANFE ("$i":U, "ValorTotal":U,     5.9,  5.65).
+RUN piCriaTtColunasDANFE ("$j":U, "BaseCalcIcms":U,   5.9,  5.65).
+RUN piCriaTtColunasDANFE ("$k":U, "ValorIcms":U,      5.1,  5.65).
+RUN piCriaTtColunasDANFE ("$l":U, "ValorIpi":U,       5.1,  5.65).
+RUN piCriaTtColunasDANFE ("$m":U, "AliquotaIcms":U,   2.9,  3.2).
+RUN piCriaTtColunasDANFE ("$n":U, "AliquotaIpi":U,    2.9,  3.2).
+RUN piCriaTtColunasDANFE ("$o":U, "BaseCalcIcmsST":U,   0,  5.65).
+RUN piCriaTtColunasDANFE ("$p":U, "ValorIcmsST":U,      0,  5.65).
+
+
+PROCEDURE piCriaTtCaracteres:
+    DEFINE INPUT PARAMETER iCodigoASC   AS INTEGER NO-UNDO.
+    DEFINE INPUT PARAMETER dTamanhoChar AS DECIMAL NO-UNDO.
+
+    CREATE ttCaracteres.
+    ASSIGN ttCaracteres.codigoASC   = iCodigoASC
+           ttCaracteres.tamanhoChar = dTamanhoChar.
+
+END PROCEDURE.
+
+PROCEDURE piCriaTtColunasDANFE:
+    DEFINE INPUT PARAMETER cCodigo          AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER cDescricao       AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER dTamanhoRetrato  AS DECIMAL NO-UNDO.
+    DEFINE INPUT PARAMETER dTamanhoPaisagem AS DECIMAL NO-UNDO.
+
+    CREATE ttColunasDANFE.
+    ASSIGN ttColunasDANFE.codigo    = cCodigo
+           ttColunasDANFE.descricao = cDescricao
+           ttColunasDANFE.tamanhoRetrato  = dTamanhoRetrato
+           ttColunasDANFE.tamanhoPaisagem = dTamanhoPaisagem.
+
+END PROCEDURE.

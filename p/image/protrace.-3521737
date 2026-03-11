@@ -1,0 +1,21 @@
+//=====================================================
+PROGRESS stack trace as of Thu Aug 30 14:23:16 2001
+//=====================================================
+Exception code: C0000005 ACCESS_VIOLATION
+Fault address:  0047E444 01:0007D444 C:\XNVIEW-WIN\VIEWER\WINDOWS\XNVIEW.EXE
+
+Registers:
+EAX:00000014
+EBX:004FD4D0
+ECX:00000005
+EDX:000001B8
+ESI:00684FD8
+EDI:000001B8
+CS:EIP:0137:0047E444
+SS:ESP:013F:0066E1C4  EBP:004F4AEE
+DS:013F  ES:013F  FS:1D3F  GS:0000
+Flags:00010206
+
+Call Stack:
+Address   Frame     Logical addr  Module
+0047E444  004F4AEE  0001:0007D444 C:\XNVIEW-WIN\VIEWER\WINDOWS\XNVIEW.EXE

@@ -1,0 +1,38 @@
+/*****************************************************************************************************
+**   Procedure: calculaDescontoICMS 
+**   Objetivo : Buscar o percentual de desconto do ICMS Desonerado           
+******************************************************************************************************/
+ DEF VAR l-contrib                AS LOGICAL NO-UNDO.
+ DEF VAR de-per-des-icms-excessao AS DECIMAL NO-UNDO.
+ DEF BUFFER b-emit-estab FOR emitente.
+
+ /* Encontra percentual de desconto */  
+ FIND FIRST b-emit-estab NO-LOCK 
+      WHERE b-emit-estab.cod-emitente = estabelec.cod-emitente NO-ERROR.
+ ASSIGN l-contrib = IF AVAIL b-emit-estab THEN b-emit-estab.contrib-icms ELSE yes.
+
+ FOR FIRST unid-feder NO-LOCK
+     WHERE unid-feder.pais   = emitente.pais
+       AND unid-feder.estado = emitente.estado: END.
+ 
+ IF AVAIL unid-feder THEN 
+     DO i-cont = 1 to 12:
+         IF unid-feder.est-exc[i-cont] = estabelec.estado THEN
+             ASSIGN de-per-des-icms-excessao  = unid-feder.perc-exc[i-cont + 13].
+     END.
+
+ IF AVAIL unid-feder AND
+    l-contrib        AND                      /* Contribuinte de ICMS    */
+    estabelec.estado <> unid-feder.estado THEN /* UF destino <> UF origem */
+    ASSIGN de-perc-desc-icms = IF de-per-des-icms-excessao > 0    /* Caso tenha desconto nas excessoes */
+                               THEN de-per-des-icms-excessao      /* Utiliza desconto excessao         */
+                               ELSE IF unid-feder.desc-icms > 0   /* Caso Desc na UF <> 0              */
+                                    THEN unid-feder.desc-icms     /* Desconto ICMS de UF               */
+                                    ELSE b-natur-oper-fiscal.per-des-icms. /* Desconto da Natureza              */
+ ELSE /* Utiliza da natureza de operacao */
+     ASSIGN de-perc-desc-icms = b-natur-oper-fiscal.per-des-icms.
+     
+
+
+
+

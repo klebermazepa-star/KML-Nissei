@@ -1,0 +1,33 @@
+ADD TABLE "cst_cliente_bloqueio"
+  AREA "Schema Area"
+  DUMP-NAME "cst_cliente_bloqueio"
+
+ADD FIELD "cod-emitente" OF "cst_cliente_bloqueio" AS character 
+  FORMAT "x(7)"
+  INITIAL "" 
+  POSITION 2
+  ORDER 20  
+
+ADD FIELD "Nome-abrev" OF "cst_cliente_bloqueio" AS character 
+  FORMAT "x(20)"
+  INITIAL "" 
+  POSITION 3
+  ORDER 30
+  
+ADD FIELD "Bloqueio" OF "cst_cliente_bloqueio" AS logical
+  FORMAT "sim/nao"
+  INITIAL "" 
+  POSITION 4
+  ORDER 40
+  
+ADD INDEX "idx-cliente_bloqueio" ON "cst_cliente_bloqueio" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "cod-emitente" ASCENDING
+
+.
+PSC
+cpstream=ibm850
+.
+0000000543

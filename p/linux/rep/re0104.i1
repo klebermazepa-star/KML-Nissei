@@ -1,0 +1,31 @@
+/*****************************************************************************
+**       Programa: re0104.i1 
+**
+**       Data....: 01/07/2003 
+**
+**       Autor...: DATASUL S.A. - Rubia Daniele Pires de Oliveira 
+**
+**       Objetivo: Definir as temp-tables tt-un-devol e tt-un-devol-mp
+*******************************************************************************/
+define temp-table tt-un-devol no-undo
+    field sequencia   as int
+    field parcela     as char format "x(2)":U
+    field cod-un      as char format "x(3)":U
+    field vl-aprop-un as dec  format ">>>>>>>,>>9.99":U
+    index seq is primary unique
+        sequencia
+        parcela
+        cod-un.
+
+define temp-table tt-un-devol-mp no-undo
+    field sequencia      as int
+    field parcela        as char format "x(2)":U
+    field cod-un         as char format "x(3)":U
+    field vl-aprop-un    as dec  format ">>>>>>>,>>9.99":U
+    field cod-maq-origem like maquina.cd-maquina
+    field num-processo   as   integer format ">>>>>>>>9" initial 0
+    field num-sequencia  as   integer format ">>>>>9"    initial 0
+    field ind-tipo-movto as   integer format "99"        initial 1
+    index documento is primary  cod-maq-origem
+                                num-processo
+                                num-sequencia.

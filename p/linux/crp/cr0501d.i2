@@ -1,0 +1,21 @@
+/********************************************************************************
+***
+*** crp/cr0501d.i2 - Cria TempTable de Retorno da Consistˆncia.
+***
+********************************************************************************/
+create tt-retorno-lin-i-cr.
+assign tt-retorno-lin-i-cr.cod-erro   = "{1}"
+       tt-retorno-lin-i-cr.desc-erro  = trim(return-value)
+       tt-retorno-lin-i-cr.situacao   = {2}
+       tt-retorno-lin-i-cr.cod-chave  = lin-i-cr.referencia  + "," +
+                                 string(lin-i-cr.sequencia)  + "," +
+                                 string(lin-i-cr.ep-codigo)  + "," +
+                                        lin-i-cr.cod-estabel + "," +                       
+                                        lin-i-cr.cod-esp     + "," +
+                                        lin-i-cr.serie       + "," +
+                                        lin-i-cr.nr-docto    + "," +
+                                        lin-i-cr.parcela
+       l-situacao = {2}
+       i-num-erro = {1}.
+
+/* Fim de Include */

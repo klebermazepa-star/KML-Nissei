@@ -1,0 +1,19 @@
+
+DEF VAR l-acr-ems50 AS LOG INIT NO NO-UNDO.
+DEF VAR l-acr-ems2  AS LOG INIT NO NO-UNDO.
+
+if can-find(funcao where funcao.cd-funcao = "adm-acr-ems-5.00"
+                     and funcao.ativo
+                     and funcao.log-1) then do:
+
+    ASSIGN l-acr-ems50 = YES.
+
+    &IF '{&bf_mat_versao_ems}' = '2.04' &THEN
+        if can-find(funcao where funcao.cd-funcao = "SPP-INTEGRA-RE-CR"
+                             and funcao.ativo) THEN
+            ASSIGN l-acr-ems2 = YES.
+
+    &ELSEIF '{&bf_mat_versao_ems}' >= '2.062' &THEN
+        ASSIGN l-acr-ems2 = YES.
+    &ENDIF
+END.

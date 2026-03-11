@@ -1,0 +1,17 @@
+/********************************************************************************
+*
+*    BOIN176.I4 - Definicao TT-ITEM-DEVOL-CLI
+*                 Utilizado na Geracao de Itens a Partir do It-Nota-Fisc
+*
+*********************************************************************************/
+
+def temp-table {1} no-undo
+    field rw-it-nota-fisc   as rowid
+    field quant-devol       like item-doc-est.quantidade
+    field preco-devol       like item-doc-est.preco-total extent 0
+    field cod-depos         like item-doc-est.cod-depos
+    field reabre-pd         like item-doc-est.reabre-pd
+    field vl-desconto       like item-doc-est.pr-total-cmi
+    field nat-of            like item-doc-est.nat-operacao.
+    
+/* fim da include */    

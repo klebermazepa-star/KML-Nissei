@@ -1,0 +1,210 @@
+/********************************************************************************
+**
+**   Procedures de Integra»’o Contas a Receber(Estorno Devolu‡Æo) com o EMS 5.00
+**
+********************************************************************************/
+Procedure Pi-conecta-ems50-CR:
+    def input param l-conecta as logical no-undo.
+
+    if l-conecta then do:
+        if  search("prgfin/acr/acr779za.r")  = ? and
+            search("prgfin/acr/acr779za.py") = ? then do:
+                run pi-erro-nota ( 6246, "prgfin/acr/acr779za.py").
+                return.
+        end.
+        else do:
+            assign l-conec-bas = no
+                   l-conec-fin = no
+                   l-conec-uni = no.
+                   
+          &if "{&EMSFND_VERSION}" >= "1.00" &then
+          &else
+            if  not connected("emsbas")  then do:
+                find first bco-ext 
+                     where bco-ext.ep-codigo     = param-global.empresa-prin 
+                     and   bco-ext.nom-logic-bco = "emsbas" no-lock no-error.
+
+                if  not avail bco-ext then do:
+                    {utp/ut-table.i mgadm bco-ext 1}
+                    run pi-erro-nota ( 8263, return-value).
+                end.                       
+                else do:
+                    assign l-conec-bas = yes.
+                    connect value(bco-ext.localiz-fisic-bco) -ld emsbas value(bco-ext.param-conex-bco) no-error.
+                end.
+            end. 
+
+            if  not connected("emsfin") then do:
+                find first bco-ext 
+                     where bco-ext.ep-codigo     = param-global.empresa-prin 
+                     and   bco-ext.nom-logic-bco = "emsfin" no-lock no-error.
+
+                if  not avail bco-ext then do:
+                    {utp/ut-table.i mgadm bco-ext 1}
+                    run pi-erro-nota ( 8263, return-value).
+                end.                       
+                else do:
+                    assign l-conec-fin = yes.
+                    connect value(bco-ext.localiz-fisic-bco) -ld emsfin value(bco-ext.param-conex-bco) no-error.
+                end.
+            end. 
+
+            if  not connected("emsuni") then do:
+                find first bco-ext 
+                     where bco-ext.ep-codigo     = param-global.empresa-prin 
+                     and   bco-ext.nom-logic-bco = "emsuni" no-lock no-error.
+
+                if  not avail bco-ext then do:
+                    {utp/ut-table.i mgadm bco-ext 1}
+                    run pi-erro-nota ( 8263, return-value).
+                end.                       
+                else do:
+                    assign l-conec-uni = yes.
+                    connect value(bco-ext.localiz-fisic-bco) -ld emsuni value(bco-ext.param-conex-bco) no-error.
+                end.
+            end. 
+          &endif
+        end.
+    end.
+    if not l-conecta or l-erro then do:
+        if  connected("emsbas") and l-conec-bas = yes then
+            disconnect emsbas.
+        if  connected("emsuni") and l-conec-uni = yes then
+            disconnect emsuni.
+        if  connected("emsfin") and l-conec-fin = yes then
+            disconnect emsfin.
+    end.                
+
+End Procedure. /*Pi-conecta-ems50-CR*/
+
+Procedure Pi-verifica-EMS50-CR:   
+def input  parameter table for tt-tot-tit.
+def input  parameter table for tt-titulo.
+&IF "{&bf_mat_versao_ems}" >= "2.04" &THEN
+        def input-output  parameter table for tt-un-devol.
+&ENDIF        
+def output parameter table for tt-erro.
+
+DEFINE VARIABLE l-ativo    AS LOGICAL    NO-UNDO.
+DEFINE VARIABLE h-acr779zc AS HANDLE     NO-UNDO.
+
+    /* Chama a api de integra‡Æo com CR (evolu¡da), passando os parametros da nova tt-tot-tit-devol, para fazer a rastreabilidade */
+    IF  l-acr-ems2 THEN DO:
+
+        FOR EACH tt-impto-retid-fat:
+
+            IF NOT CAN-FIND(FIRST tt-impto-retid-fat-aux
+                            WHERE tt-impto-retid-fat-aux.cod-estabel   = tt-impto-retid-fat.cod-estabel  
+                              AND tt-impto-retid-fat-aux.cod-esp       = tt-impto-retid-fat.cod-esp      
+                              AND tt-impto-retid-fat-aux.serie         = tt-impto-retid-fat.serie        
+                              AND tt-impto-retid-fat-aux.nr-docto      = tt-impto-retid-fat.nr-docto     
+                              AND tt-impto-retid-fat-aux.parcela       = tt-impto-retid-fat.parcela      
+                              AND tt-impto-retid-fat-aux.cod-emitente  = tt-impto-retid-fat.cod-emitente 
+                              AND tt-impto-retid-fat-aux.idi-tip-impto = tt-impto-retid-fat.idi-tip-impto) THEN DO:
+
+                CREATE tt-impto-retid-fat-aux.
+                BUFFER-COPY tt-impto-retid-fat TO tt-impto-retid-fat-aux.
+
+            END.
+            ELSE DO:
+
+                FOR FIRST tt-impto-retid-fat-aux
+                    WHERE tt-impto-retid-fat-aux.cod-estabel   = tt-impto-retid-fat.cod-estabel  
+                      AND tt-impto-retid-fat-aux.cod-esp       = tt-impto-retid-fat.cod-esp      
+                      AND tt-impto-retid-fat-aux.serie         = tt-impto-retid-fat.serie        
+                      AND tt-impto-retid-fat-aux.nr-docto      = tt-impto-retid-fat.nr-docto     
+                      AND tt-impto-retid-fat-aux.parcela       = tt-impto-retid-fat.parcela      
+                      AND tt-impto-retid-fat-aux.cod-emitente  = tt-impto-retid-fat.cod-emitente 
+                      AND tt-impto-retid-fat-aux.idi-tip-impto = tt-impto-retid-fat.idi-tip-impto:
+                    
+                    ASSIGN tt-impto-retid-fat-aux.vl-impto = tt-impto-retid-fat-aux.vl-impto + tt-impto-retid-fat.vl-impto.
+                END.
+            END.
+
+        END.
+
+        run prgfin/acr/acr779zc.py persistent set h-acr779zc.
+        run pi_main_code_api_integracao_recebimento_acr_5 in h-acr779zc ( INPUT  table tt-tot-tit-devol,
+                                                                          INPUT  table tt-titulo,
+                                                                          INPUT  table tt-un-devol,
+                                                                          OUTPUT table tt-erro-cr,
+                                                                          INPUT  table tt-impto-retid-fat-aux).
+
+        /* Verificar se aqui ‚ o local mais adequado para retirar o programa da mem¢ria */
+        DELETE PROCEDURE h-acr779zc.
+        ASSIGN h-acr779zc = ?.
+    END.
+    ELSE DO:
+        IF l-unid-neg-devol-cli THEN DO:
+            run prgfin/acr/acr779zb.py (input  table tt-tot-tit,
+                                        input  table tt-titulo,
+                                        input  table tt-un-devol,
+                                        output table tt-erro-cr).
+        END.
+        ELSE DO: 
+            run prgfin/acr/acr779za.py (input  table tt-tot-tit,
+                                        input  table tt-titulo,
+                                        output table tt-erro-cr).
+        END.
+    END.
+
+
+    /* Somente gera relatorio de erros se a variavel foi parametrizada para tanto. */
+    IF  l-rel-erros THEN DO:
+
+        /* ImpressÆo dos Erros de Integra‡Æo */
+        for each tt-erro-cr
+            break by tt-erro-cr.num-mensagem:
+            if line-counter > 62 then
+                page.
+    
+            /* Imprime cabe‡alho*/
+            if line-counter <= 5 then do:
+               put c-cabec1 at 0 skip
+                   c-cabec2 at 0 skip.
+            end.
+    
+            /* Imprime dados do documento */
+            if  avail docum-est then do:
+                if  first(tt-erro-cr.num-mensagem) then do:
+                    put docum-est.serie-docto at 1
+                        docum-est.nro-docto   at 7
+                        string(docum-est.cod-emitente) at 24 format "X(9)"
+                        docum-est.nat-operacao at 35.
+                end.
+            end.
+    
+            /* Imprime a mensagem*/
+            put string(tt-erro-cr.num-mensagem,">>>>>9") at 44.
+            put tt-erro-cr.des-msg-erro at 53 format "X(78)" skip.
+            if  trim(tt-erro-cr.des-msg-ajuda) <> "" then do:
+                run pi-print-editor (input tt-erro-cr.des-msg-ajuda, input 78).
+                for each tt-editor:
+                    put tt-editor.conteudo at 53 format "X(78)" skip.
+                end.
+            end.
+            else do: 
+                create tt-erro.
+                assign tt-erro.cd-erro =   tt-erro-cr.num-mensagem 
+                       tt-erro.mensagem =  tt-erro-cr.des-msg-erro .
+            end.
+            assign l-erro = yes.
+        end.
+        if l-erro = yes then
+            undo, return "NOK".                                                                          
+    END.
+    ELSE DO:
+        for each tt-erro-cr:
+            create tt-erro.
+            assign tt-erro.cd-erro  = tt-erro-cr.num-mensagem 
+                   tt-erro.mensagem = tt-erro-cr.des-msg-erro + CHR(10) + tt-erro-cr.des-msg-ajuda
+                   l-erro           = yes.
+        END.
+        if  l-erro = yes then
+            undo, return "NOK".
+    END.
+
+End Procedure. /*Pi-verifica-EMS50-CR*/
+
+
+/**** Fim do Programa *******/

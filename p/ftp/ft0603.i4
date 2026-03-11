@@ -1,0 +1,458 @@
+/******************************************************************************
+**
+**  Include.: FT0603.I4
+**
+**  Data....: Maio de 1997.
+**
+**  Objetivo: Geracao do movimento pendente no CR
+**
+******************************************************************************/
+def var i-empresa like param-global.empresa-prin no-undo.
+
+assign i-empresa = param-global.empresa-prin.
+
+&if defined (bf_dis_consiste_conta) &then
+    find estabelec where
+         estabelec.cod-estabel = nota-fiscal.cod-estabel no-lock no-error.
+    if avail estabelec then do:
+    run cdp/cd9970.p (input  rowid(estabelec),
+                      output i-empresa).
+    end.
+&endif
+
+do:
+for each w-lin:
+    delete w-lin.
+end.
+assign l-titulo = no.
+if  emitente.natureza <> 3 then do  for fat-duplic:
+    find first fat-duplic
+         where fat-duplic.cod-estabel = nota-fiscal.cod-estabel
+           and fat-duplic.serie       = nota-fiscal.serie
+           and fat-duplic.nr-fatura   = nota-fiscal.nr-fatura
+           and not flag-atualiz
+           and fat-duplic.cod-esp = "CV"
+           no-lock no-error.
+    if  avail fat-duplic then do:
+        find first lin-i-cr
+             where lin-i-cr.ep-codigo = i-empresa
+               and lin-i-cr.cod-estabel = nota-fiscal.cod-estabel
+               and lin-i-cr.cod-esp     = fat-duplic.cod-esp
+               and lin-i-cr.nr-docto    = nota-fiscal.nr-fatura
+                   no-lock no-error.
+        if  not avail lin-i-cr then
+            find first titulo
+            where titulo.ep-codigo = i-empresa
+            and titulo.cod-estabel = nota-fiscal.cod-estabel
+            and titulo.cod-esp     = fat-duplic.cod-esp
+            and titulo.nr-docto    = nota-fiscal.nr-fatura
+            no-lock no-error.           
+        if  avail titulo  or avail lin-i-cr then do:
+            {utp/ut-liter.i Duplicata_j _existe_no_Contas_a_Receber_com_Empresa: * r}
+            put trim(return-value) space(1) i-empresa. 
+            {utp/ut-table.i mgadm estabel 1} 
+            put trim(return-value) space(1) nota-fiscal.cod-estabel.
+            {utp/ut-table.i mgadm esp-doc 1}
+            put trim(return-value) space(1) fat-duplic.cod-esp.
+            {utp/ut-liter.i N£mero_de_Documento * r}
+            put trim(return-value) space(1) nota-fiscal.nr-fatura skip.            
+            assign l-titulo = yes.
+        end.
+    end.
+end.
+find ped-venda use-index ch-pedido
+     where ped-venda.nome-abrev = nota-fiscal.nome-ab-cli
+       and ped-venda.nr-pedcli  = nota-fiscal.nr-pedcli
+     no-lock no-error.
+if  avail ped-venda then
+    find b-repres use-index abrev
+         where b-repres.nome-abrev = ped-venda.no-ab-reppri
+         no-lock no-error.
+find cond-pagto where cond-pagto.cod-cond-pag = nota-fiscal.cod-cond-pag
+     no-lock no-error.
+for each fat-duplic 
+    where fat-duplic.cod-estabel = nota-fiscal.cod-estabel
+    and fat-duplic.serie         = nota-fiscal.serie
+    and fat-duplic.nr-fatura     = nota-fiscal.nr-fatura
+    and fat-duplic.ind-fat-nota  = 1
+    and not fat-duplic.flag-atualiz
+    and not l-titulo     no-lock
+    break by fat-duplic.nr-fatura:
+    accumulate fat-duplic.vl-parcela
+                          (total by fat-duplic.nr-fatura).
+    find esp-doc  where
+         esp-doc.cod-esp = fat-duplic.cod-esp no-lock no-error.
+    assign r-fat-dupl = rowid(fat-duplic).
+
+
+
+
+ /*   
+ *     
+ *     
+ *     create lin-i-cr.
+ *     assign lin-i-cr.cod-cond-pag = nota-fiscal.cod-cond-pag
+ *            lin-i-cr.cod-emitente = emitente.end-cobranca
+ *            lin-i-cr.cod-esp      = fat-duplic.cod-esp
+ *            lin-i-cr.cod-estabel  = fat-duplic.cod-estabel
+ *            lin-i-cr.tipo-titulo  = if nota-fiscal.ind-tip-nota = '4' then 3
+ *                                    else if nota-fiscal.ind-tip-nota = '5' then 2
+ *                                         else 1
+ *            lin-i-cr.cod-rep      = if  avail ped-venda
+ *                                    and avail b-repres then b-repres.cod-rep
+ *                                    else 0
+ *            lin-i-cr.ct-conta     = para-fat.ct-recven         
+ *            lin-i-cr.contabilizou = no
+ *            lin-i-cr.dt-desconto  = fat-duplic.dt-desconto
+ *            lin-i-cr.dt-emissao   = nota-fiscal.dt-emis-nota
+ *            lin-i-cr.dt-vencimen  = fat-duplic.dt-venciment
+ *            lin-i-cr.dt-pg-prev   = lin-i-cr.dt-vencimen
+ *            lin-i-cr.emite-bloq   = emitente.emite-bloq
+ *            lin-i-cr.ep-codigo    = i-empresa
+ *            lin-i-cr.nat-operacao = fat-duplic.nat-operacao
+ *            lin-i-cr.diversos     = fat-duplic.vl-despesa
+ *            lin-i-cr.frete        = fat-duplic.frete
+ *            lin-i-cr.vl-taxa      = fat-duplic.tax
+ *            lin-i-cr.situacao     = 0
+ *            lin-i-cr.nr-docto     = /*if  ind-tip-nota <> '5'
+ *                                    and emitente.natureza = '2'
+ *                                    then nota-fiscal.nr-proc-exp
+ *                                    else*/ fat-duplic.nr-fatura
+ *            lin-i-cr.nr-pedcli    = nota-fiscal.nr-pedcli
+ *            lin-i-cr.parcela      = fat-duplic.parcela
+ *            lin-i-cr.pedido-rep   = if  avail ped-venda then ped-venda.nr-pedrep
+ *                                    else ''
+ *            lin-i-cr.referencia   = c-referencia
+ *            i-nr-seq              = i-nr-seq + 10
+ *            i-tot-doc             = i-tot-doc + 1
+ *            i-not-doc             = i-not-doc + 1
+ *            lin-i-cr.sequencia    = i-nr-seq
+ *            lin-i-cr.vl-original  = fat-duplic.vl-parcela
+ *            lin-i-cr.vl-liquido   = fat-duplic.vl-comis
+ *            lin-i-cr.vl-desconto  = fat-duplic.vl-desconto
+ *            de-vl-total           = de-vl-total
+ *                                  + fat-duplic.vl-parcela.*/
+
+
+    create w-lin.
+    assign w-lin.r-lin = rowid(lin-i-cr).
+    if  esp-doc.tipo = 5
+    or  esp-doc.tipo = 4
+    and nota-fiscal.nro-nota-orig <> "" then do:
+        find first b-fat-dupl
+             where b-fat-dupl.cod-estabel = fat-duplic.cod-estabel
+               and b-fat-dupl.serie       = nota-fiscal.serie-orig
+               and b-fat-dupl.nr-fatura   = nota-fiscal.nro-nota-orig
+                   no-lock no-error.
+        if  avail b-fat-dupl then do:
+            create lin-ant.
+            assign lin-ant.ep-codigo    = i-empresa
+                   lin-ant.cod-estabel  = lin-i-cr.cod-estabel
+                   lin-ant.esp-antecip  = b-fat-dupl.cod-esp
+                   lin-ant.doc-antecip  = nota-fiscal.nro-nota-orig
+                   lin-ant.parc-antecip = b-fat-dupl.parcela
+                   lin-ant.cod-esp      = lin-i-cr.cod-esp
+                   lin-ant.nr-docto     = lin-i-cr.nr-docto
+                   lin-ant.parcela      = lin-i-cr.parcela
+                   lin-ant.cod-emitente = emitente.cod-emitente
+                   lin-ant.vl-antecip   = 0.
+        end.
+    end.
+    find first fat-repre 
+         where fat-repre.cod-estabel = fat-dupl.cod-estabel
+           and fat-repre.serie       = fat-dupl.serie
+           and fat-repre.nr-fatura   = fat-dupl.nr-fatura
+         no-lock no-error.
+    if  avail fat-repre then
+    for each fat-repre 
+       where fat-repre.cod-estabel = fat-dupl.cod-estabel
+         and fat-repre.serie       = fat-dupl.serie
+         and fat-repre.nr-fatura   = fat-dupl.nr-fatura no-lock:
+        find repres
+            where repres.nome-abrev = fat-repre.nome-ab-rep
+            no-lock no-error.
+        if  avail repres then do:
+            /*
+            if  l-comissao then do:
+                {ftp/ft0603.i1 fat-repre.nome-ab-rep
+                               fat-repre.perc-comis
+                               fat-repre.comis-emis}
+            end.
+            else*/
+               assign de-comis = fat-repre.perc-comis.
+            create rep-i-cr.
+            assign rep-i-cr.cod-rep     = repres.cod-rep
+                   rep-i-cr.cod-estabel =
+                         fat-repre.cod-estabel
+                   rep-i-cr.cod-esp     = fat-duplic.cod-esp
+                   rep-i-cr.comis-emis  =
+                         fat-repre.comis-emis
+                   rep-i-cr.comissao    = round(de-comis,4)
+                   rep-i-cr.ep-codigo   = lin-i-cr.ep-codigo
+                   rep-i-cr.nr-docto    =
+                         fat-repre.nr-fatura
+                   rep-i-cr.parcela     = fat-duplic.parcela.
+        end.
+    end.
+    /*
+    else
+        if  avail ped-venda then do:
+            for each ped-repre use-index ch-pedrep1
+               where ped-repre.nr-pedido = ped-venda.nr-pedido
+                no-lock,
+                each repres use-index nome
+                     where repres.nome-abrev =
+                           ped-repre.nome-ab-rep no-lock:
+                /*
+                if  l-comissao then do:
+                    {ftp/ft0603.i1 ped-repre.nome-ab-rep
+                                   ped-repre.perc-comis
+                                   ped-repre.comis-emis}
+                end.
+                else*/
+                    assign de-comis = ped-repre.perc-comis.
+                create rep-i-cr.
+                assign rep-i-cr.cod-rep     = repres.cod-rep
+                   rep-i-cr.cod-estabel = fat-duplic.cod-estabel
+                   rep-i-cr.cod-esp     = fat-duplic.cod-esp
+                   rep-i-cr.comis-emis  = ped-repre.comis-emis
+                   rep-i-cr.comissao    = round(de-comis,4)
+                   rep-i-cr.ep-codigo   = lin-i-cr.ep-codigo
+                   rep-i-cr.nr-docto    = fat-duplic.nr-fatura
+                   rep-i-cr.parcela     = fat-duplic.parcela.
+            end.
+        end.
+        */
+
+/*    /* Atualizando status da duplicata */
+ *     find b-fat-dupl where rowid(b-fat-dupl) = r-fat-dupl.
+ *     assign b-fat-dupl.flag-atualiz = yes.
+ *     if  last-of(fat-duplic.nr-fatura) then do:
+ *         if  esp-doc.atual-estat then do for estatist:
+ *             find estatist where
+ *                  estatist.cod-emitente = emitente.cod-emitente
+ *                  exclusive-lock no-error.
+ *             if  not avail estatist then do:
+ *                 create estatist.
+ *                 assign estatist.cod-emitente =
+ *                        emitente.cod-emitente
+ *                   estatist.vl-maior-tit =
+ *                          (accum total by fat-duplic.nr-fatura
+ *                                 fat-duplic.vl-parcela)
+ *                   estatist.dt-maior-tit = fat-duplic.dt-emissao
+ *                   estatist.vl-ult-tit   =
+ *                          (accum total by fat-duplic.nr-fatura
+ *                                 fat-duplic.vl-parcela)
+ *                   estatist.dt-ult-tit   = fat-duplic.dt-emissao.
+ *             end.
+ *             else do:
+ *                 if  param-cr.mo-codigo = 0  then
+ *                     assign de-fator1 = 1
+ *                            de-fator2 = 1.
+ *                 else do:
+ *                     {cdp/cd9600.i param-cr.mo-codigo
+ *                                   fat-duplic.dt-emissao
+ *                                   de-fator1}
+ *                     else
+ *                         assign de-fator1 = 1.
+ *                     {cdp/cd9600.i param-cr.mo-codigo
+ *                                   estatist.dt-maior-tit
+ *                                   de-fator2}
+ *                     else
+ *                         assign de-fator2 = 1.
+ *                 end.
+ *             end.
+ *             if  de-fator1 = 0 then assign de-fator1 = 1.
+ *             if  de-fator2 = 0 then assign de-fator2 = 1.
+ *             assign de-titulo = (accum total by fat-duplic.nr-fatura
+ *                                fat-duplic.vl-parcela) / de-fator1
+ *                    de-maior-tit = estatist.vl-maior-tit / de-fator2.
+ *             if  de-titulo >= de-maior-tit then
+ *                 assign estatist.vl-maior-tit = (accum total by fat-duplic.nr-fatura
+ *                                               fat-duplic.vl-parcela)
+ *                       estatist.dt-maior-tit = fat-duplic.dt-emissao.
+ *             if  fat-duplic.dt-emissao >= estatist.dt-ult-tit then
+ *                 assign estatist.vl-ult-tit = (accum total by fat-duplic.nr-fatura
+ *                                              fat-duplic.vl-parcela)
+ *                        estatist.dt-ult-tit = fat-duplic.dt-emissao.
+ *         end.
+ *         /* Aqui havia contabilizacao para o CR (lin-ct-cr) */
+ *     end.*/
+
+end.
+if  i-tot-doc > 0 then do:
+    find doc-i-cr
+       where doc-i-cr.ep-codigo = i-empresa
+         and doc-i-cr.referencia = c-referencia
+             exclusive-lock no-error.
+    if  not avail doc-i-cr then do:
+        create doc-i-cr.
+        assign doc-i-cr.cod-estabel = nota-fiscal.cod-estabel
+               doc-i-cr.ct-credito  = estabelec.ct-recven
+               doc-i-cr.sc-credito  = estabelec.sc-recven
+               doc-i-cr.dt-movto    = nota-fiscal.dt-emis-nota
+               doc-i-cr.ep-codigo   = i-empresa
+               doc-i-cr.referencia  = c-referencia
+               doc-i-cr.total-movto = 0.
+        create doc-work.
+        assign doc-work.reg-doc    = rowid(doc-i-cr)
+               doc-work.referencia = doc-i-cr.referencia.
+    end.
+    assign doc-i-cr.total-movto = de-vl-total.
+end.
+if  avail ped-venda
+and ped-venda.ind-antecip then do:
+    find ped-antecip of ped-venda exclusive-lock no-error.
+    find first w-ped-ant
+         where w-ped-ant.r-pedido = rowid(ped-venda) no-error.
+    if  not avail w-ped-ant then do:
+        create w-ped-ant.
+        assign w-ped-ant.r-pedido = rowid(ped-venda).
+        do  i-cont = 1 to 6:
+            find    titulo
+              where titulo.ep-codigo   = i-empresa
+                and titulo.cod-estabel = ped-venda.cod-estabel 
+/*  O I-CONT DOS CAMPOS ABAIXO ESTÇO EM COMENT PQ ELES Sà SÇO EXTENT
+ *   NA VERSÇO INTERNAC, ¥ SEI PQ...*/
+                and titulo.cod-esp     = ped-antecip.cod-esp /*[i-cont]*/
+                and titulo.nr-docto    = ped-antecip.nr-docto /*[i-cont]*/ no-lock no-error.
+/*  EM COMENT PQ O PED-ANTECIP.PARCELA DEVERµ TER SEU FORMAT ALTERADO
+ *   DE 99 P/ X(2)...                
+ *                 and titulo.parcela     = ped-antecip.parcela /*[i-cont]*/*/
+            if  avail titulo then do:
+                find first w-cr-ant
+                     where w-cr-ant.ep-codigo   = i-empresa
+                       and w-cr-ant.cod-estabel = ped-venda.cod-estabel
+                       and w-cr-ant.cod-esp     = ped-antecip.cod-esp /*[i-cont]*/
+                       and w-cr-ant.nr-docto    = ped-antecip.nr-docto /*[i-cont]*/  
+/*EM COMENT PQ O PED-ANTECIP.PARCELA DEVERµ TER SEU FORMAT ALTERADO
+ *  *   DE 99 P/ X(2)...                         
+ *                        and w-cr-ant.parcela     = ped-antecip.parcela /*[i-cont]*/*/
+                           no-error.
+                if  not avail w-cr-ant then do:
+                    create w-cr-ant.
+                    assign w-cr-ant.ep-codigo   = titulo.ep-codigo
+                           w-cr-ant.cod-estabel = titulo.cod-estabel
+                           w-cr-ant.cod-esp     = titulo.cod-esp
+                           w-cr-ant.nr-docto    = titulo.nr-docto .
+/*EM COMENT PQ O PED-ANTECIP.PARCELA DEVERµ TER SEU FORMAT ALTERADO
+ *  *   DE 99 P/ X(2)...                             
+ *                            w-cr-ant.parcela     = titulo.parcela.*/
+                end.
+                if  ped-venda.mo-codigo <> 0 then do:
+                    find first cotacao
+                    where cotacao.mo-codigo   = ped-venda.mo-codigo
+                    and cotacao.ano-periodo =
+                        string(year(ped-antecip.data-antecip[i-cont]),'9999') +
+                        string(month(ped-antecip.data-antecip[i-cont]),'99')
+                 and cotacao.cotacao[int(day(ped-antecip.data-antecip[i-cont]))]
+                        <> ? no-lock.
+                    assign de-fator =
+                    cotacao.cotacao[int(day(ped-antecip.data-antecip[i-cont]))].
+                end.
+                else assign de-fator = 1.
+                assign i-aux = (if round((ped-antecip.vl-antecip[i-cont] /
+                                    de-fator), 2) - w-cr-ant.vl-antec >
+                                 titulo.vl-saldo then
+                                    titulo.vl-saldo
+                                 else
+                                    round((ped-antecip.vl-antecip[i-cont] /
+                                    de-fator), 2)) - w-cr-ant.vl-antec
+                       w-cr-ant.vl-antec = w-cr-ant.vl-antec + i-aux
+                       w-ped-ant.vl-antec = w-ped-ant.vl-antec + i-aux.
+            end.
+        end.
+    end.
+    for each w-lin:
+        find lin-i-cr where rowid(lin-i-cr) = w-lin.r-lin no-lock.
+        do  i-cont = 1 to 6:
+            find first w-cr-ant
+              where w-cr-ant.ep-codigo   = i-empresa
+                and w-cr-ant.cod-estabel = ped-venda.cod-estabel 
+/*  O I-CONT DOS CAMPOS ABAIXO ESTÇO EM COMENT PQ ELES Sà SÇO EXTENT
+ *   NA VERSÇO INTERNAC, ¥ SEI PQ...*/                
+                and w-cr-ant.cod-esp     = ped-antecip.cod-esp /*[i-cont]*/
+                and w-cr-ant.nr-docto    = ped-antecip.nr-docto /*[i-cont]*/
+/*EM COMENT PQ O PED-ANTECIP.PARCELA DEVERµ TER SEU FORMAT ALTERADO
+ *  *  *   DE 99 P/ X(2)...                
+ *                 and w-cr-ant.parcela     = ped-antecip.parcela /*[i-cont]*/*/
+                    no-error.
+            if  avail w-cr-ant
+            and w-ped-ant.vl-antec > 0
+            and w-cr-ant.vl-antec > 0 then do:
+                create lin-ant.
+                assign lin-ant.ep-codigo    = i-empresa
+                       lin-ant.cod-estabel  = ped-venda.cod-estabel 
+/*  O I-CONT DOS CAMPOS ABAIXO ESTÇO EM COMENT PQ ELES Sà SÇO EXTENT
+ *   NA VERSÇO INTERNAC, ¥ SEI PQ...*/                       
+                       lin-ant.esp-antecip  = ped-antecip.cod-esp /*[i-cont]*/
+                       lin-ant.doc-antecip  = ped-antecip.nr-docto /*[i-cont]*/
+/*  EM COMENT PQ CAMPO PED-ANTECIP.PARCELA FICOU DE SER MUDADO SEU FORMATO
+ *   DE 99 P/ X(12) PELO TREMARIM                          
+ *                        lin-ant.parc-antecip = ped-antecip.parcela /*[i-cont]*/*/
+                       lin-ant.cod-esp      = lin-i-cr.cod-esp
+                       lin-ant.nr-docto     = lin-i-cr.nr-docto
+                       lin-ant.parcela      = lin-i-cr.parcela
+                       lin-ant.cod-emitente = emitente.cod-emitente
+                       lin-ant.vl-antecip   = if w-cr-ant.vl-antec
+                                            > w-ped-ant.vl-antec then
+                                              w-ped-ant.vl-antec
+                                            else w-cr-ant.vl-antec  
+/*  EM COMENT PQ O CAMPO LIN-I-CR.VL-ORIGINAL Sà EXISTE NO INTERNAC                                          
+ *                        lin-ant.vl-antecip   = if lin-ant.vl-antecip
+ *                                             > (lin-i-cr.vl-original
+ *                                                - lin-i-cr.vl-desconto) then
+ *                                               lin-i-cr.vl-original
+ *                                               - lin-i-cr.vl-desconto
+ *                                             else lin-ant.vl-antecip*/
+                       w-ped-ant.vl-antec = w-ped-ant.vl-antec -
+                         lin-ant.vl-antecip
+                       w-cr-ant.vl-antec = w-cr-ant.vl-antec -
+                         lin-ant.vl-antecip
+                       ped-antecip.vl-antecip[i-cont] =
+                         ped-antecip.vl-antecip[i-cont] - lin-ant.vl-antecip.
+            end.
+            else
+                next.
+        end.
+    end.
+end.
+/*****************************************************************
+** O status da nota e atualizado quando a nota nao emite duplicata
+** ou quando emite e EFETIVAMENTE as duplicatas da mesma foram ge-
+** radas para o contas a receber
+******************************************************************/
+if  not l-titulo then do:
+    find b-nota where rowid(b-nota) = r-nota-s exclusive-lock no-error.
+    if  not b-nota.emite-dup then do for it-nota-fisc:
+        assign b-nota.ind-sit-nota = if  natur-oper.atual-estat then 5
+                                     else 6
+               b-nota.dt-atual-cr  = today.
+        for each it-nota-fisc
+            where it-nota-fisc.cod-estabel = b-nota.cod-estabel
+            and   it-nota-fisc.serie       = b-nota.serie
+            and   it-nota-fisc.nr-nota-fis = b-nota.nr-nota-fis exclusive-lock:
+            assign it-nota-fisc.ind-sit-nota = b-nota.ind-sit-nota.
+        end.
+    end.
+    else do for fat-duplic:
+        find first fat-duplic
+             where fat-duplic.cod-estabel = b-nota.cod-estabel
+               and fat-duplic.serie       = b-nota.serie
+               and fat-duplic.nr-fatura   = b-nota.nr-fatura
+               and fat-duplic.flag-atualiz no-lock no-error.
+        if  avail fat-duplic then do for it-nota-fisc:
+            assign b-nota.ind-sit-nota = if  natur-oper.atual-estat then 5
+                                         else 6
+                   b-nota.dt-atual-cr  = today.
+            for each it-nota-fisc
+            where it-nota-fisc.cod-estabel = b-nota.cod-estabel
+            and   it-nota-fisc.serie       = b-nota.serie
+            and   it-nota-fisc.nr-nota-fis = b-nota.nr-nota-fis exclusive-lock:
+                assign it-nota-fisc.ind-sit-nota = b-nota.ind-sit-nota.
+            end.
+        end.
+    end.
+end.
+end.
+/* FT0603.I4 */

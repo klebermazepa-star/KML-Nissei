@@ -1,0 +1,27 @@
+/******************************************************************************
+**
+** CD4305.I2 - Defini‡Æo da tabela temporaria tt-it-nota-doc.
+**
+**
+** Objetos que utilizam essa include:
+** - FT2003-b01.w
+** - FT2004.w
+** - FT2004-v08.w 
+**
+******************************************************************************/
+
+
+/******************************ATENCAO*************************************
+ Pre-processador abaixo determina a utiliza‡Æo da Rotina Ciap - Cr‚dito de ICMS
+ do Ativo Permanente, se estiver definida a vari vel bf_dis_ciap 
+ ( &if defined(bf_dis_ciap) &then ) 
+**************************************************************************/ 
+
+&if defined(bf_dis_ciap) &then
+    def temp-table tt-it-nota-doc like it-nota-doc
+        field seq-tt-it-docto     as   int
+        index seq is unique
+              seq-tt-it-docto.          
+&endif
+  
+/*  CD4305.I2  */                                               

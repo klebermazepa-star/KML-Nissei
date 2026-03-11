@@ -1,0 +1,129 @@
+/*******************************************************************************
+**
+** reapi190b.i5 - Calcula ICMS Desonerado - Configurador de Tributos Importa‡Æo
+** 
+*******************************************************************************/
+
+PROCEDURE calculaICMSdesonerado:
+/*------------------------------------------------------------------------------
+ Calcula ICMS Desonerado Importa‡Æo
+------------------------------------------------------------------------------*/
+    
+  /*cria‡Æo registro wt-docto para carregar informa‡äes da configura‡Æo de tributo*/  
+  RUN createTbWtDocto (INPUT tt-docum-est-nova.serie-docto,                                   
+                       INPUT tt-docum-est-nova.nro-docto,                                     
+                       INPUT tt-docum-est-nova.cod-emitente,                                  
+                       INPUT tt-docum-est-nova.nat-operacao). 
+  
+  FOR FIRST tt-it-docto 
+      where tt-it-docto.nr-nota         = tt-docum-est-nova.nro-docto                                                 
+      and   tt-it-docto.serie           = tt-docum-est-nova.serie-docto                                                     
+      and   tt-it-docto.cod-estabel     = tt-docum-est-nova.cod-estabel                                               
+      and   tt-it-docto.nat-operacao    = tt-docum-est-nova.nat-operacao                                              
+      and   tt-it-docto.nr-sequencia    = tt-item-doc-est-nova.sequencia NO-LOCK: END.                       
+                                                       
+  RUN createTbWtItDoctoImposto.
+  
+  RUN enviaTbWtDocto     IN h-bodi613calc2 (INPUT TABLE tb-wt-docto). 
+  RUN enviaTbWtItDocto   IN h-bodi613calc2 (INPUT TABLE tb-wt-it-docto).            
+  RUN enviaTbWtItImposto IN h-bodi613calc2 (INPUT TABLE tb-wt-it-imposto).
+ 
+  RUN enviaTbWtDocto     IN  h_bodi317im2bra (INPUT TABLE tb-wt-docto).  
+  RUN enviaTbWtItDocto   IN  h_bodi317im2bra (INPUT TABLE tb-wt-it-docto).
+  RUN enviaTbWtItImposto IN  h_bodi317im2bra (INPUT TABLE tb-wt-it-imposto).
+   
+ 
+  RUN localizaWtDocto IN h_bodi317im2bra (INPUT 1,
+                                          OUTPUT l-procedimento-ok).
+  IF  NOT l-procedimento-ok THEN 
+      RETURN "NOK":U.    
+ 
+  RUN retornaTbWtItImposto IN h_bodi317im2bra (OUTPUT TABLE tb-wt-it-imposto).
+ 
+  RUN localizaWtDocto in h-bodi613calc2 ( input 1,
+                                          output l-procedimento-ok ).
+  IF NOT l-procedimento-ok THEN 
+     RETURN "NOK":U. 
+                                         
+  RUN pi-recebe-handle in h_bodi317im2bra (input "h-bodi613calc2",
+                                          input h-bodi613calc2).
+   
+  RUN trataConfigTributos in h_bodi317im2bra.
+ 
+  /* retornar temp-table */       
+  run retornaTbCtTribWtItemDocto in h-bodi613calc2 ( output table tb-ct-trib-wt-item-docto ).
+  run retornaTbWtItImposto       in h-bodi613calc2 ( output table tb-wt-it-imposto ). 
+  
+
+  IF AVAIL tt-it-docto THEN DO:
+             
+      FOR FIRST tt-desconto-icms                                                                       
+          WHERE tt-desconto-icms.numero-ordem = tt-item-doc-est-nova.numero-ordem                                         
+          AND   tt-desconto-icms.parcela      = tt-item-doc-est-nova.parcela: END.      
+      
+      /* Calcula valor quando tem percentual de desconto */
+      if tt-desconto-icms.de-perc-desc-icms > 0 then
+         ASSIGN de-vl-desc-icms    = (tt-it-docto.vl-merc-ori - tt-it-docto.desconto) * (tt-desconto-icms.de-perc-desc-icms / 100). 
+      else 
+         ASSIGN de-vl-desc-icms    = 0.                                            
+    
+      /*Verifica se encontrou cen rio fiscal com ICMS Desonerado no Configurador de Tributos */      
+      FOR FIRST tb-wt-docto NO-LOCK
+          WHERE tb-wt-docto.serie        = tt-docto.serie 
+            AND tb-wt-docto.nr-nota      = tt-docto.nr-nota   
+            AND tb-wt-docto.cod-emitente = tt-docto.cod-emitente
+            AND tb-wt-docto.nat-operacao = tt-docto.nat-operacao
+            AND tb-wt-docto.seq-wt-docto = tt-docto.seq-tt-docto,
+          FIRST tb-wt-it-docto NO-LOCK
+          WHERE tb-wt-it-docto.seq-wt-docto    = tb-wt-docto.seq-wt-docto
+            AND tb-wt-it-docto.seq-wt-it-docto = tt-it-docto.nr-sequencia,
+          FIRST tb-ct-trib-wt-item-docto NO-LOCK
+          WHERE tb-ct-trib-wt-item-docto.num-seq-wt-docto      = tb-wt-docto.seq-wt-docto
+            AND tb-ct-trib-wt-item-docto.num-seq-wt-item-docto = tb-wt-it-docto.seq-wt-it-docto
+            AND tb-ct-trib-wt-item-docto.cod-tip-trib          = "ICMS Desonerado":     
+                    
+          /* Grava o valor calculado pelo configurador */  
+          ASSIGN de-vl-desc-icms    = tb-ct-trib-wt-item-docto.val-trib            
+                 tt-desconto-icms.de-perc-desc-icms  = 0   
+                 tt-desconto-icms.l-aplica-desc-icms = no. /* Ainda nÆo tem tratamento para o Aplica Desconto ICMS pelo configurador */                
+
+      END.                                                                                     
+   
+      EMPTY TEMP-TABLE tt-ext-item-doc-est-deson.    
+      CREATE tt-ext-item-doc-est-deson.
+      ASSIGN tt-ext-item-doc-est-deson.serie-docto  = tt-docto.serie 
+             tt-ext-item-doc-est-deson.nro-docto    = tt-docto.nr-nota   
+             tt-ext-item-doc-est-deson.cod-emitente = tt-docto.cod-emitente
+             tt-ext-item-doc-est-deson.nat-operacao = tt-docto.nat-operacao
+             tt-ext-item-doc-est-deson.sequencia    = tt-it-docto.nr-sequencia
+             tt-ext-item-doc-est-deson.cod-param    = "icms-deson":U
+             tt-ext-item-doc-est-deson.log-livre-1  = tt-desconto-icms.l-aplica-desc-icms /*aplica como desconto*/
+             tt-ext-item-doc-est-deson.val-livre-1  = tt-desconto-icms.de-perc-desc-icms  /*perc desconto icms*/
+             tt-ext-item-doc-est-deson.val-livre-2  = de-vl-desc-icms. /*valor desconto icms*/                       
+         
+      /* Cria ou atualiza informa‡Æo da desonera‡Æo na tabela de extensÆo do item do documento */
+      IF tt-it-docto.nr-sequencia > 0 THEN DO:                   
+         RUN openQueryStatic IN h-boin01017 (INPUT "Main":U) NO-ERROR.
+         RUN goToKey IN h-boin01017 (INPUT tt-docto.serie, 
+                                     INPUT tt-docto.nr-nota,    
+                                     INPUT tt-docto.cod-emitente, 
+                                     INPUT tt-docto.nat-operacao, 
+                                     INPUT tt-it-docto.nr-sequencia, 
+                                     INPUT "icms-deson":U). 
+                                       
+         IF  RETURN-VALUE = "OK":U THEN DO:
+             RUN emptyRowErrors IN h-boin01017.
+             RUN setRecord IN h-boin01017 (INPUT TABLE tt-ext-item-doc-est-deson).
+             RUN updateRecord IN h-boin01017.  
+         END.    
+         ELSE DO:
+             RUN emptyRowErrors IN h-boin01017.
+             RUN setRecord IN h-boin01017 (INPUT TABLE tt-ext-item-doc-est-deson).
+             RUN createRecord IN h-boin01017.
+         END.
+      END.
+  END.
+ 
+END PROCEDURE. 
+         
+         

@@ -1,0 +1,45 @@
+/*****************************************************************************
+**   NICS0202.I2 - Rotina de Impressao dos Custos dos Itens por Familia
+*****************************************************************************/
+
+l-primeira = yes.
+
+for each item use-index familia where
+    item.it-codigo >= c-item-ini and item.it-codigo <= c-item-fim and
+    item.ge-codigo >= i-grupo-ini and item.ge-codigo <= i-grupo-fim and
+    item.fm-codigo >= c-familia-ini and item.fm-codigo <= c-familia-fim and
+    item.desc-item >= c-descr-ini and item.desc-item <= c-descr-fim and
+    item.inform-compl >= c-inf-ini and item.inform-compl <= c-inf-fim and
+    item.data-implant >= d-data-ini and item.data-implant <= d-data-fim  no-lock
+    &IF DEFINED (bf_man_custeio_item) &THEN
+        , first item-uni-estab where
+                item-uni-estab.it-codigo   = item.it-codigo and
+                item-uni-estab.cod-estabel = tt-param.cod-estabel no-lock
+    &ENDIF    
+    on stop undo, leave :
+    view frame f-cabec-255.
+    view frame f-rodape-255.   
+    
+    if c-opcao-obs = "2" and item.cod-obsoleto > 1 then
+        next.
+    if c-opcao-obs = "3" and item.cod-obsoleto = 1 then
+        next.
+    find familia where familia.fm-codigo = item.fm-codigo no-lock no-error.
+    if c-familia-aux <> item.fm-codigo /*or line-counter <= 9 or line-counter > 58*/ then do:
+        if not l-primeira then
+           /*page.*/
+           put skip(1).
+        l-primeira = no.          
+        
+        {utp/ut-liter.i Fam¡lia mcs l}
+        assign c-fam = return-value.    
+        
+        display c-fam ": " item.fm-codigo "-" no-label
+                familia.descricao when available familia no-label skip(1)
+                with no-box page-top no-label width 132 stream-io frame f2-cab.
+    end.
+    {intprg/nics0202.i5}
+    c-familia-aux = item.fm-codigo.
+end.
+
+/* Fim do Include */

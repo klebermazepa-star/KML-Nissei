@@ -1,0 +1,53 @@
+procedure pi-atualiza-nr-nota-fatura:
+/*********************************************************************************************/
+/*Utilizada pela include ft2010.i12                                                          */  
+/*Se o numero da nota estourar o limite determinado para o pais entao o numero da nota e     */
+/*reinicializado.*/
+
+    def input  param nr-ult-nota-fat like ser-estab.nr-ult-nota no-undo.
+    def output param c-nr-nota-fat   like ser-estab.nr-ult-nota no-undo.
+        
+    case i-pais-impto-usuario:
+    
+        when 1  then do: /*Brasil */
+
+            &if '{&bf_libera_15_posicoes}' = 'yes' &then
+                IF DEC(nr-ult-nota-fat) >= 1000000000000000 THEN /* atribui 1 se nr >= 1000000000000000 */
+                   ASSIGN nr-ult-nota-fat = STRING(1,">>>>>>>>9999999").
+                   
+                 ASSIGN c-nr-nota-fat = trim(string(dec(nr-ult-nota-fat), ">>>>>>>>9999999")). 
+
+            &else       
+                IF DEC(nr-ult-nota-fat) >= 10000000000 THEN  /* atribui 1 se nr >= 10000000000 */
+                   ASSIGN nr-ult-nota-fat = STRING(1,">>>9999999").
+                   
+                ASSIGN c-nr-nota-fat = trim(string(dec(nr-ult-nota-fat), ">>>9999999")). 
+            &endif    
+
+        end.
+        when 2 then do: /*Argentina*/                  
+            if int(nr-ult-nota-fat) >= 100000000 then  
+                assign nr-ult-nota-fat = trim(string(1,">9999999")).
+                
+            assign c-nr-nota-fat = trim(string(integer(nr-ult-nota-fat),">9999999")). 
+            
+        end.
+        when 3 then do: /*Estados Unidos*/   
+
+            /* No include ft2010.i12 existe uma DPC que efetua o tratamento necessario para os EUA onde */
+            /* o controle de numeracao de notas fiscais e determinado por uma faixa.                    */
+
+            assign c-nr-nota-fat = trim(string(dec(nr-ult-nota-fat),">>>>>>>>>9999999")).
+                        
+        end.
+                        
+        otherwise do: 
+            if int(nr-ult-nota-fat) >= 100000000 then  
+                assign nr-ult-nota-fat = trim(string(1,">9999999")).
+                
+            assign c-nr-nota-fat = trim(string(integer(nr-ult-nota-fat),">9999999")). 
+            
+        end.                    
+    end case. 
+end procedure.
+

@@ -1,0 +1,16 @@
+
+ADD FIELD "caminho_unix" OF "int_ndd_param" AS character 
+  DESCRIPTION "Diret¢rio Unix"
+  FORMAT "x(120)"
+  INITIAL ""
+  LABEL "Diret¢rio Unix"
+  POSITION 7
+  MAX-WIDTH 240
+  HELP "Diret¢rio base onde ficam os programas, WSDL e XML no Unix"
+  ORDER 60
+
+.
+PSC
+cpstream=ibm850
+.
+0000001735

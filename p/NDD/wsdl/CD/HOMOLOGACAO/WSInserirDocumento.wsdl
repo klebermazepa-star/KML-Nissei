@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://nddigital.com.br/eForms/webservices" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://nddigital.com.br/eForms/webservices" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://nddigital.com.br/eForms/webservices">
+      <s:element name="eDocument">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="header" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="document" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="eDocumentResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="eDocumentResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="eDocumentSoapIn">
+    <wsdl:part name="parameters" element="tns:eDocument" />
+  </wsdl:message>
+  <wsdl:message name="eDocumentSoapOut">
+    <wsdl:part name="parameters" element="tns:eDocumentResponse" />
+  </wsdl:message>
+  <wsdl:portType name="WSInserirDocumentoSoap">
+    <wsdl:operation name="InserirDocumento">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Responsável pelo recebimento das mensagens de envio de documentos eletronicos.</wsdl:documentation>
+      <wsdl:input name="eDocument" message="tns:eDocumentSoapIn" />
+      <wsdl:output name="eDocument" message="tns:eDocumentSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WSInserirDocumentoSoap" type="tns:WSInserirDocumentoSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="InserirDocumento">
+      <soap:operation soapAction="http://nddigital.com.br/eForms/webservices/eDocument" style="document" />
+      <wsdl:input name="eDocument">
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output name="eDocument">
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="WSInserirDocumentoSoap12" type="tns:WSInserirDocumentoSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="InserirDocumento">
+      <soap12:operation soapAction="http://nddigital.com.br/eForms/webservices/eDocument" style="document" />
+      <wsdl:input name="eDocument">
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output name="eDocument">
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WSInserirDocumento">
+    <wsdl:port name="WSInserirDocumentoSoap" binding="tns:WSInserirDocumentoSoap">
+      <soap:address location="https://nfenisseihl.e-datacenter.nddigital.com.br/eFormswebservices/WSInserirDocumento.asmx" />
+    </wsdl:port>
+    <wsdl:port name="WSInserirDocumentoSoap12" binding="tns:WSInserirDocumentoSoap12">
+      <soap12:address location="https://nfenisseihl.e-datacenter.nddigital.com.br/eFormswebservices/WSInserirDocumento.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

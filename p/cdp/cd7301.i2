@@ -1,0 +1,21 @@
+/***************************************************************
+** 
+**    cd7301.i2: Testa Versao de Integracao 
+**
+***************************************************************/
+
+find first tt-versao-integr no-lock no-error.
+if  tt-versao-integr.cod-versao-integracao <> i-versao-integ then do:
+    run utp/ut-msgs.p (input "msg",
+                       input 3941,
+                       input "").
+    create tt-erros-geral.
+    assign tt-erros-geral.identif-msg        = ""
+           tt-erros-geral.num-sequencia-erro = 1
+           tt-erros-geral.cod-erro           = 3941
+           tt-erros-geral.des-erro           = return-value + {1}.                   
+    return "NOK".
+end.                    
+                                       
+
+/*** Fim do Include ***/

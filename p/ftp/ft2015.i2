@@ -1,0 +1,16 @@
+/******************************************************************************
+**
+** FT2015.I2 - Definic∆o da tabela temporaria tt-desp-nota-fisc
+**
+**
+******************************************************************************/
+
+def temp-table tt-desp-nota-fisc no-undo
+        field cod-despesa                    like desp-nota-fisc.cod-despesa      
+        field val-per-desp                   like desp-nota-fisc.val-per-desp        
+        field val-despesa                    like desp-nota-fisc.val-despesa
+        field cod-estabel                    like desp-nota-fisc.cod-estabel  
+        field serie                          like desp-nota-fisc.serie
+        field nr-nota-fis                    like desp-nota-fisc.nr-nota-fis.
+          
+          

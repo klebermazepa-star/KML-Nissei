@@ -1,0 +1,73 @@
+{include/i_dbvers.i}
+&IF "{&mguni_version} " < "2.08" &THEN 
+
+/*******************************************************************************
+**
+**   cd7300.i6: Prepara chamada da MPAPI002
+**              Gera os dados que serao enviados para o Multiplanta para
+**              replicacao.  
+**              DEVE SER USADO SOMENTE QUANDO OS ERROS FOREM EXIBIDOS EM 
+**              TELA.
+**
+**              {1} - VersÆo de Integra‡Æo
+**              {2} - C¢digo da Transa‡Æo
+**              {3} - Diferencia‡Æo das Temp-Tables
+**                    Exemplo:  tt-replica-msg{-aux1}
+**                              tt-dados-env{-aux1}
+**                              tt-integracao{-aux1}
+**                              tt-control-env{-aux1}
+**                              tt-destino-env{-aux1}
+*********************************************************************************/
+
+    if  param-global.modulo-mp
+    and (   tt-replica-msg{3}.log-replica-msg  = yes
+         or c-estabel-dest <> ""
+         or c-lista-dest   <> "" )
+    then do:
+
+        find first tt-dados-env{3} no-lock no-error.
+        if  avail tt-dados-env{3}
+        then do:
+            assign tt-integracao{3}.cod-versao-integracao = {1}
+                   tt-integracao{3}.cod-transacao         = {2}.
+
+            create tt-control-env{3}.
+            assign tt-control-env{3}.cod-usuario          = c-seg-usuario
+                   tt-control-env{3}.cod-maq-origem       = i-maq-local. 
+
+            if  c-estabel-dest <> "" then
+                assign tt-control-env{3}.cod-estabelec-dest = c-estabel-dest.
+             
+            if  c-lista-dest <> "" then
+                assign tt-control-env{3}.cd-lista-destino = c-lista-dest.
+
+            run mpp/mpapi002.p (input-output table tt-integracao{3},
+                                input-output table tt-control-env{3},
+                                input        table tt-dados-env{3}).
+
+            find first tt-integracao{3} no-lock no-error.
+            if  return-value = "NOK" then do:
+                run utp/ut-msgs.p (input "show",
+                                   input tt-integracao{3}.cod-erro,
+                                   input tt-integracao{3}.conteudo).
+
+                for each tt-control-env{3}:
+                    delete tt-control-env{3}.
+                end.
+
+                for each tt-dados-env{3}:
+                    delete tt-dados-env{3}.
+                end.
+
+                return "adm-error".
+            end.
+        end.
+    end.
+
+    for each tt-dados-env{3}:
+        delete tt-dados-env{3}.
+    end.               
+    
+/*** Fim do Include ***/ 
+
+&ENDIF

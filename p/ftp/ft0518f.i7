@@ -1,0 +1,3 @@
+/* TRATA CAMPOS COM VALOR ? E MUDA PARA "" */
+
+IF {1} = ? THEN "" ELSE {1}

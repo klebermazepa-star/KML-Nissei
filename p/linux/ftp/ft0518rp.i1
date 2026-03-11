@@ -1,0 +1,14 @@
+/* Defini‡Æo da tabela tempor ria ttCaracteres e ttColunasDANFE */
+
+DEFINE {1} SHARED TEMP-TABLE ttCaracteres NO-UNDO
+    FIELD codigoASC    AS INTEGER
+    FIELD tamanhoChar  AS DECIMAL
+    INDEX ixCaracteres IS PRIMARY UNIQUE codigoASC.
+
+DEFINE {1} SHARED TEMP-TABLE ttColunasDANFE NO-UNDO
+    FIELD codigo          AS CHARACTER
+    FIELD descricao       AS CHARACTER
+    FIELD tamanhoRetrato  AS DECIMAL
+    FIELD tamanhoPaisagem AS DECIMAL
+    INDEX ixColunasDANFE  IS PRIMARY UNIQUE codigo
+    INDEX ixColunasDANFE2 IS UNIQUE descricao.

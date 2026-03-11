@@ -1,0 +1,221 @@
+/******************************************************************************
+***
+*** CDAPI013.I10 - Definiá∆o temp-tables Monitoramento Avaliaá∆o CrÇdito
+***
+******************************************************************************/
+{cdp/cdcfgmat.i}
+{cdp/cdcfgdis.i}
+{utp/ut-glob.i}
+
+DEFINE STREAM s-monitor.
+
+define temp-table tt-mnt-param-exec no-undo
+       field nr-pedido     like tt-param-aval.nr-pedido
+       field param-aval    like tt-param-aval.param-aval    label "ParÉmetro Avaliaá∆o"
+       field embarque      like tt-param-aval.embarque      label "Embarque"
+       field efetiva       like tt-param-aval.efetiva       label "Efetiva"
+       field retorna       like tt-param-aval.retorna       label "Retorna"
+       field reavalia-forc like tt-param-aval.reavalia-forc label "Reavalia Foráado"
+       field vl-a-aval     like tt-param-aval.vl-a-avaliar  label "Valor a Avaliar"
+       field usuario       like tt-param-aval.usuario       label "Usu†rio Avaliador"
+       field programa      like tt-param-aval.programa      label "Programa Avaliador".
+
+define temp-table tt-mnt-param-emit no-undo
+       field nome-abrev         like emitente.nome-abrev
+       field lim-credito        like emitente.lim-credito
+       field dt-lim-cre         like emitente.dt-lim-cre
+       field lim-adicional      like emitente.lim-adicional
+       field dt-fim-cred        like emitente.dt-fim-cred
+       field moeda-libcre       like emitente.moeda-libcre
+       field ind-cre-cli        like emitente.ind-cre-cli
+       field ind-aval           like emitente.ind-aval
+       field ind-aval-embarque  like emitente.ind-aval-embarque
+       field data-implant       like emitente.data-implant
+       field cod-gr-cli         like emitente.cod-gr-cli
+       field nr-peratr          like emitente.nr-peratr
+       field nr-mesina          like emitente.nr-mesina
+       field nr-cheque-devol    like emitente.nr-cheque-devol
+       field vl-max-devol       like emitente.vl-max-devol
+       field periodo-devol      like emitente.periodo-devol
+       field ind-abrange-aval   like emitente.ind-abrange-aval
+       field identific          like emitente.identific
+       field nome-matriz        like emitente.nome-matriz.
+
+define temp-table tt-mnt-param-matriz no-undo like tt-mnt-param-emit .
+
+define temp-table tt-mnt-param-ped NO-UNDO
+       field dias-maxatr                like &IF "{&bf_dis_versao_ems}" >= "2.062" &then cm-param.num-dia-atraso  &else para-ped.dias-maxatr  &endif
+       field moeda-libcre               like &IF "{&bf_dis_versao_ems}" >= "2.062" &then emitente.moeda-libcre    &else para-ped.moeda-libcre &endif
+       field lim-maxatr                 like &IF "{&bf_dis_versao_ems}" >= "2.062" &then cm-param.val-atraso-max  &else para-ped.lim-maxatr   &endif
+       field lim-admatr                 like &IF "{&bf_dis_versao_ems}" >= "2.062" &then cm-param.val-aviso-db    &else para-ped.lim-admatr   &endif
+       field reabre-aval                like &IF "{&bf_dis_versao_ems}" >= "2.062" &then cm-param.log-reabre-aval &else para-ped.reabre-aval  &endif
+       field periodo-devol              like para-ped.periodo-devol 
+       field nr-cheque-devol            like para-ped.nr-cheque-devol
+       field vl-max-devol               like para-ped.vl-max-devol
+       field dias-admatr                like &IF "{&bf_dis_versao_ems}" >= "2.062" &then  cm-param.num-dia-aviso             &else para-ped.dias-admatr &endif
+       &IF "{&bf_dis_versao_ems}" >= "2.04" &then
+       field log-consid-credito-credito like &IF "{&bf_dis_versao_ems}" >= "2.062" &then cm-param.log-consid-credito-credito &ELSE para-ped.log-consid-credito-credito &ENDIF
+       field log-consid-cotas-credito   like &IF "{&bf_dis_versao_ems}" >= "2.062" &then cm-param.log-consid-cotas-credito   &else para-ped.log-consid-cotas-credito   &endif
+       field log-consid-desco-credito   like &IF "{&bf_dis_versao_ems}" >= "2.062" &then cm-param.log-consid-desco-credito   &else para-ped.log-consid-desco-credito   &endif
+       field log-consid-precos-credito  like &IF "{&bf_dis_versao_ems}" >= "2.062" &then cm-param.log-consid-precos-credito  &else para-ped.log-consid-precos-credito  &endif
+       &endif
+       field horiz-fixo                 like &IF "{&bf_dis_versao_ems}" >= "2.062" &then cm-param.num-horiz-fix &else para-ped.horiz-fixo format ">>>9" &endif.
+
+define temp-table tt-mnt-resultados no-undo
+       field cod-sit-aval       like ped-venda.cod-sit-aval
+       field user-aprov         like ped-venda.user-aprov
+       field quem-aprovou       like ped-venda.quem-aprovou
+       field dt-apr-cred        like ped-venda.dt-apr-cred
+       field desc-bloq          like ped-venda.desc-bloq
+       field desc-forc-cr       like ped-venda.desc-forc-cr
+       field cod-message-alerta like ped-venda.cod-message-alerta format ">>>,>>9"
+       field cr-qtde-limite     like i-qtde-limite    label "Quantidade Limite"
+       field cr-tot-limite      like de-tot-limite    format ">,>>>,>>>,>>9.99" label "Limite Total"
+       field cr-saldo           like de-saldo-cr      format "->,>>>,>>>,>>9.99" label "Saldo CR"
+       field cr-tot-ad          like de-tot-ad        format "->,>>>,>>>,>>9.99" label "Aviso DÇbito"
+       field cr-tot-tit         like de-tot-tit       format "->>,>>>,>>>,>>9.99" label "T°tulos"
+       field cr-sl-aberto       like de-cr-sl-aberto  format "->>,>>>,>>>,>>9.99" label "Saldo Aberto CR"
+       field cr-ant-aberto      like de-cr-ant-aberto format "->,>>>,>>>,>>9.99" label "Saldo Aberto Antecipaá‰es CR"
+       field cr-cheque-devol    like l-cheque-devol   format "Sim/N∆o" label "Cheque Devolvido"
+       field cr-inativo         like l-inativo        format "Sim/N∆o" label "Inativo"
+       field cr-inativo-mp      like l-inativo-mp     format "Sim/N∆o" label "Inativo (MP)"
+       field mi-dt-ult-ven      like da-ult-ven       format "99/99/9999" label "Data Èltima Venda"
+       field cr-ult-atraso      like d-cr-ult-atraso  format "99/99/9999" label "Data Èltimo Atraso"
+       field mp-dt-ult-ven      like mp-dt-ult-ven    label "Data Èltima Venda(MP)"
+       field mp-dt-ult-atr      like mp-dt-ult-atr    label "Data Èltimo Atraso(MP)"
+       field mp-vl-dup-atr      like mp-vl-dup-atr    label "Duplicatas Atrasadas(MP)"
+       field mp-vl-cr-abe       like mp-vl-cr-abe     format "->,>>>,>>>,>>9.99" label "Valor Aberto CR(MP)"
+       field mp-vl-ap-abe       like mp-vl-ap-abe     format "->,>>>,>>>,>>9.99" label "Valor Aberto Ap(MP)"
+       field mi-nr-meses        like i-nr-meses       label "N£mero Meses"
+       field mi-nr-mesina       like i-nr-mesina      label "N£mero Meses Inativo"
+       field ap-saldo           like de-saldo-ap      format "->,>>>,>>>,>>9.99" label "Saldo AP"
+       field ap-sl-aberto       like de-ap-sl-aberto  format "->,>>>,>>>,>>9.99" label "Saldo Aberto AP"
+       field ap-ant-aberto      like de-ap-ant-aberto label "Saldo Aberto Antecipaá‰es AP"
+       field pd-total-ped       like i-total-ped      label "N£mero Pedidos"
+       field pd-tot-pdap        like i-tot-pdap       label "N£mero Pedidos Aprovados"
+       field pd-tot-pdre        like i-tot-pdre       label "N£mero Pedidos Reprovados"
+       field pd-tot-pdaa        like i-tot-pdaa       label "N£mero Pedidos a Avaliar"
+       field pd-totvlap         like de-totvlap       format ">,>>>,>>>,>>9.99" label "Total Pedidos Aprovados"
+       field pd-totvlre         like de-totvlre       format ">,>>>,>>>,>>9.99" label "Total Pedidos Reprovados"
+       field pd-totvlaa         like de-totvlaa       format ">,>>>,>>>,>>9.99" label "Total Pedidos a Avaliar"
+       field pd-sl-ap-forc      like de-pd-sl-ap-forc format "->,>>>,>>>,>>9.99" label "Total Pedidos Aprovados Foráados"
+       field ft-tot-pdcr        like i-tot-pdcr       label "N£mero Notas Fiscais"
+       field ft-vl-nota         like de-vl-nota       label "Total Notas Fiscais".
+
+DEFINE TEMP-TABLE tt-mnt-ped-item no-undo
+       FIELD nome-abrev   LIKE ped-item.nome-abrev
+       FIELD nr-pedcli    LIKE ped-item.nr-pedcli
+       FIELD nr-sequencia LIKE ped-item.nr-sequencia
+       FIELD it-codigo    LIKE ped-item.it-codigo
+       FIELD cod-refer    LIKE ped-item.cod-refer
+       field vl-liq-abe   like ped-item.vl-liq-abe
+       field mo-codigo    like ped-venda.mo-codigo
+       field cot-moeda    like cotacao.cotacao[1]
+       field dt-entrega   like ped-item.dt-entrega
+       field cod-sit-aval like ped-venda.cod-sit-aval
+       index ch-pedido
+             nome-abrev nr-pedcli
+       INDEX ch-codigo IS PRIMARY UNIQUE
+             nome-abrev nr-pedcli nr-sequencia it-codigo cod-refer.
+
+define temp-table tt-mnt-nota-fiscal no-undo
+       field cod-estabel  like nota-fiscal.cod-estabel
+       field serie        like nota-fiscal.serie
+       field nr-nota-fis  like nota-fiscal.nr-nota-fis
+       field nr-fatura    like nota-fiscal.nr-fatura
+       field ind-tip-nota as integer format ">9" label "Tipo"
+       field valor-nota   like de-vl-nota label "Valor Nota"
+       field fator        like de-fator-2 label "Fator Utiliz."
+       index ch-codigo is primary unique
+             cod-estabel serie nr-nota-fis.
+
+define temp-table tt-mnt-titulo no-undo
+       field ep-codigo   like ems2mult.titulo.ep-codigo
+       field cod-estabel like ems2mult.titulo.cod-estabel
+       field cod-esp     like ems2mult.titulo.cod-esp
+       field serie       like ems2mult.titulo.serie
+       field nr-docto    like ems2mult.titulo.nr-docto
+       field parcela     like ems2mult.titulo.parcela
+       field tipo        like ems2mult.titulo.tipo
+       field saldo       like ems2mult.titulo.vl-saldo-me
+       field cot-moeda   like ems2mult.cotacao.cotacao[1]
+       index ch-codigo is primary unique
+             ep-codigo cod-estabel cod-esp serie nr-docto parcela.
+
+define temp-table tt-mnt-cheque no-undo
+       field cod-banco    like cheque.cod-banco
+       field agencia      like cheque.agencia
+       field conta-corren like cheque.conta-corren
+       field nr-cheque    like cheque.nr-cheque
+       field vl-cheque    like cheque.vl-cheque
+       field fator        like de-fator-2 label "Fator Utiliz."
+       index ch-codigo is primary unique
+             cod-banco agencia conta-corren nr-cheque.
+
+define temp-table tt-mnt-tit-ap no-undo
+       field ep-codigo   like ems2mult.tit-ap.ep-codigo
+       field cod-fornec  like ems2mult.tit-ap.cod-fornec
+       field cod-estabel like ems2mult.tit-ap.cod-estabel
+       field cod-esp     like ems2mult.tit-ap.cod-esp
+       field serie       like ems2mult.tit-ap.serie
+       field nr-docto    like ems2mult.tit-ap.nr-docto
+       field parcela     like ems2mult.tit-ap.parcela
+       field tipo        like ems2mult.tit-ap.tipo
+       field saldo       like ems2mult.tit-ap.vl-saldo-me
+       field moeda       like ems2mult.tit-ap.moeda
+       field cot-moeda   like cotacao.cotacao[1]
+       index ch-codigo is primary unique
+             ep-codigo cod-fornec cod-estabel cod-esp serie nr-docto parcela.
+
+define temp-table tt-mnt-emit-estat no-undo
+       field cod-gr-emit  like ems2mult.emit-estat.cod-gr-emit
+       field cod-emitente like ems2mult.emit-estat.cod-emitente
+       field data         like ems2mult.emit-estat.data
+       field valor-rec    like ems2mult.emit-estat.valor-rec
+       field vl-tot-rec   like ems2mult.emit-estat.vl-tot-rec
+       field dias-atraso  like i-dias-atraso label "Atraso"
+       index ch-codigo is primary unique
+             cod-gr-emit cod-emitente data.
+
+define temp-table tt-mnt-gr-cli no-undo
+       field cod-gr-cli like ems2mult.gr-cli.cod-gr-cli
+       field atraso-max like ems2mult.gr-cli.atraso-max
+       index ch-codigo is primary unique
+             cod-gr-cli.
+
+define temp-table tt-mnt-emitente no-undo
+       field cod-emitente like emitente.cod-emitente
+       field nome-emit    like emitente.nome-emit
+       index ch-codigo is primary unique
+             cod-emitente.
+
+define temp-table tt-mnt-resum-emit no-undo
+       field nome-abrev       like resum-emit.nome-abrev
+       field cd-maquina-gerac like resum-emit.cd-maquina-gerac
+       field ep-codigo        like resum-emit.ep-codigo
+       field cod-estabel      like resum-emit.cod-estabel
+       field pd-sl-aberto     like resum-emit.pd-sl-aberto
+       field pd-vl-faturado   like resum-emit.pd-vl-faturado
+       field pd-ult-venda     like resum-emit.pd-ult-venda
+       field ap-sl-aberto     like resum-emit.ap-sl-aberto
+       field ap-ant-aberto    like resum-emit.ap-ant-aberto
+       field cr-dp-atraso     like resum-emit.cr-dp-atraso
+       field cr-av-db-atraso  like resum-emit.cr-av-db-atraso
+       field cr-sl-aberto     like resum-emit.cr-sl-aberto
+       field cr-ant-aberto    like resum-emit.cr-ant-aberto
+       field cr-ult-atraso    like resum-emit.cr-ult-atraso
+       field fator            like de-fator-2 label "Fator Utiliz."
+       index ch-codigo is primary unique
+             nome-abrev cd-maquina-gerac ep-codigo cod-estabel.
+
+define temp-table tt-mnt-estatist no-undo
+       field cod-emitente like ems2mult.estatist.cod-emitente
+       field dt-ult-tit   like ems2mult.estatist.dt-ult-tit
+       field dt-emis-nota as date label "Emiss∆o Èltima NF" format "99/99/9999"
+       index ch-codigo is primary unique
+             cod-emitente.
+
+/* cdp/cdapi013.i10 */
+
+
+

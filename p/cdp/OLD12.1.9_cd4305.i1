@@ -1,0 +1,636 @@
+/******************************************************************************
+**
+** CD4305.I1 - Definicoes das tabelas temporarias tt-docto, 
+**             tt-it-docto e tt-it-imposto.
+**
+** OBS: - Include elaborado especificamente para versao I. 
+**
+** Programas que utilizam essa include:
+** - CD4305
+** - CD4306
+** - CD4307
+** - CD4308
+** - CD4309
+** - CD4310
+** - CD4311
+** - CD4313
+** - CD4314
+**
+******************************************************************************/
+
+
+/******************************ATENCAO*************************************
+ Pre-processador abaixo responsavel por distinguir o produto que
+ esta executando o componente ( Magnus ou EMS ). 
+ Se estiver definida a variavel bf-mat-comex 
+ ( &if defined(bf-mat-comex) &then ) significa que o produto
+ chamador e o Magnus se nao, EMS. Utilizado pelo produto Comercio Exterior
+**************************************************************************/ 
+
+/**************** Novo Modulo de Importacao do Magnus ************************/
+&if defined(bf-mat-comex) &then    
+    def buffer it for it-nota-fisc.
+    def buffer nf for nota-fiscal.
+    def buffer id for item-doc-est.
+
+    def {1} shared temp-table tt-docto                              
+
+        /* campos comuns */
+
+        field cod-des-merc        like nf.cod-des-merc     
+        field cod-emitente        like docum-est.cod-emitente       
+        field cod-estabel         like nf.cod-estabel      
+        field dt-nf-ent-fut       like nf.dt-emis-nota     
+        field estado              like nf.estado           
+        field nat-operacao        like nf.nat-operacao     
+        field nome-abrev          like nf.nome-ab-cli      
+        field nr-nota             like nf.nr-nota-fis      
+        field opcoes              as   log extent 8
+        field pais                like nf.pais             
+        field perc-embalagem      as dec form ">>9.99"
+        field perc-frete          as dec form ">>9.99"
+        field perc-desco1         like ped-venda.perc-desco1        
+        field perc-desco2         like ped-venda.perc-desco2        
+        field perc-seguro         as dec form ">>9.99"
+        field peso-bru-tot        like nf.peso-bru-tot     
+        field peso-liq-tot        like nf.peso-liq-tot     
+        field peso-bru-tot-inf    like nf.peso-bru-tot     
+        field peso-liq-tot-inf    like nf.peso-liq-tot     
+        field serie               like nf.serie            
+        field vl-embalagem        like nf.vl-embalagem     
+        field vl-embalagem-inf    like nf.vl-embalagem     
+        field vl-frete            like nf.vl-frete         
+        field vl-frete-inf        like nf.vl-frete         
+        field vl-mercad           like nf.vl-mercad        
+        field vl-seguro           like nf.vl-seguro        
+        field vl-seguro-inf       like nf.vl-seguro        
+        field char-1              as   c format "x(200)"
+        /* campos do char-1: nr-siscomex e dt-embarque */
+    
+        /* campos do recebimento */
+    
+        field inc-seq             like param-re.inc-seq
+        field seq-item-um         like param-re.seq-item-um
+        field usuario             like param-re.usuario
+        field gera-estrut         as   logical
+    
+        /* campos do faturamento */
+                                                                    
+        field bairro              like nf.bairro           
+        field cep                 like nf.cep
+        field cgc                 like nf.cgc
+        field cond-redespa        like nf.cond-redespa
+        field cidade              like nf.cidade           
+        field cidade-cif          like nf.cidade-cif
+        field cod-cond-pag        like nf.cod-cond-pag     
+        field cod-entrega         like nf.cod-entrega
+        field dt-base-dup         as   date format 99/99/9999       
+        field dt-emis-nota        like nf.dt-emis-nota     
+        field dt-prvenc           like nf.dt-prvenc        
+        field endereco            like nf.endereco
+        field esp-docto           like nf.esp-docto
+        field esp-ped             as   int                          
+        field fat-nota            like fat-duplic.ind-fat-nota      
+        field ind-tip-nota        as   char form "x(02)"
+        field ins-estadual        like nf.ins-estadual
+        field marca-volume        like nf.marca-volume
+        field mo-codigo           like ped-venda.mo-codigo          
+        field no-ab-reppri        like nf.no-ab-reppri     
+        field nome-tr-red         like nf.nome-tr-red
+        field nome-transp         like nf.nome-transp
+        field nivel-rest          like it.nivel-restituicao
+        field nr-fatura           like ser-estab.nr-ult-fat             
+        field cdd-embarq          like nf.cdd-embarq
+        field nr-pedcli           like nf.nr-pedcli        
+        field nr-resumo           like nf.nr-resumo
+        field nr-tabpre           like nf.nr-tabpre
+        field nr-volumes          like nf.nr-volumes
+        field obs                 like nf.observ-nota
+        field pc-rest             like it.pc-restituicao
+        field placa               like nf.placa
+        field tip-cob-desp        like ped-venda.tip-cob-desp       
+        field serie-ent-fut       like nf.serie
+        field nr-nota-ent-fut     like nf.nr-nota-fis
+        field ind-lib-nota        like nf.ind-lib-nota
+        field cod-rota            like nf.cod-rota
+        field cod-msg             like nf.cod-mensagem
+        field vl-taxa-exp         like nf.vl-taxa-exp
+        field nr-proc-exp         like nf.nr-proc-exp
+        field nr-tab-finan        like nf.nr-tab-finan
+        field nr-ind-finan        like nf.nr-ind-finan
+        field cod-portador        like nf.cod-portador
+        field modalidade          like nf.modalidade
+        field selecionado         as char 
+        field zip-code            like pre-fatur.zip-code
+        field nr-nota-base        like nf.nr-nota-fis
+        field serie-base          like nf.serie
+        field nr-prog             as   inte
+    	/*Projeto 90 - Gestão de Caixas*/
+        FIELD num-cx-financ       LIKE nota-fiscal.num-cx-financ
+        FIELD num-process-negoc   LIKE nota-fiscal.num-process-negoc     
+	/*Fim Projeto 90*/
+
+    
+        index codigo is primary
+              cod-estabel
+              serie
+              nr-nota
+              nat-operacao
+    
+        index embarque
+              cdd-embarq
+              nr-resumo
+              nr-nota.
+
+    def {1} shared temp-table tt-it-docto        
+
+        field baixa-estoq         like it.baixa-estoq     
+        field calcula             as   log  init yes
+        field class-fiscal        like item.class-fiscal form {cdp/cd0603.i3}
+        field cod-estabel         like it.cod-estab     
+        field cod-refer           like it.cod-ref       
+        field ct-codigo           as char format "x(20)"      
+        field data-comp           like id.data-comp       
+        field ind-componen        like it.ind-compon
+        field it-codigo           like it.it-codigo       
+        field narrativa           like nar-it-nota.narrativa
+        field nat-comp            like id.nat-oper    
+        field nat-operacao        like it.nat-oper    
+        field nr-nota             like it.nr-nota-fis     
+        field nr-pedcli           like it.nr-pedcli       
+        field nr-sequencia        like it.nr-seq-fat      
+        field nro-comp            like id.nro-comp        
+        field per-des-item        like it.per-des-item    
+        field peso-liq-it         like it.peso-liq-fat    
+        field peso-liq-it-inf     like it.peso-liq-fat    
+        field peso-embal-it       like it.peso-liq-fat
+        field quantidade          like it.qt-faturada     
+        field sc-codigo           as char format "x(20)"      
+        field selecionado         as   char form "x(01)"            
+        field seq-comp            like id.seq-comp        
+        field serie               like it.serie           
+        field serie-comp          like id.serie-comp      
+        field un                  like it.un              
+        field vl-despes-it        like it.vl-despes-it    
+        field vl-despes-it-inf    like it.vl-despes-it    
+        field vl-embalagem        like it.vl-despes-it    
+        field vl-embalagem-inf    like it.vl-despes-it    
+        field vl-frete            like it.vl-despes-it    
+        field vl-frete-inf        like it.vl-despes-it    
+        field vl-merc-liq         like it.vl-merc-liq     
+        field vl-merc-ori         like it.vl-merc-ori     
+        field vl-merc-tab         like it.vl-merc-tab     
+        field vl-preori           like it.vl-preori       
+        field vl-pretab           like it.vl-pretab       
+        field vl-preuni           like it.vl-preuni       
+        field vl-seguro           like it.vl-despes-it    
+        field vl-seguro-inf       like it.vl-despes-it    
+        field vl-tot-item         like it.vl-tot-item     
+        field vl-tot-item-inf     like it.vl-tot-item     
+    
+    
+        /* campos do recebimento */
+        field cod-emitente    like id.cod-emitente
+        field desconto        like id.desconto extent 0
+        field nr-ord-prod     like id.nr-ord-prod
+        field nr-pd-seq       like ped-item.nr-sequencia
+        field num-pedido      like id.num-pedido
+        field numero-ordem    like id.numero-ordem
+        field parcela         like id.parcela
+        field nr-ficha        like id.nr-ficha
+        field num-ord-inv     like id.num-ord-inv
+        field encerra-pa      like id.encerra-pa
+        field reabre-pd       like id.reabre-pd
+        field alterado        as   logical
+        field vl-cotacao      as   dec extent 2
+        field qt-aloc-terc    like id.quantidade 
+        field qt-aloc-cc      like id.quantidade
+        field vl-unit-mob     like id.preco-unit extent 0
+        field valor-mat       like movto-estoq.valor-mat
+        field valor-mob       like movto-estoq.valor-mob 
+        field char-1          as   c format "x(100)"
+        /* campos do char-1: item-pai, cod-roteiro, op-codigo */
+    
+        /* campos do faturamento */
+        field nr-entrega          like it.nr-entrega
+        /*field ct-cuscon           like it.ct-cuscon form "99999999"*/ /*UFC*/
+        field ct-cuscon           as   char form "x(20)"
+        field cod-ccusto-cust-ctbl as char form "x(20)"
+        field cod-entrega         like ped-item.cod-entrega
+        field fat-qtfam           like it.log-1
+        field ind-imprenda        like it.ind-imprenda
+        field mercliq-moeda-forte like it.vl-preori
+        field mercori-moeda-forte like it.vl-preori
+        field merctab-moeda-forte like it.vl-preori
+        field nivel-rest          like it.nivel-restituicao
+        field pc-rest             like it.pc-restituicao
+        field peso-bru-it         like it.peso-bruto
+        field peso-bru-it-inf     like it.peso-bruto
+        field preori-moeda-forte  like it.vl-preori
+        field pretab-moeda-forte  like it.vl-pretab
+        field preuni-moeda-forte  like it.vl-preuni
+        field despes-moeda-forte  like it.vl-preori
+        field sc-cuscon           like it.sc-cuscon 
+        field tipo-atend          like it.tipo-atend
+        field vl-merc-s-icms      like it.vl-merc-liq
+        field vl-preori-ped       like it.vl-preori
+        field vl-pretab-ped       like it.vl-pretab
+        field vl-taxa-exp         like nf.vl-taxa-exp
+        field desconto-zf         as   de
+    
+        index codigo is primary
+              cod-estabel
+              serie
+              nr-nota
+              nr-pedcli
+              nr-sequencia
+              nr-entrega
+              nat-operacao.
+
+    def {1} shared temp-table tt-it-imposto
+
+        field aliquota-icm        like it.aliquota-icm    
+        field aliq-icm-comp       like it.aliquota-icm
+        field aliquota-ipi        like it.aliquota-ipi    
+        field aliquota-iss        like it.aliquota-iss    
+        field cd-trib-icm         like it.cd-trib-icm     
+        field cd-trib-ipi         like it.cd-trib-ipi     
+        field cd-trib-iss         like it.cd-trib-iss     
+        field cod-servico         like it.cod-servico
+        field ind-icm-ret         like it.ind-icm-ret     
+        field per-des-icms        like it.per-des-icms    
+        field perc-red-icm        like it.perc-red-icm    
+        field perc-red-ipi        like it.perc-red-ipi    
+        field perc-red-iss        like it.perc-red-iss    
+        field r-tt-it-docto       as   recid                        
+        field vl-bicms-ent-fut    like it.vl-bicms-it
+        field vl-bicms-it         like it.vl-bicms-it     
+        field vl-bicms-it-merc    like it.vl-bicms-it     
+        field vl-bipi-ent-fut     like it.vl-bipi-it
+        field vl-bipi-it          like it.vl-bipi-it      
+        field vl-biss-it          like it.vl-biss-it      
+        field vl-bsubs-ent-fut    like it.vl-bsubs-it     
+        field vl-bsubs-it         like it.vl-bsubs-it     
+        field icm-complem         like id.icm-complem extent 0
+        field vl-icms-ent-fut     like it.vl-icms-it 
+        field vl-icms-it          like it.vl-icms-it      
+        field vl-icms-it-merc     like it.vl-icms-it
+        field vl-icms-outras      like it.vl-icmsou-it
+        field vl-icmsnt-it        like it.vl-icmsnt-it    
+        field vl-icmsou-it        like it.vl-icmsou-it    
+        field vl-icmsub-ent-fut   like it.vl-icmsub-it
+        field vl-icmsub-it        like it.vl-icmsub-it
+        field vl-ipi-ent-fut      like it.vl-ipi-it
+        field vl-ipi-it           like it.vl-ipi-it       
+        field vl-ipi-outras       like it.vl-ipi-it       
+        field vl-ipint-it         like it.vl-ipint-it     
+        field vl-ipiou-it         like it.vl-ipiou-it     
+        field vl-ir-adic          like it.vl-ir-adic
+        field vl-irf-it           like it.vl-irf-it
+        field vl-iss-it           like it.vl-iss-it       
+        field vl-issnt-it         like it.vl-issnt-it     
+        field vl-issou-it         like it.vl-issou-it    
+        /* Vanderson */ 
+        field vl-pis-sub          like it.vl-ipi-it
+        field vl-cofins-sub       like it.vl-ipi-it
+        /* Vanderson */
+        field vl-pauta            like it.vl-preuni       
+        field vl-precon           like it.vl-precon
+        index codigo is primary
+              r-tt-it-docto.
+
+/********************************* Produto EMS  ********************************/
+&else     
+    def temp-table tt-docto no-undo
+
+        /* campos comuns */
+        field seq-tt-docto        as   int
+        field cod-des-merc        like nota-fiscal.cod-des-merc     
+        field cod-emitente        like docum-est.cod-emitente       
+        field cod-estabel         like nota-fiscal.cod-estabel      
+        field dt-nf-ent-fut       like nota-fiscal.dt-emis-nota     
+        field estado              like nota-fiscal.estado           
+        field nat-operacao        like nota-fiscal.nat-operacao     
+        field nome-abrev          like nota-fiscal.nome-ab-cli      
+        field nr-nota             like nota-fiscal.nr-nota-fis      
+        field opcoes              as   log extent 8
+        field pais                like nota-fiscal.pais             
+        field perc-embalagem      as   dec form ">>9.99"
+        field perc-frete          as   dec form ">>9.99"
+        field perc-desco1         like ped-venda.perc-desco1        
+        field perc-desco2         like ped-venda.perc-desco2        
+        field perc-seguro         as   dec form ">>9.99"
+        field peso-bru-tot        like nota-fiscal.peso-bru-tot     
+        field peso-liq-tot        like nota-fiscal.peso-liq-tot     
+        field peso-bru-tot-inf    like nota-fiscal.peso-bru-tot     
+        field peso-liq-tot-inf    like nota-fiscal.peso-liq-tot     
+        field serie               like nota-fiscal.serie            
+        field vl-embalagem        like nota-fiscal.vl-embalagem     
+        field vl-embalagem-inf    like nota-fiscal.vl-embalagem     
+        field vl-frete            like nota-fiscal.vl-frete         
+        field vl-frete-inf        like nota-fiscal.vl-frete         
+        field vl-mercad           like nota-fiscal.vl-mercad        
+        field vl-mercad-inf       like nota-fiscal.vl-mercad        
+        field vl-seguro           like nota-fiscal.vl-seguro        
+        field vl-seguro-inf       like nota-fiscal.vl-seguro        
+    
+        /* campos do recebimento */
+    
+        field inc-seq             like param-re.inc-seq
+        field seq-item-um         like param-re.seq-item-um
+        field usuario             like param-re.usuario
+        field gera-estrut         as   logical
+        field dt-trans            like docum-est.dt-trans
+        field vl-outras           like docum-est.valor-outras
+    
+        /* campos do faturamento */
+                                                                    
+        field vl-desconto         like ped-venda.vl-desconto
+        field vl-desconto-perc    as   decimal format ">9.99999" 
+        field cod-canal-venda     like nota-fiscal.cod-canal-venda
+        field bairro              like nota-fiscal.bairro           
+        field cep                 like nota-fiscal.cep
+        field cgc                 like nota-fiscal.cgc
+        field cond-redespa        like nota-fiscal.cond-redespa
+        field cidade              like nota-fiscal.cidade           
+        field cidade-cif          like nota-fiscal.cidade-cif
+        field cod-cond-pag        like nota-fiscal.cod-cond-pag     
+        field cod-entrega         like nota-fiscal.cod-entrega
+        field dt-base-dup         as   date format 99/99/9999       
+        field dt-emis-nota        like nota-fiscal.dt-emis-nota     
+        field dt-embarque         like nota-fiscal.dt-embarque
+        field dt-prvenc           like nota-fiscal.dt-prvenc        
+        field endereco            like nota-fiscal.endereco
+        field esp-docto           like nota-fiscal.esp-docto
+        field esp-ped             as   int                          
+        field fat-nota            as   int 
+        field ind-tip-nota        like nota-fiscal.ind-tip-nota
+        field ins-estadual        like nota-fiscal.ins-estadual
+        field marca-volume        like nota-fiscal.marca-volume
+        field mo-codigo           like ped-venda.mo-codigo          
+        field no-ab-reppri        like nota-fiscal.no-ab-reppri     
+        field nome-tr-red         like nota-fiscal.nome-tr-red
+        field nome-transp         like nota-fiscal.nome-transp
+        field nivel-rest          like it-nota-fisc.nivel-restituicao
+        field nr-fatura           like ser-estab.nr-ult-fat             
+        field cdd-embarq          like nota-fiscal.cdd-embarq
+        field nr-pedcli           like nota-fiscal.nr-pedcli        
+        field nr-resumo           like nota-fiscal.nr-resumo
+        field nr-tabpre           like nota-fiscal.nr-tabpre
+        field nr-volumes          like nota-fiscal.nr-volumes
+        field obs                 like nota-fiscal.observ-nota
+        field pc-rest             like it-nota-fisc.pc-restituicao
+        field placa               like nota-fiscal.placa
+        field tip-cob-desp        like ped-venda.tip-cob-desp       
+        field serie-ent-fut       like nota-fiscal.serie
+        field nr-nota-ent-fut     like nota-fiscal.nr-nota-fis
+        field nr-siscomex         like nota-fiscal.nr-siscomex
+        field ind-lib-nota        like nota-fiscal.ind-lib-nota
+        field cod-rota            like nota-fiscal.cod-rota
+        field cod-msg             like nota-fiscal.cod-mensagem
+        field vl-taxa-exp         like nota-fiscal.vl-taxa-exp
+        field nr-proc-exp         like nota-fiscal.nr-proc-exp
+        field nr-tab-finan        like nota-fiscal.nr-tab-finan
+        field nr-ind-finan        like nota-fiscal.nr-ind-finan
+        field cod-portador        like nota-fiscal.cod-portador
+        field modalidade          like nota-fiscal.modalidade
+        field selecionado         as   char 
+        field zip-code            like pre-fatur.cep
+        field nr-nota-base        like nota-fiscal.nr-nota-fis
+        field serie-base          like nota-fiscal.serie
+        field nr-prog             as   inte
+        field uf-placa            like nota-fiscal.uf-placa
+        field char-1              as   char format "x(200)"
+        field serie-dif           like serie.serie
+        field nr-nota-dif         like nota-fiscal.nr-nota-fis
+        field perc-acres-dif      as   deci format ">>9.99"
+        field vl-acres-dif        like nota-fiscal.vl-tot-nota
+        field vl-taxa-exp-dif     like nota-fiscal.vl-taxa-exp
+        field dt-cancela          like nota-fiscal.dt-cancela
+        field motvo-cance         like nota-fiscal.desc-cancela
+        field char-2              as   char format "x(100)"
+        field u-char-1            as   char format "x(100)"
+		/*Projeto 90 - Gestão de Caixas*/
+        FIELD num-cx-financ       LIKE nota-fiscal.num-cx-financ
+        FIELD num-process-negoc   LIKE nota-fiscal.num-process-negoc     
+		/*Fim Projeto 90*/
+        
+        index codigo is primary
+              cod-estabel
+              serie
+              nr-nota
+              nat-operacao
+    
+        index embarque
+              cdd-embarq
+              nr-resumo
+              nr-nota
+              
+        index seq is unique
+              seq-tt-docto.
+
+    def temp-table tt-it-docto no-undo
+
+        field seq-tt-it-docto     as   int
+        field baixa-estoq         like it-nota-fisc.baixa-estoq     
+        field calcula             as   log  init yes
+        field class-fiscal        like item.class-fiscal form {cdp/cd0603.i3}
+        field cod-estabel         like it-nota-fisc.cod-estab     
+        field cod-refer           like it-nota-fisc.cod-ref       
+        field ct-codigo           as   char form "x(20)"
+        field sc-codigo           as   char form "x(20)"
+        field data-comp           like item-doc-est.data-comp       
+        field ind-componen        like it-nota-fisc.ind-compon
+        field it-codigo           like it-nota-fisc.it-codigo       
+        field narrativa           like nar-it-nota.narrativa
+        field nat-comp            like item-doc-est.nat-oper    
+        field nat-operacao        like it-nota-fisc.nat-oper    
+        field nr-nota             like it-nota-fisc.nr-nota-fis     
+        field nr-pedcli           like it-nota-fisc.nr-pedcli       
+        field nr-sequencia        like it-nota-fisc.nr-seq-fat      
+        field nro-comp            like item-doc-est.nro-comp        
+        field per-des-item        like it-nota-fisc.per-des-item    
+        field peso-liq-it         like it-nota-fisc.peso-liq-fat    
+        field peso-liq-it-inf     like it-nota-fisc.peso-liq-fat    
+        field peso-embal-it       like it-nota-fisc.peso-liq-fat
+        field quantidade          like it-nota-fisc.qt-faturada     
+        field selecionado         as   char form "x(01)"            
+        field seq-comp            like item-doc-est.seq-comp        
+        field serie               like it-nota-fisc.serie           
+        field serie-comp          like item-doc-est.serie-comp      
+        field un                  like it-nota-fisc.un              
+        field vl-despes-it        like it-nota-fisc.vl-despes-it    
+        field vl-despes-it-inf    like it-nota-fisc.vl-despes-it    
+        field vl-embalagem        like it-nota-fisc.vl-despes-it    
+        field vl-embalagem-inf    like it-nota-fisc.vl-despes-it    
+        field vl-frete            like it-nota-fisc.vl-despes-it    
+        field vl-frete-inf        like it-nota-fisc.vl-despes-it    
+        field vl-merc-liq         like it-nota-fisc.vl-merc-liq     
+        field vl-merc-ori         like it-nota-fisc.vl-merc-ori     
+        field vl-merc-tab         like it-nota-fisc.vl-merc-tab     
+        field vl-preori           like it-nota-fisc.vl-preori       
+        field vl-pretab           like it-nota-fisc.vl-pretab       
+        field vl-preuni           like it-nota-fisc.vl-preuni       
+        field vl-seguro           like it-nota-fisc.vl-despes-it    
+        field vl-seguro-inf       like it-nota-fisc.vl-despes-it    
+        field vl-tot-item         like it-nota-fisc.vl-tot-item     
+        field vl-tot-item-inf     like it-nota-fisc.vl-tot-item     
+    
+    
+        /* campos do recebimento */
+        field cod-emitente    like item-doc-est.cod-emitente
+        field desconto        like item-doc-est.desconto extent 0
+        field nr-ord-prod     like item-doc-est.nr-ord-prod
+        field nr-pd-seq       like ped-item.nr-sequencia
+        field num-pedido      like item-doc-est.num-pedido
+        field numero-ordem    like item-doc-est.numero-ordem
+        field parcela         like item-doc-est.parcela
+        field nr-ficha        like item-doc-est.nr-ficha
+        field num-ord-inv     like item-doc-est.num-ord-inv
+        field encerra-pa      like item-doc-est.encerra-pa
+        field reabre-pd       like item-doc-est.reabre-pd
+        field alterado        as   logical
+        field vl-cotacao      as   dec extent 2
+        field qt-aloc-terc    like item-doc-est.quantidade 
+        field qt-aloc-cc      like item-doc-est.quantidade
+        field vl-unit-mob     like item-doc-est.preco-unit extent 0
+        field valor-mat       like movto-estoq.valor-mat-m
+        field valor-mob       like movto-estoq.valor-mob-m
+        field char-1          as   c format "x(100)"
+        field nr-evento       as   integer
+        field item-pai        like reservas.item-pai
+        field cod-roteiro     like reservas.cod-roteiro
+        field op-codigo       like reservas.op-codigo
+        field quant-conf      like it-doc-fisico.quant-conf     
+        FIELD nat-of          LIKE item-doc-est.nat-of /* Natureza fiscal do item... */
+        /* campos do char-1: item-pai, cod-roteiro, op-codigo */
+    
+        /* campos do faturamento */
+        field nr-entrega          like it-nota-fisc.nr-entrega
+        field ct-cuscon           as char format "x(20)" /*like it-nota-fisc.ct-cuscon */
+        field sc-cuscon           as char format "x(20)" 
+        field cod-entrega         like ped-item.cod-entrega
+        field fat-qtfam           like it-nota-fisc.log-1
+        field ind-imprenda        like it-nota-fisc.ind-imprenda
+        field mercliq-moeda-forte like it-nota-fisc.vl-preori
+        field mercori-moeda-forte like it-nota-fisc.vl-preori
+        field merctab-moeda-forte like it-nota-fisc.vl-preori
+        field nivel-rest          like it-nota-fisc.nivel-restituicao
+        field pc-rest             like it-nota-fisc.pc-restituicao
+        field peso-bru-it         like it-nota-fisc.peso-bruto
+        field peso-bru-it-inf     like it-nota-fisc.peso-bruto
+        field preori-moeda-forte  like it-nota-fisc.vl-preori
+        field pretab-moeda-forte  like it-nota-fisc.vl-pretab
+        field preuni-moeda-forte  like it-nota-fisc.vl-preuni
+        field despes-moeda-forte  like it-nota-fisc.vl-preori
+        field tipo-atend          like it-nota-fisc.tipo-atend
+        field vl-merc-s-icms      like it-nota-fisc.vl-merc-liq
+        field vl-preori-ped       like it-nota-fisc.vl-preori
+        field vl-pretab-ped       like it-nota-fisc.vl-pretab
+        field vl-taxa-exp         like nota-fiscal.vl-taxa-exp
+        field desconto-zf         as   de
+        field vl-desconto         like ped-venda.vl-desconto
+        field vl-desconto-perc    as   decimal format ">9.99999" 
+        field char-2              as   char format "x(100)"
+        field u-char-1            as   char format "x(100)"
+    
+        index codigo is primary
+              cod-estabel
+              serie
+              nr-nota
+              nr-pedcli
+              nr-sequencia
+              nr-entrega
+              nat-operacao
+    
+        index seq is unique
+              seq-tt-it-docto
+              
+        index receb 
+              cod-estabel
+              serie
+              nr-nota
+              nr-sequencia.
+
+    def temp-table tt-it-imposto no-undo
+
+        field aliquota-icm        like it-nota-fisc.aliquota-icm    
+        field aliq-icm-comp       like it-nota-fisc.aliquota-icm
+        field aliquota-ipi        like it-nota-fisc.aliquota-ipi    
+        field aliquota-iss        like it-nota-fisc.aliquota-iss    
+        field cd-trib-icm         like it-nota-fisc.cd-trib-icm     
+        field cd-trib-ipi         like it-nota-fisc.cd-trib-ipi     
+        field cd-trib-iss         like it-nota-fisc.cd-trib-iss     
+        field cod-servico         like it-nota-fisc.cod-servico
+        field char-1              as char form "x(100)"
+        field ind-icm-ret         like it-nota-fisc.ind-icm-ret     
+        field per-des-icms        like it-nota-fisc.per-des-icms    
+        field perc-red-icm        like it-nota-fisc.perc-red-icm    
+        field perc-red-ipi        like it-nota-fisc.perc-red-ipi    
+        field perc-red-iss        like it-nota-fisc.perc-red-iss    
+        field seq-tt-it-docto     as   int                        
+        field vl-bicms-ent-fut    like it-nota-fisc.vl-bicms-it
+        field vl-bicms-it         like it-nota-fisc.vl-bicms-it     
+        field vl-bicms-it-merc    like it-nota-fisc.vl-bicms-it     
+        field vl-bipi-ent-fut     like it-nota-fisc.vl-bipi-it
+        field vl-bipi-it          like it-nota-fisc.vl-bipi-it      
+        field vl-biss-it          like it-nota-fisc.vl-biss-it      
+        field vl-bsubs-ent-fut    like it-nota-fisc.vl-bsubs-it     
+        field vl-bsubs-it         like it-nota-fisc.vl-bsubs-it     
+        field icm-complem         like item-doc-est.icm-complem extent 0
+        field vl-icms-ent-fut     like it-nota-fisc.vl-icms-it 
+        field vl-icms-it          like it-nota-fisc.vl-icms-it      
+        field vl-icms-it-merc     like it-nota-fisc.vl-icms-it
+        field vl-icms-outras      like it-nota-fisc.vl-icmsou-it
+        field vl-icmsnt-it        like it-nota-fisc.vl-icmsnt-it    
+        field vl-icmsou-it        like it-nota-fisc.vl-icmsou-it    
+        field vl-icmsub-ent-fut   like it-nota-fisc.vl-icmsub-it
+        field vl-icmsub-it        like it-nota-fisc.vl-icmsub-it
+        field vl-ipi-ent-fut      like it-nota-fisc.vl-ipi-it
+        field vl-ipi-it           like it-nota-fisc.vl-ipi-it       
+        field vl-ipi-outras       like it-nota-fisc.vl-ipi-it       
+        field vl-ipint-it         like it-nota-fisc.vl-ipint-it     
+        field vl-ipiou-it         like it-nota-fisc.vl-ipiou-it     
+        field vl-ir-adic          like it-nota-fisc.vl-ir-adic
+        field vl-irf-it           like it-nota-fisc.vl-irf-it
+        field vl-iss-it           like it-nota-fisc.vl-iss-it       
+        field vl-issnt-it         like it-nota-fisc.vl-issnt-it     
+        field vl-issou-it         like it-nota-fisc.vl-issou-it     
+        field vl-pauta            like it-nota-fisc.vl-preuni       
+        field vl-precon           like it-nota-fisc.vl-precon
+        index seq is unique primary
+              seq-tt-it-docto.
+
+
+    def temp-table tt-it-docto-imp no-undo
+
+        field seq-tt-it-docto     as   int
+        field aliquota            like it-nota-imp.aliquota
+        field cod-taxa            like it-nota-imp.cod-taxa
+        /*field conta-tax         like it-nota-imp.conta-tax*/ /*UFC*/
+        field ct-tax              as char format "x(20)"
+        field sc-tax              as char format "x(20)"
+        field nr-seq-imp          like it-nota-imp.nr-seq-imp
+        field perc-redimp         like it-nota-imp.perc-redimp
+        field tipo-tax            like it-nota-imp.tipo-tax
+        field vl-base-imp         like it-nota-imp.vl-base-imp
+        field vl-imposto          like it-nota-imp.vl-imposto
+        field uf                  like nota-fiscal.uf
+        /*field conta-percepcao     like impto-tit-cr.conta-percepcao*/ /*UFC*/
+        field ct-percepcao        as char format "x(20)" 
+        field sc-percepcao        as char form "x(20)"    
+        /*field conta-retencao      like impto-tit-cr.conta-retencao*/ /*UFC*/
+        field ct-retencao         as char format "x(20)"
+        field sc-retencao         as char format "x(20)"      
+        field perc-percepcao      like impto-tit-cr.perc-percepcao      
+        field vl-percepcao        like impto-tit-cr.vl-percepcao        
+        field vl-imposto-me       like impto-tit-cr.vl-imposto-me       
+        field vl-base-me          like impto-tit-cr.vl-base-me          
+        field vl-percepcao-me     like impto-tit-cr.vl-percepcao-me     
+
+        index seq is primary
+              seq-tt-it-docto
+              cod-taxa.
+&endif
+
+/*  CD4305.I1  */                                               

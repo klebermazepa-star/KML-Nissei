@@ -1,0 +1,53 @@
+movto_tit_acr.ind_trans_acr_abrev movto_tit_acr.ind_trans_acr 
+
+FAQ 1703
+
+-  AVCR    "Acerto Valor a Crédito",
++  AVDB    "Acerto Valor a Débito",
++  AVMA    "Acerto Valor a Maior",
+-  AVMN    "Acerto Valor a Menor",
+=  ADEM    "Alteração Data Emissão",
+=  ADVN    "Alteração Data Vencimento",
+=  ALNC    "Alteração não Contábil",
++- CVAL    "Correção de Valor", 
++- CVLL    "Correção Valor na Liquidac",
+-  DEV     "Devolução",
+=  DCTO    "Desconto Bancário",
+=  DESF    "Despesa Financeira",
+=  EDES    "Estorno Desp Financeira"
++- ECLQ    "Estorno Correção Val Liquidac",
++- ECVL    "Estorno Correção Valor",
++  ELQT    "Estorno Liquid Transf Estab",
+-  ESTT    "Estorno de Título",
++  ELIQ    "Estorno de Liquidacao",
++  ETRE    "Estorno Transf Estab",
+=  ETUN    "Estorno Transf Unid Negoc",
+-  EREN    "Estorno Renegociação",
++  ELQR    "Estorno Liquid Renegociac",
+=  EDCT    "Estorno Desconto Bancário",
+-  EVMA    "Estorno Acerto Val Maior",
++  EVMN    "Estorno Acerto Val Menor",
++  EVCR    "Estorno Acerto Val Crédito",
+-  EVDB    "Estorno Acerto Val Débito",
++  IMPL    "Implantação",
+
++  IMCR    "Implantação a Crédito",
++  IMDB    "Implantação a Debito",
+
+-  LIQ    "Liquidação",
+-  LQTE    "Liquidação Transf Estab",
+-  LQRN    "Liquidação Renegociac",
+-  LQEC    "Liquidação Enctro Ctas",
+=  LQPD    "Liquidação Perda Dedutível",
++  REN    "Renegociação",
++  TRES    "Transf Estabelecimento",
+=  TRUN    "Transf Unidade Negócio"
+
+    >> nao identificados (na consultoria nao constava esses tipos)
+
+    "Liquidação Subst",
+    "Estorno Liquidacao Subst",
+    "Devolução de Cheque",
+    "Reintegração Perda Dedutível",
+    "Subst Nota por Duplicata",
+    "Estorno Subst Nota Dupl",

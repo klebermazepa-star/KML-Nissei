@@ -1,0 +1,118 @@
+/**************************************************************************
+**
+**  Include: ft2010.I13
+**
+**  Objetivo: Criar o arquivo it-nota-imp
+**
+***************************************************************************/
+for each tt-it-docto-imp 
+    where tt-it-docto-imp.seq-tt-it-docto = tt-it-docto.seq-tt-it-docto,
+    first tipo-tax where tipo-tax.cod-tax = tt-it-docto-imp.cod-taxa no-lock
+        by    tt-it-docto-imp.nr-seq-imp:
+
+    create it-nota-imp.
+    assign it-nota-imp.nr-nota-fis = it-nota-fisc.nr-nota-fis
+           it-nota-imp.serie       = it-nota-fisc.serie
+           it-nota-imp.cod-estabel = it-nota-fisc.cod-estabel
+           it-nota-imp.nr-seq-fat  = it-nota-fisc.nr-seq-fat
+           it-nota-imp.it-codigo   = it-nota-fisc.it-codigo
+           it-nota-imp.ct-tax      = if  tt-it-docto-imp.vl-percepcao > 0
+                                     then tt-it-docto-imp.ct-percepcao
+                                     else tt-it-docto-imp.ct-tax
+           it-nota-imp.sc-tax      = if  tt-it-docto-imp.vl-percepcao > 0
+                                     then tt-it-docto-imp.sc-percepcao
+                                     else tt-it-docto-imp.sc-tax
+           it-nota-imp.vl-imposto  = if  tt-it-docto-imp.vl-percepcao > 0
+                                     then tt-it-docto-imp.vl-percepcao
+                                     else tt-it-docto-imp.vl-imposto
+           it-nota-imp.vl-base-imp = tt-it-docto-imp.vl-base-imp
+           it-nota-imp.aliquota    = if  tt-it-docto-imp.vl-percepcao > 0
+                                     then tt-it-docto-imp.perc-percepcao
+                                     else tt-it-docto-imp.aliquota
+           it-nota-imp.tipo-tax    = tipo-tax.tipo
+           it-nota-imp.nr-seq-imp  = tt-it-docto-imp.nr-seq-imp
+           it-nota-imp.cod-taxa    = tt-it-docto-imp.cod-taxa
+           c-ct-percepcao          = tt-it-docto-imp.ct-percepcao
+           c-sc-percepcao          = tt-it-docto-imp.sc-percepcao
+           de-perc-percepcao       = tt-it-docto-imp.perc-percepcao
+           de-vl-percepcao         = tt-it-docto-imp.vl-percepcao
+           de-vl-imposto-me        = if tt-it-docto-imp.vl-percepcao > 0
+                                     then tt-it-docto-imp.vl-percepcao-me
+                                     else tt-it-docto-imp.vl-imposto-me
+           de-vl-base-me           = tt-it-docto-imp.vl-base-me
+           de-vl-percepcao-me      = tt-it-docto-imp.vl-percepcao-me
+           it-nota-imp.int-2       = tt-it-docto-imp.tipo-tax.
+
+    /*******************************************/
+    /* Pre-processador Faturamento Outra Moeda */
+    /*******************************************/
+
+    &if defined (bf_dis_fat_moeda) &then
+        assign it-nota-imp.vl-imposto-me  = it-nota-imp.vl-imposto
+               it-nota-imp.vl-base-imp-me = it-nota-imp.vl-base-imp
+               de-vl-percepcao-me         = de-vl-percepcao.
+               
+        if  i-moeda-fatur <> 0 then
+            assign it-nota-imp.vl-imposto =
+                        if  l-trunca
+                        then trunc(it-nota-imp.vl-imposto * de-taxa-fatur, i-round)
+                        else round(it-nota-imp.vl-imposto * de-taxa-fatur, i-round)
+                   it-nota-imp.vl-base-imp =
+                        if  l-trunca
+                        then trunc(it-nota-imp.vl-base-imp * de-taxa-fatur, i-round)
+                        else round(it-nota-imp.vl-base-imp * de-taxa-fatur, i-round)
+
+                   de-vl-percepcao = 
+                        if  l-trunca
+                        then trunc(de-vl-percepcao * de-taxa-fatur, i-round)
+                        else round(de-vl-percepcao * de-taxa-fatur, i-round).
+
+        assign it-nota-imp.vl-imposto  = fn_ajust_dec(it-nota-imp.vl-imposto, 0)
+               it-nota-imp.vl-base-imp = fn_ajust_dec(it-nota-imp.vl-base-imp, 0)
+               de-vl-percepcao         = fn_ajust_dec(de-vl-percepcao, 0).
+
+    &endif
+
+    /*************************************************************/
+    /* tratamento para emitentes que possuem status de autarquia */
+
+    if  avail emitente and emitente.agente-retencao 
+    then assign it-nota-imp.int-1 = 9.
+
+    /*************************************************************/                                                                    
+
+    /*Atualiza‡Æo das 5 primeiras vari veis no char-1*/   
+    {cdp/cd4334.i51 "no" "yes"}
+    {cdp/cd4300.i4  "no" it-nota-imp.char-1}             
+
+    /*Atualiza‡Æo das 5 £ltimas vari veis no char-2*/   
+    {cdp/cd4334.i51 "no" "no"}
+    {cdp/cd4300.i4  "no" it-nota-imp.char-2}             
+
+    /******* Chamada DPC - ARG342.P - Cria‡Æo do ext-it-nota-imp *******/
+    create tt-epc.
+    assign tt-epc.cod-event     = "Create_table"
+           tt-epc.cod-parameter = "Rowid It-nota-imp"
+           tt-epc.val-parameter = string(rowid(it-nota-imp)).
+
+    create tt-epc.
+    assign tt-epc.cod-event     = "Create_table"
+           tt-epc.cod-parameter = "UF"
+           tt-epc.val-parameter = tt-it-docto-imp.uf.
+
+    create tt-epc.
+    assign tt-epc.cod-event     = "Create_table"
+           tt-epc.cod-parameter = "Cliente"
+           tt-epc.val-parameter = nota-fiscal.nome-ab-cli.
+
+    {include/i-epc201.i "Create_table"}
+
+    for each tt-epc where tt-epc.cod-event = "Create_table":
+       delete tt-epc.
+    end.
+
+    /********************************************************************/
+
+end.  
+
+/* Fim do Include ft2010.I13 */

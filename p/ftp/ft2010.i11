@@ -1,0 +1,49 @@
+/******************************************************************************
+**
+** ftp/ft2010.i11 - Efetuar gravacao do fat-ser-lote
+**
+******************************************************************************/
+
+if  tt-it-docto.ind-componen = 1 /* Nao eï Produto Configurado */
+or  tt-it-docto.baixa-estoq then 
+    for each tt-saldo-estoq
+        where tt-saldo-estoq.seq-tt-it-docto = tt-it-docto.seq-tt-it-docto
+        break by tt-saldo-estoq.seq-tt-it-docto:
+
+        if  tt-it-docto.fat-qtfam = ? then
+            find item-cli
+                 where item-cli.nome-abrev = tt-docto.nome-abrev
+                 and item-cli.it-codigo    = tt-saldo-estoq.it-codigo
+                 no-lock no-error.
+
+        {ftp/ft2010.i5 "tt-it-docto"} /* Criar fat-ser-lote */
+    end. 
+else 
+    /* Produto configurado */
+    if  tt-it-docto.ind-componen = 2 then /* Item Pai */
+    
+        for each b-tt-it-docto
+            where b-tt-it-docto.cod-estabel  = tt-it-docto.cod-estabel
+            and   b-tt-it-docto.serie        = tt-it-docto.serie
+            and   b-tt-it-docto.nr-nota      = tt-it-docto.nr-nota
+            and   b-tt-it-docto.nr-sequencia = tt-it-docto.nr-sequencia
+            and   b-tt-it-docto.nr-pedcli    = tt-it-docto.nr-pedcli
+            and   b-tt-it-docto.ind-componen = 3: /* Item Filho */
+           
+            for each tt-saldo-estoq
+            where tt-saldo-estoq.seq-tt-it-docto = b-tt-it-docto.seq-tt-it-docto
+            break by tt-saldo-estoq.seq-tt-it-docto:
+
+               if  b-tt-it-docto.fat-qtfam = ? then
+                  find item-cli
+                     where item-cli.nome-abrev = tt-docto.nome-abrev
+                     and   item-cli.it-codigo  = tt-saldo-estoq.it-codigo
+                     no-lock no-error.
+
+               {ftp/ft2010.i5 "b-tt-it-docto"} /* Criar fat-ser-lote */
+            end.   
+        end. 
+
+/* ftp/ft2010.i11 */
+
+

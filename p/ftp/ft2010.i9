@@ -1,0 +1,24 @@
+/*****************************************************************************
+**
+**  ftp/ft2010.i9 - Atualizar gerencial a partir do it-nota-fisc
+**
+******************************************************************************/
+
+if  param-global.modulo-ge 
+and it-nota-fisc.emite-duplic then do:
+
+    if  not avail param-ge then
+        find first param-ge
+             where param-ge.ep-codigo = param-global.empresa-prin 
+             no-lock no-error.
+
+    if  avail param-ge 
+    and param-ge.tp-atualizacao = 1 then
+        /* Funcao ïInclui-Itensï */
+        run gep/ge0102e.p (input rowid(it-nota-fisc),
+                           input 18).
+
+end.
+
+/* ftp/ft2010.i9 */
+

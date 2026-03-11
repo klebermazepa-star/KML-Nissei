@@ -1,0 +1,100 @@
+/*****************************************************************************
+**
+**       RE1005.i10 - LEITURA DAS CONTAS DO FATURAMENTO (RE1005B4, RE1005B1)
+**
+*****************************************************************************/
+
+procedure pi-leitura-conta-ft:
+
+    def var l-busca-conta-natureza-saida as log no-undo.
+    def var c-natur-oper1                  like natur-oper.nat-operacao  no-undo.
+    def var c-natur-oper2                  like natur-oper.nat-operacao  no-undo.
+    def var c-cod-canal-venda              like emitente.cod-canal-venda no-undo.
+    
+    assign l-busca-conta-natureza-saida = no.
+
+    if  c-nom-prog-upc-mg97  <> "" THEN DO:
+        for each tt-epc 
+            where tt-epc.cod-event = "Altera_Ordem_Natureza":U:
+            delete tt-epc.
+        end.
+
+        /*** Criacao do registro para temp-table tt-epc ***/
+        {include/i-epc200.i2 &CodEvent='"Altera_Ordem_Natureza"'
+                             &CodParameter='"rowid-item-doc-est"'
+                             &ValueParameter="string(rowid(item-doc-est))"}
+
+        {include/i-epc200.i2 &CodEvent='"Altera_Ordem_Natureza"'
+                             &CodParameter='"l-altera-ordem"'
+                             &ValueParameter='""'}
+
+         {include/i-epc201.i "Altera_Ordem_Natureza"} 
+
+         assign l-busca-conta-natureza-saida = can-find(first tt-epc
+                                                        where tt-epc.cod-event = "Altera_Ordem_Natureza"
+                                                        and   tt-epc.cod-parameter = "l-altera-ordem"
+                                                        and   tt-epc.val-parameter = "YES").
+    end.                                                   
+    
+    if can-find(first funcao where
+                      funcao.cd-funcao = "spp-ordem-natur-conta":U and
+                      funcao.ativo     = yes ) then 
+       assign l-busca-conta-natureza-saida = yes.               
+                      
+
+
+    /* tratamento padrao */
+    if  not l-busca-conta-natureza-saida then 
+        assign c-natur-oper1 = item-doc-est.nat-operacao
+               c-natur-oper2 = item-doc-est.nat-comp.
+    else /* alterado via epc */
+        assign c-natur-oper1 = item-doc-est.nat-comp
+               c-natur-oper2 = item-doc-est.nat-operacao.
+                       
+    if can-find(first natur-oper where natur-oper.nat-operacao = item-doc-est.nat-operacao 
+                                   and natur-oper.transf) then
+        find first estabelec where estabelec.cod-estabel = docum-est.estab-de-or no-lock no-error.
+    
+    find first nota-fiscal no-lock
+        where nota-fiscal.cod-estabel   = estabelec.cod-estabel
+          and nota-fiscal.serie         = item-doc-est.serie-comp
+          and nota-fiscal.nr-nota-fis   = item-doc-est.nro-comp no-error.
+    if avail nota-fiscal then
+        assign c-cod-canal-venda = nota-fiscal.cod-canal-venda.
+    else do:
+        if natur-oper.cod-canal-venda <> 0 then
+            assign c-cod-canal-venda = natur-oper.cod-canal-venda.
+        else     
+            assign c-cod-canal-venda = emitente.cod-canal-venda.
+    end.
+        
+    if  c-natur-oper1 <> "":U then 
+         run pi-cd9500 in h-cd9500(estabelec.cod-estabel,
+                                   emitente.cod-gr-cli,
+                                   rowid(item),
+                                   c-natur-oper1 ,
+                                   (IF lContaFtPorCliente THEN string(emitente.cod-emitente) ELSE item-doc-est.serie-docto),
+                                   item.deposito-pad,
+                                   (if avail nota-fiscal then
+                                       nota-fiscal.cod-canal-venda
+                                    else natur-oper.cod-canal-venda),
+                                   output rw-conta-ft).
+
+    if  rw-conta-ft = ?
+    and c-natur-oper2 <> "":U  then 
+        run pi-cd9500 in h-cd9500(estabelec.cod-estabel,
+                                  emitente.cod-gr-cli,
+                                  rowid(item),
+                                  c-natur-oper2,
+                                   (IF lContaFtPorCliente THEN string(emitente.cod-emitente) ELSE item-doc-est.serie-comp),
+                                  item.deposito-pad,
+                                  (if avail nota-fiscal then
+                                      nota-fiscal.cod-canal-venda
+                                   else natur-oper.cod-canal-venda),
+                                  output rw-conta-ft).
+
+end.
+
+/* fim do include */
+
+

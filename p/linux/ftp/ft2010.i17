@@ -1,0 +1,16 @@
+
+/*PROCEDURE pi-nfe:*/
+
+    DEFINE VARIABLE h-bodi317ef AS HANDLE      NO-UNDO.
+    
+    IF  NOT VALID-HANDLE(h-bodi317ef) THEN
+        RUN dibo/bodi317ef.p PERSISTENT SET h-bodi317ef.
+
+    RUN pi-setaNota    IN h-bodi317ef (INPUT ROWID(nota-fiscal)).
+    RUN pi-nfe         IN h-bodi317ef.
+
+    DELETE PROCEDURE h-bodi317ef.
+
+    ASSIGN h-bodi317ef = ?.    
+
+/*END.*/

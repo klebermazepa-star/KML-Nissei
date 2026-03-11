@@ -1,0 +1,18 @@
+/***************************************************************************
+** Programa: CDAPI300.i1 
+** Definicao das temp-tables padroes utilizadas para chamada das api's 
+** de efetivacao dos modulos
+**************************************************************************/
+
+def temp-table tt-versao-integr no-undo
+       field cod-versao-integracao as integer format "999"
+       field ind-origem-msg        as integer format "99" /* i01mp900.i */.
+             
+def temp-table tt-erros-geral no-undo
+       field identif-msg           as char    format "x(60)"
+       field num-sequencia-erro    as integer format "999"
+       field cod-erro              as integer format "99999"   
+       field des-erro              as char    format "x(60)"
+       field cod-maq-origem        as integer format "999"
+       field num-processo          as integer format "999999999".
+       

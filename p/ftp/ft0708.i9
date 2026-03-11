@@ -1,0 +1,13 @@
+/******************************************************************************
+**
+**  ftp/ft0708.i9 definicao das variaves que determinar a existencia do
+**                fasb e cmi
+**
+******************************************************************************/
+
+def {1} shared var l-fasb      as logical.
+def {1} shared var l-cmi       as logical.
+def {1} shared var l-fasb-imp  as logical.
+def {1} shared var l-cmi-imp   as logical.
+
+/* ftp/ft0708.i9 */

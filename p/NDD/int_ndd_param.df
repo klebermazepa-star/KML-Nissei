@@ -1,0 +1,80 @@
+ADD TABLE "int_ndd_param"
+  AREA "Schema Area"
+  DESCRIPTION "Parametros de integracao NDD"
+  DUMP-NAME "int_ndd_param"
+
+ADD FIELD "conexaodi" OF "int_ndd_param" AS character 
+  DESCRIPTION "Id da Conex∆o"
+  FORMAT "x(8)"
+  INITIAL ""
+  LABEL "Id da Conex∆o"
+  POSITION 2
+  MAX-WIDTH 16
+  COLUMN-LABEL "Id da Conex∆o"
+  HELP "Id da Conex∆o"
+  ORDER 10
+
+ADD FIELD "usuario" OF "int_ndd_param" AS character 
+  DESCRIPTION "Usu†rio"
+  FORMAT "x(12)"
+  INITIAL ""
+  LABEL "Usu†rio"
+  POSITION 3
+  MAX-WIDTH 24
+  COLUMN-LABEL "Usu†rio"
+  HELP "Usu†rio"
+  ORDER 20
+
+ADD FIELD "senha" OF "int_ndd_param" AS character 
+  DESCRIPTION "Senha"
+  FORMAT "x(12)"
+  INITIAL ""
+  LABEL "Senha"
+  POSITION 4
+  MAX-WIDTH 24
+  COLUMN-LABEL "Senha"
+  HELP "Senha"
+  ORDER 30
+
+ADD FIELD "caminho" OF "int_ndd_param" AS character 
+  DESCRIPTION "Diret¢rio Base"
+  FORMAT "x(120)"
+  INITIAL ""
+  LABEL "Diret¢rio Base"
+  POSITION 5
+  MAX-WIDTH 240
+  HELP "Diret¢rio base onde ficam os programas, WSDL e XML"
+  ORDER 40
+
+ADD FIELD "gerarlog" OF "int_ndd_param" AS logical 
+  DESCRIPTION "Gerar Log de Processamento"
+  FORMAT "yes/no"
+  INITIAL "no"
+  LABEL "Gerar Log de Processamento"
+  POSITION 6
+  MAX-WIDTH 1
+  VIEW-AS "VIEW-AS TOGGLE-BOX"
+  HELP "Manter arquivos tempor†rios de processamento"
+  ORDER 50
+
+ADD FIELD "caminho_unix" OF "int_ndd_param" AS character 
+  DESCRIPTION "Diret¢rio Unix"
+  FORMAT "x(120)"
+  INITIAL ""
+  LABEL "Diret¢rio Unix"
+  POSITION 7
+  MAX-WIDTH 240
+  HELP "Diret¢rio base onde ficam os programas, WSDL e XML no Unix"
+  ORDER 60
+
+ADD INDEX "chave" ON "int_ndd_param" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "conexaodi" ASCENDING 
+
+.
+PSC
+cpstream=ibm850
+.
+0000001735

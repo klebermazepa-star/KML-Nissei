@@ -1,0 +1,100 @@
+/*******************************************************************************
+*   Programa..:  REAPI190B.I1
+*   Objetivo .:  Defini‡Æo de vari veis
+********************************************************************************/
+
+DEF VAR i-nr-linhas-nota           AS INTEGER                          NO-UNDO.
+DEF VAR i-forma-emis               AS INTEGER                          NO-UNDO.
+def var i-msg                      as INTEGER                          no-undo.
+def var i-cont                     as INTEGER                          no-undo.        
+def var i-tamanho-linha            as INTEGER                          no-undo.
+def var i-nr-linhas                as INTEGER                          no-undo.
+DEF VAR i-trib-ii                  AS INTEGER                          NO-UNDO.
+def var de-trib-pis                as INTEGER init 2                   no-undo.
+def var de-trib-cofins             as INTEGER init 2                   no-undo.
+def var c-msg                      as char                             no-undo.
+def var c-char                     as char                             no-undo.
+def var c-descricao                as char                             no-undo.
+def var c-descricao-aux            as CHAR                             no-undo.
+def var l-erro-numero              as LOGICAL                          no-undo.
+def var l-erro                     as logical                          no-undo.
+def var l-considera-icm            as logical init no                  no-undo.
+def var l-fornec-imp               as logical init no                  no-undo.
+def var l-imp                      as logical init no                  no-undo.
+def var h-cd4337                   as handle                           no-undo.
+def var h-cd4338                   as handle                           no-undo.
+DEF VAR h-cdapi024                 AS HANDLE                           NO-UNDO.
+def var h-boin060                  as HANDLE                           no-undo.
+def var h-bocx250                  as HANDLE                           no-undo.
+def var h-bocx100                  as HANDLE                           no-undo.
+def var de-aliquota-pis            as DECIMAL format ">9.9999":U       no-undo. /*aleterado para 4 csasa decimais*/
+def var de-val-unit-pis            as decimal format ">>>9.99999":U    no-undo.
+def var de-val-vol-pis             as decimal format ">>>9.99999":U    no-undo.
+def var de-aliquota-cofins         as DECIMAL format ">9.9999":U       no-undo. /*aleterado para 4 csasa decimais*/
+def var de-val-unit-cofins         as decimal format ">>>9.99999":U    no-undo.
+def var de-val-vol-cofins          as decimal format ">>>9.99999":U    no-undo.
+DEF VAR de-aliq-ii                 AS DECIMAL FORMAT ">>9.99"          NO-UNDO.
+DEF VAR de-aliq-icms-imp           AS DECIMAL FORMAT ">>9.99"          NO-UNDO.
+DEF VAR de-aliq-ipi-imp            AS DECIMAL FORMAT ">>9.99"          NO-UNDO.
+def var de-valor-pis               as decimal format ">>>>>>>>>9.99":U no-undo.
+def var de-valor-cofins            as decimal format ">>>>>>>>>9.99":U no-undo.
+def var de-base-pis                as decimal format ">>>>>>>>>9.99":U no-undo.
+DEF VAR de-volume-item             AS DECIMAL FORMAT ">>>>>>>>>9.99"   NO-UNDO.
+def var de-base-cofins             as decimal format ">>>>>>>>>9.99":U no-undo.
+def var de-val-reduc-pis-normal    as decimal format ">>9.99":U        no-undo.
+def var de-val-reduc-cofins-normal as decimal format ">>9.99":U        no-undo.
+def var de-vlr-merc-nota-dev       as decimal                          NO-UNDO.        
+def var de-vl-icm                  like docum-est.icm-deb-cre          NO-UNDO. 
+def var de-base-icm                like docum-est.base-icm             NO-UNDO.
+def var de-tot-despesa             like docum-est.despesa-nota         NO-UNDO.
+DEF VAR de-base-ipi-aux            LIKE docum-est.base-ipi             NO-UNDO.
+def var i-empresa                  like param-global.empresa-prin      no-undo.
+def var c-un                       like item-doc-est.un                no-undo.
+def var c-registro                 as   char format "x(8)"             no-undo.
+def var l-unid-neg                 as   logical initial no             no-undo.
+DEF VAR h-btb009za                 AS HANDLE                           no-undo.
+def var i-x                        as integ                            no-undo.
+def var de-tot-unid-neg            as decimal                          no-undo.
+def var de-desconto                as decimal  init 0                  no-undo.
+def var de-despesa                 as decimal  init 0                  no-undo.
+def var de-frete                   as decimal  init 0                  no-undo.
+def var de-vl-tot-item             as decimal  init 0                  no-undo.
+def var i-versao-integ             as integer format "999"             no-undo.
+def var l-valida-mensal-ate        as logical                          no-undo.
+def var l-valida-nat-oper          as logical                          no-undo.
+def var rw-docum-est-upc           as raw                              no-undo.
+def var de-qtd-max                 like item-doc-est.quantidade        no-undo.
+def var de-base-ipi                like docum-est.base-ipi             no-undo. 
+def var de-vl-ipi                  like docum-est.ipi-deb-cre          no-undo.
+def var de-peso-item               like item-doc-est.peso-liquido      no-undo.
+def var de-base-subs               like docum-est.base-subs            no-undo.
+def var de-vl-subs                 like docum-est.vl-subs              no-undo.
+def var de-vl-icm-ou               like docum-est.icm-outras           no-undo.
+def var de-vl-ipi-ou               like docum-est.ipi-outras           no-undo.
+def var de-base-iss                like docum-est.base-iss             no-undo.
+def var de-vl-iss                  like docum-est.iss-deb-cre          no-undo.
+def var de-vl-pis-subs             like docum-est.vl-pis-subs          no-undo.
+def var de-vl-cofins-subs          like docum-est.vl-cofins-subs       no-undo.
+DEF VAR l-docum-est                AS LOGICAL                          NO-UNDO.
+def var l-conec-bas                as logical                          no-undo.
+def var l-conec-fin                as logical                          no-undo.
+def var l-conec-uni                as logical                          no-undo.
+def var l-erro-conect              as logical                          no-undo.
+def var l-nota-rateio              as logical                          no-undo.
+def var c-return-value             as char                             no-undo.
+def var c-return-value1            as char                             no-undo.
+def var c-esp-docto                as char                             no-undo.
+DEF VAR l-spp-nfe                  AS LOG                              NO-UNDO.
+DEF VAR rw-docum-est               AS ROWID                            NO-UNDO.
+DEF VAR rw-item-doc-est            AS ROWID                            NO-UNDO.
+DEF VAR c-ct-codigo                LIKE docum-est.ct-transit           NO-UNDO.
+DEF VAR c-sc-codigo                LIKE docum-est.sc-transit           NO-UNDO.
+DEF VAR da-medio-ate               AS DATE                             NO-UNDO.
+DEF VAR cAuxTraducao001            AS CHARACTER                        NO-UNDO.
+DEF VAR l-autom-retenc             AS LOG                              NO-UNDO.
+define variable c-cod-estabel-oc   like ordem-compra.cod-estabel       no-undo.
+
+
+define variable c-formato as character format "x(16)" no-undo.
+
+&glob bf_nr_nota        yes    /* Aumenta numero da nota fiscal */ 

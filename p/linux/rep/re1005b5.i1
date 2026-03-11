@@ -1,0 +1,5 @@
+PROCEDURE pi-retorna-tt-impto-retid-fat:
+
+    DEFINE OUTPUT PARAMETER TABLE FOR tt-impto-retid-fat.
+
+END PROCEDURE.

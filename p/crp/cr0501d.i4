@@ -1,0 +1,16 @@
+/*-------------------------------------------------------------------
+ * 
+ *        Defini‡Æo de Vari veis
+ *        
+ *-------------------------------------------------------------------*/
+
+def var da-valida-juro     as date format "99/99/9999"         no-undo.
+def var de-perc-juro       as dec  format ">>9,99"             no-undo.
+def var i-car-juro         as int  format "99"                 no-undo.
+def var de-valor-min       as dec  format "->>,>>>,>>>,>>9.99" no-undo.
+def var l-gera-ad          as log  init yes                    no-undo.
+def var de-perc-multa      as dec  format ">>9,99"             no-undo.
+def var i-car-multa        as int  format "99"                 no-undo.
+def var i-tp-juros         as int  format "9"                  no-undo.
+def var i-mo-vl-min        as int  format "99"                 no-undo.
+def var l-existe-tab-juros as log                              no-undo.

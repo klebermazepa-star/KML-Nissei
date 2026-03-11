@@ -1,0 +1,34 @@
+/****************************************************************************************************
+**
+** CD9700.i1 - Logica para identificar se a natureza eh uma fatura faturamento antecipado, remessa
+**             faturamento antecipado, fatura entrega futura ou remessa entrega futura.
+** Parametros - {1} -> buffer da tabela natur-oper.
+**
+*****************************************************************************************************/
+
+ASSIGN l-fatura-fat-antecip  = NO
+       l-remessa-fat-antecip = NO
+       l-fatura-ent-futura   = NO
+       l-remessa-ent-futura  = NO.
+
+IF  {1}.ind-entfut AND NOT {1}.ind-est-qtd THEN DO: /* eh fatura e nao eh remessa */
+    
+    IF  SUBSTRING({1}.char-1,1,5) = "1" THEN  /* Faturamento Antecipado */
+        ASSIGN l-fatura-fat-antecip = YES.
+        
+    IF  SUBSTRING({1}.char-1,1,5) = "0" OR SUBSTRING({1}.char-1,1,5) = "" THEN /* Entrega Futura */
+        ASSIGN l-fatura-ent-futura = YES.
+        
+END.
+ELSE IF {1}.ind-est-qtd THEN DO: /* eh uma remessa */
+    
+    IF  SUBSTRING({1}.char-1,1,5) = "1" THEN /* Faturamento Antecipado */
+        ASSIGN l-remessa-fat-antecip = YES.
+    
+    IF  SUBSTRING({1}.char-1,1,5) = "0" THEN /* Entrega Futura */
+        ASSIGN l-remessa-ent-futura = YES.
+        
+END.   
+
+
+

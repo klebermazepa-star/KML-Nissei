@@ -1,0 +1,133 @@
+/*****************************************************************************
+**    NICS0202.I5 - Include com o display principal
+*****************************************************************************/
+
+find item-estab where 
+     item-estab.it-codigo   = item.it-codigo and 
+     item-estab.cod-estabel = tt-param.cod-estabel no-lock no-error.
+if  avail item-estab then do:
+    if  tt-param.rs-preco = 1 then
+        assign de-vl-unit-mat-1 = item-estab.val-unit-mat-m[1]     
+               de-vl-unit-mat-2 = item-estab.val-unit-mat-m[2]     
+               de-vl-unit-mat-3 = item-estab.val-unit-mat-m[3]
+               de-vl-unit-mob-1 = item-estab.val-unit-mob-m[1]     
+               de-vl-unit-mob-2 = item-estab.val-unit-mob-m[2]     
+               de-vl-unit-mob-3 = item-estab.val-unit-mob-m[3]
+               de-vl-unit-ggf-1 = item-estab.val-unit-ggf-m[1]     
+               de-vl-unit-ggf-2 = item-estab.val-unit-ggf-m[2]     
+               de-vl-unit-ggf-3 = item-estab.val-unit-ggf-m[3]
+               da-tp-preco      = item-estab.mensal-ate
+               de-tot-vl-item   = item-estab.val-unit-mat-m[1] + item-estab.val-unit-mob-m[1] + item-estab.val-unit-ggf-m[1].   
+
+    if  tt-param.rs-preco = 2 then
+        assign de-vl-unit-mat-1 = item-estab.val-unit-mat-o[1]     
+               de-vl-unit-mat-2 = item-estab.val-unit-mat-o[2]     
+               de-vl-unit-mat-3 = item-estab.val-unit-mat-o[3]
+               de-vl-unit-mob-1 = item-estab.val-unit-mob-o[1]     
+               de-vl-unit-mob-2 = item-estab.val-unit-mob-o[2]     
+               de-vl-unit-mob-3 = item-estab.val-unit-mob-o[3]
+               de-vl-unit-ggf-1 = item-estab.val-unit-ggf-o[1]     
+               de-vl-unit-ggf-2 = item-estab.val-unit-ggf-o[2]     
+               de-vl-unit-ggf-3 = item-estab.val-unit-ggf-o[3]
+               da-tp-preco      = item-estab.on-line-ate
+               de-tot-vl-item   = item-estab.val-unit-mat-o[1] + item-estab.val-unit-mob-o[1] + item-estab.val-unit-ggf-o[1].
+                  
+    if  tt-param.rs-preco = 3 then
+        assign de-vl-unit-mat-1 = item-estab.val-unit-mat-p[1]     
+               de-vl-unit-mat-2 = item-estab.val-unit-mat-p[2]     
+               de-vl-unit-mat-3 = item-estab.val-unit-mat-p[3]
+               de-vl-unit-mob-1 = item-estab.val-unit-mob-p[1]     
+               de-vl-unit-mob-2 = item-estab.val-unit-mob-p[2]     
+               de-vl-unit-mob-3 = item-estab.val-unit-mob-p[3]
+               de-vl-unit-ggf-1 = item-estab.val-unit-ggf-p[1]     
+               de-vl-unit-ggf-2 = item-estab.val-unit-ggf-p[2]     
+               de-vl-unit-ggf-3 = item-estab.val-unit-ggf-p[3]
+               da-tp-preco      = item-estab.padrao-ate
+               de-tot-vl-item   = item-estab.val-unit-mat-p[1] + item-estab.val-unit-mob-p[1] + item-estab.val-unit-ggf-p[1].     
+end.
+
+if item.tipo-contr = 1 then        
+   assign c-tp-controle = "F¡sico".
+if item.tipo-contr = 2 then        
+   assign c-tp-controle = "Total".
+if item.tipo-contr = 3 then        
+   assign c-tp-controle = "Consignado".
+if item.tipo-contr = 4 then        
+   assign c-tp-controle = "D‚bito Direto".
+if item.tipo-contr = 5 then        
+   assign c-tp-controle = "NÆo Definido".
+   
+if item.cod-obsoleto = 1 then
+   assign c-obsoleto = "Ativo".
+if item.cod-obsoleto = 2 then
+   assign c-obsoleto = "Obsoleto Ordens Autom ticas".
+if item.cod-obsoleto = 3 then
+   assign c-obsoleto = "Obsoleto Todas as Ordens".
+if item.cod-obsoleto = 4 then
+   assign c-obsoleto = "Totalmente Obsoleto".
+
+for each pr-it-per where 
+         pr-it-per.it-codigo   = item.it-codigo and
+         pr-it-per.cod-estabel = tt-param.cod-estabel no-lock:
+         
+    IF pr-it-per.periodo = 07/31/2016 THEN
+       ASSIGN de-medio-31-07 = pr-it-per.val-unit-mat-m[1] + pr-it-per.val-unit-mob-m[1] + pr-it-per.val-unit-ggf-m[1].
+        
+    IF pr-it-per.periodo = 08/31/2016 THEN
+       ASSIGN de-medio-31-08 = pr-it-per.val-unit-mat-m[1] + pr-it-per.val-unit-mob-m[1] + pr-it-per.val-unit-ggf-m[1].
+end.
+
+display item.it-codigo
+        item.desc-item 
+        item.un
+        item.desc-item
+    &IF DEFINED (bf_man_custeio_item) &THEN
+        item-uni-estab.preco-base   @ item.preco-base
+        item-uni-estab.preco-ul-ent @ item.preco-ul-ent
+        /*item-uni-estab.preco-repos  @ item.preco-repos*/
+        item-uni-estab.data-base    @ item.data-base
+        item-uni-estab.data-ult-ent @ item.data-ult-ent
+        /*item-uni-estab.data-ult-rep @ item.data-ult-rep*/    
+    &ELSE        
+        item.preco-base
+        item.preco-ul-ent
+        /*item.preco-repos*/
+        item.data-base
+        item.data-ult-ent
+        /*item.data-ult-rep*/
+    &ENDIF
+        de-medio-31-07
+        de-medio-31-08
+        c-tp-controle
+        c-obsoleto
+        /*de-tot-vl-item 
+        da-tp-preco
+        de-vl-unit-mat-1
+        de-vl-unit-mat-2
+        de-vl-unit-mat-3
+        de-vl-unit-mob-1
+        de-vl-unit-mob-2
+        de-vl-unit-mob-3               
+        de-vl-unit-ggf-1
+        de-vl-unit-ggf-2
+        de-vl-unit-ggf-3*/
+        with frame f-detalhe-255.
+down with frame f-detalhe-255.
+
+assign de-vl-unit-mat-1 = 0.0     
+       de-vl-unit-mat-2 = 0.0    
+       de-vl-unit-mat-3 = 0.0    
+       de-vl-unit-mob-1 = 0.0    
+       de-vl-unit-mob-2 = 0.0    
+       de-vl-unit-mob-3 = 0.0    
+       de-vl-unit-ggf-1 = 0.0    
+       de-vl-unit-ggf-2 = 0.0    
+       de-vl-unit-ggf-3 = 0.0
+       de-tot-vl-item   = 0    
+       da-tp-preco      = ?
+       de-medio-31-07   = 0
+       de-medio-31-08   = 0.
+       
+run pi-acompanhar in h-acomp (input "Item: " + item.it-codigo).
+
+/* Fim do Include */

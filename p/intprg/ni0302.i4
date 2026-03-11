@@ -1,0 +1,259 @@
+/******************************************************************************
+**
+**  Include.: OF0717.I4
+**
+**  Objetivo: Variaveis para impressao do resumo por UF
+**
+******************************************************************************/
+
+def {1} var c-estab-param  like estabelec.cod-estabel  no-undo.
+def {1} var c-linha-branco as character no-undo format "x(132)".
+def {1} var c-sep          as character no-undo format "x" init "|".
+def {1} var l-separadores  as logical format "Sim/Nao" no-undo.
+def {1} var l-resumo-aliq  as logical format "Sim/Nao" no-undo.
+def {1} var c-cod-est      like estabelec.cod-estabel  no-undo.
+def {1} var i-aux          as int                      no-undo.        
+
+def {1} var c-estabel      like estabelec.nome         no-undo.
+def {1} var c-cgc          like estabelec.cgc          no-undo.
+def {1} var c-inscricao    as character format "x(19)" no-undo.
+def {1} var i-aux-nat      as int       format "9"     no-undo.
+
+def {1} var c-natur        as character format "x(22)" no-undo.
+  
+def {1} var c-rodape-1     as character format "x(130)" no-undo.
+def {1} var c-titulo       as character                 no-undo.  
+def {1} var c-tit          as char format "x(11)"      
+                                          init "REGISTRO DE" no-undo.
+def {1} var c-titimposto   as char format "x(7)"      
+                                          init "ICMS" no-undo.
+def {1} var c-uf           as char format "x(41)"            no-undo.
+def {1} var da-iniper      like doc-fiscal.dt-docto          no-undo.
+def {1} var da-fimper      like doc-fiscal.dt-docto          no-undo.
+def {1} var da-inimes      like doc-fiscal.dt-docto          no-undo.
+def {1} var i-num-pag      like contr-livros.nr-ult-pag      no-undo.
+def {1} var i-aux-tipo     as int                            no-undo.
+def {1} var i-pag-aux      like contr-livros.nr-ult-pag      no-undo.
+def {1} var c-impres-cab   as character format "x(7)"        no-undo.
+                                        
+def {1} var de-contab      as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-base        as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-imposto     as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-trib        as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-outras      as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo. 
+def {1} var c-nat-oper     as char                         extent 3  no-undo. 
+def {1} var de-contab-1    as decimal 
+                            format ">>>>>>,>>>,>>>,>>9.99" extent 3  no-undo.
+def {1} var de-base-1      as decimal
+                            format ">>>>>>,>>>,>>>,>>9.99" extent 3  no-undo.
+def {1} var de-imposto-1   as decimal
+                            format ">>>>>>,>>>,>>>,>>9.99" extent 3  no-undo.
+def {1} var de-trib-1      as decimal 
+                            format ">>>>>>,>>>,>>>,>>9.99" extent 3  no-undo.
+def {1} var de-outras-1    as decimal 
+                            format ">>>>>>,>>>,>>>,>>9.99" extent 3  no-undo.
+def {1} var de-icms-sub-1  as decimal 
+                            format ">>>>>>,>>>,>>>,>>9.99" extent 3  no-undo.
+def {1} var de-icms-dec-2  as decimal 
+                            format ">>>>>>,>>>,>>>,>>9.99" extent 3  no-undo.                            
+def {1} var de-icms-sub-ent as decimal 
+                            format ">>>>>>,>>>,>>>,>>9.99" extent 3  no-undo.                            
+def {1} var de-acm-ct1     as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-acm-icmst   as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-acm-icmst-ent as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-acm-icmst-dec-2 as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-acm-bs1     as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-acm-ip1     as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-acm-tr1     as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-acm-ou1     as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-imp-deb     as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+def {1} var de-imp-cre     as decimal format ">>>>>>,>>>,>>>,>>9.99" no-undo.
+
+def {1} var de-cotacao     as dec decimals 4
+                             format ">>>,>>>,>>9.9999" init 1        no-undo.
+                                                             
+def {1} var i-moeda like moeda.mo-codigo.
+def {1} var c-moeda as character format "x(12)".
+
+def {1} var c-opcao       as character                               no-undo.
+def {1} var i-cont        as int                                     no-undo.
+/* def {1} var l-implanta    as logical initial no                      no-undo. */
+def {1} var da-conversao  as date                                    no-undo.
+def {1} var de-conv       as decimal  init 1                         no-undo.
+def {1} var c-tipo        as char  format "x(40)"                    no-undo.
+def {1} var l-achou       as logical                                 no-undo.  
+def {1} var l-param       as logical                  init no        no-undo.
+def {1} var l-eliqui      as logical                  init no        no-undo.
+def {1} var l-confirma    as logical format "Sim/Nao" init no        no-undo.
+def {1} var l-subs        as logical                  init no        no-undo.
+def {1} var i-termo       like termo.te-codigo.
+def {1} var i-terab       like termo.te-codigo                       no-undo.
+def {1} var i-teren       like termo.te-codigo                       no-undo.
+def {1} var i-ind1        as integer                                 no-undo.
+def {1} var l-resuf       as logical                  init no        no-undo.
+def {1} var l-previa      as logical form "Previa/Emissao" init yes  no-undo.
+def {1} var c-tit1        as character no-undo.
+def {1} var c-tit2        as character no-undo.
+def {1} var c-tit3        as character no-undo.
+
+def {1} frame f-cabec.
+def {1} frame f-cab-2.
+def {1} frame f-cab-3.
+def {1} frame f-diag.
+def {1} frame f-sdiag.
+def {1} frame f-bottom.
+def {1} frame f-cabec-2.
+
+/*{cdp/cd9500.i}*/
+
+DEF VAR c-sigla AS CHAR NO-UNDO.
+ASSIGN c-sigla = "".
+IF CAN-FIND (FIRST funcao 
+             WHERE funcao.cd-funcao = "spp-titulo-cab":U  
+               AND funcao.ativo     = YES) THEN
+   ASSIGN c-sigla = "- P 9".
+form header
+   (" " + fill(" ",130) + " ") at 1 format "x(132)"
+   c-tit         at 47
+   "APURA€ÇO DO"
+   c-titimposto c-sigla  
+   c-uf          skip(1)
+   "Estabelecimento: "     at 01 c-estabel format "x(113)" skip(1)
+    c-impres-cab  at 01 i-num-pag format ">>>>>9"
+   "MÒS OU PERÖODO/ANO:" at 22 da-iniper "A" da-fimper skip(1)
+   with stream-io width 132 no-labels no-box page-top frame f-cabec-2.
+
+form header
+   (" " + fill(" ",130) + " ") at 1 format "x(132)"     
+   c-tit         at 47
+   "APURA€ÇO DO"
+   c-titimposto  c-sigla 
+   c-uf          skip(1)
+   "Estabelecimento:  "     at 01 c-estabel format "x(113)" skip(1)
+   c-impres-cab  at 01 i-num-pag format ">>>>>9"
+   "MÒS OU PERÖODO/ANO:" at 22 da-iniper "A" da-fimper skip(1)
+   with stream-io width 132 no-labels no-box page-top frame f-cabec.
+
+form "-----------------------------------------------"                                at 01 space(1)
+     c-tipo                                                                                 space(1)
+     "-------------------------------------------"                                          skip 
+     "ICMS - VALORES FISCAIS"                                                         at 57 skip
+     "CODIFICACAO"                                                                    at 01
+     "OPERACOES COM CREDITO DO IMPOSTO            OPERACOES SEM CREDITO DO IMPOSTO"   at 52 skip
+     "CONTABIL     FISCAL        VALORES CONTABEIS       BASE DE CALCULO     IMPOSTO" at 01  
+     " CREDITADO      ISENTAS/NAO TRIB.               OUTRAS"                         at 79 skip
+     "------------------------------------------------------------------------------" at 01  
+     "------------------------------------------------------"                         at 79 skip                       
+     with width 132 no-labels no-box stream-io frame f-cab-2 page-top.
+
+form "-----------------------------------------------"                                at 01 space(1)
+     c-tipo                                                                                 space(1)
+     "-------------------------------------------"                                          skip
+     "ICMS - VALORES FISCAIS"                                                         at 57 skip
+     "CODIFICACAO"                                                                    at 01
+     "OPERACOES COM DEBITO DO IMPOSTO             OPERACOES SEM DEBITO DO IMPOSTO"    at 52 skip
+     "CONTABIL     FISCAL        VALORES CONTABEIS      BASE DE CALCULO       IMPOST" at 01
+     "O DEBITADO      ISENTAS/NAO TRIB.               OUTRAS"                         at 79 skip
+     "------------------------------------------------------------------------------" at 01
+     "------------------------------------------------------"                         at 79 skip
+     with width 132 no-labels no-box stream-io frame f-cab-3 page-top.
+
+/*** Separadores ***/
+
+form header
+   ("+" + fill("-",130) + "+") at 1 format "x(132)"
+   "|" at 1
+   c-tit         at 47
+   "APURA€ÇO DO"
+   c-titimposto c-sigla
+   c-uf          
+   "|" at 132
+   "|" at 1
+   "|" at 132
+   "|" at 1
+   "FIRMA: "     c-estabel 
+   "|" at 132
+   "|" at 1
+   "|" at 132
+   "|" at 1
+   "INSC. EST.:" c-inscricao
+   "C.N.P.J.(MF):"   at 34 c-cgc 
+   "|" at 132
+   "|" at 1
+   "|" at 132
+   "|" at 1
+   c-impres-cab i-num-pag format ">>>>>9"
+   "MÒS OU PERÖODO/ANO:" at 22 da-iniper "A" da-fimper 
+   "|" at 132 
+   with stream-io width 132 no-labels no-box page-top frame f-diag.
+
+form  
+   "|" at 1
+   "-----------------------------------------------------------------" at 2 
+   "-----------------------------------------------------------------" at 67 
+   "|" at 132 
+   "|" at 1
+   c-tipo at 63
+   "|" at 132
+   "|" at 1
+   "-----------------------------------------------------------------" at 2  
+   "-----------------------------------------------------------------" at 67 
+   "|" at 132 
+   "|" at 1
+   "|" at 24
+   "|" at 45
+   "ICMS - VALORES FISCAIS" at 78
+   "|" at 132
+   "|" at 1
+   "|" at 24
+   "|" at 45
+   "-------------------------------------------" at 46
+   "-------------------------------------------" at 89
+   "|" at 132 
+   "|" at 1
+   "|" at 24
+   "|" at 45
+   c-tit1 at 52 format "x(33)" 
+   "|" at 89
+   c-tit2 at 96 format "x(33)" 
+   "|" at 132
+   "|" at 1
+   "CODIFICA€ÇO" at 7
+   "|" at 24
+   "VALORES" at 31
+   "|" at 45
+   "-------------------------------------------" at 46
+   "-------------------------------------------" at 89
+   "|" at 132 
+   "|" at 1
+   "---------------------" at 2
+   "|" at 24
+   "CONTµBEIS" at 30
+   "|" at 45 
+   "BASE DE CµLCULO" at 49
+   "|" at 67
+   "IMPOSTO" at 70 c-tit3 format "x(9)"
+   "|" at 89
+   "ISENTAS OU NÇO" at 94
+   "|" at 111
+   "OUTRAS" at 119
+   "|" at 132
+   "|" at 1
+   "CONTµBIL" at 5
+   "|FISCAL |" at 16
+   "|" at 45
+   "|" at 67
+   "|" at 89
+   "TRIBUTADAS" at 96
+   "|" at 111
+   "|" at 132
+   "|" at 1
+   "-----------------------------------------------------------------" at 2 
+   "-----------------------------------------------------------------" at 67 
+   "|" at 132 
+    with stream-io width 132 no-labels no-box frame f-sdiag.
+
+form header
+  ("+" + fill("-",130) + "+") at 1 format "x(132)"
+  with no-box stream-io page-bottom no-labels width 132 frame f-bottom.
+

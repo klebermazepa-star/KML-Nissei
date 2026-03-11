@@ -1,0 +1,26 @@
+/********************************************************************************
+***
+*** ftp/ftapi001.i1 - Temp-Tables Integra‡Æo Impostos CR EMS5
+***
+********************************************************************************/
+            
+def temp-table tt-impto-tit-pend-cr-1 no-undo like impto-tit-pend-cr
+    field cd-jurisdicao      like jurisdicao.cd-jurisdicao
+    field cod-certif-isencao like it-nota-imp.cod-certif-isencao.
+
+def temp-table tt-imposto-1
+    field cod-imposto  as char
+    field vl-base      as decimal
+    field vl-imposto   as decimal.
+
+def temp-table tt_integr_acr_sales_tax no-undo
+    field tta_cod_estab            as character format "x(3)"  label "Estabelecimento" column-label "Estab"
+    field tta_cod_refer            as character format "x(10)" label "Referˆncia" column-label "Referˆncia"
+    field tta_num_seq_refer        as integer   format ">>>9"  initial 0 label "Sequˆncia" column-label "Seq"
+    field tta_cod_jurisd_sales_tax as character format "x(20)" label "Jurisdi‡Æo" column-label "Jurisdi‡Æo"
+    field tta_val_imposto          as decimal   format ">,>>>,>>>,>>9.99" decimals 2 initial 0 label "Valor Imposto" column-label "Vl Imposto"
+    field tta_cod_certif_isencao   as character format "x(20)" label "C¢digo Certificado" column-label "C¢digo Certificado"
+    field ttv_cod_estab_ext        as character format "x(3)" label "Estabelecimento" column-label "Estabelecimento".
+    
+
+/*ftp/ftapi001.i1*/

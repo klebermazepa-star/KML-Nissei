@@ -1,0 +1,2235 @@
+/*******************************************************************************
+**
+**  CDAPI013.I1 - Variaveis e Procedures/Funcoes Avaliacao de Credito
+**    mp-vl-dup-atr            Janeiro de 1999 - Andr² Peres
+**                Outubro de 1995 - Andr² Peres - Integra»’o com o EMS 5.0
+**                                  O programa chama a api do EMS 5.0 apenas uma
+**                                  vez considerando-se que sempre a pi-saldo-cr
+**                                  serÿ chamada antes da pi-saldo-ap
+**
+*******************************************************************************/
+
+DEF BUFFER b-natur-oper FOR natur-oper.
+DEF BUFFER b-emitente   FOR ems2mult.emitente.
+DEF BUFFER bf-ped-venda FOR ped-venda.
+
+def var de-perc-max-dup    as decimal no-undo.
+
+{cdp/cdcfgdis.i} /* Include para Pre Processadores */
+{cdp/cd7300.i1}  /* Defini»„es do Multi-planta     */
+{cdp/cdapi013mp.i1} /* tt-maq-ep-est-aux */
+{include/rowid.i}
+
+DEFINE TEMP-TABLE tt-emitente NO-UNDO 
+    FIELD cod-emitente      LIKE ems2mult.emitente.cod-emitente
+    FIELD nome-abrev        LIKE ems2mult.emitente.nome-abrev      
+    FIELD nr-mesina         LIKE ems2mult.emitente.nr-mesina
+    FIELD cod-gr-cli        LIKE ems2mult.emitente.cod-gr-cli
+    FIELD nr-peratr         LIKE ems2mult.emitente.nr-peratr
+    /****    Atributos utilizados na integra»’o com o EMS 5.0     *****/
+    FIELD nr-cheque-devol   LIKE ems2mult.emitente.nr-cheque-devol
+    FIELD qtd-dias          LIKE ems2mult.emitente.periodo-devol
+    FIELD vl-max-devol      LIKE ems2mult.emitente.vl-max-devol
+    FIELD identific         LIKE ems2mult.emitente.identific
+    FIELD moeda-credito     AS INTEGER FORMAT ">9"
+    FIELD de_saldo_cr       AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"
+    FIELD de_saldo_ap       AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"
+    FIELD de_tot_tit_atr_cr AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"
+    FIELD de_tot_ad_cr      AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"
+    FIELD de_cr_ant_aberto  AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"
+    FIELD de_ap_ant_aberto  AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"
+    &IF '{&BF_DIS_VERSAO_EMS}' >= '2.062' &THEN /*** A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 - Projeto Graos x Aval Credito ***/
+    FIELD de_tot_tit_atr_ap     AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"
+    FIELD de_ap_ant_sem_safra   AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"    
+    &ENDIF
+    INDEX cod-emitente IS PRIMARY  cod-emitente.
+/*** A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 - Projeto Graos x Aval Credito ***/
+&IF '{&BF_DIS_VERSAO_EMS}' >= '2.062' &THEN 
+
+        DEFINE TEMP-TABLE tt_tit_acr_analise_credito NO-UNDO
+            field tta_cod_empresa                  as character format "x(3)" label "Empresa" column-label "Empresa"
+            field tta_cod_estab                    as character format "x(3)" label "Estabelecimento" column-label "Estab"
+            field tta_cdn_cliente                  as Integer format ">>>,>>>,>>9" initial 0 label "Cliente" column-label "Cliente"
+            field tta_cod_ser_docto                as character format "x(3)" label "S‚rie Documento" column-label "S‚rie"
+            field tta_cod_espec_docto              as character format "x(3)" label "Esp‚cie Documento" column-label "Esp‚cie"
+            field tta_cod_tit_acr                  as character format "x(10)" label "T¡tulo" column-label "T¡tulo"
+            field tta_cod_parcela                  as character format "x(02)" label "Parcela" column-label "Parc"
+            field tta_dat_vencto_tit_acr           as date format "99/99/9999" initial ? label "Vencimento" column-label "Vencimento"
+            field tta_dat_emis_docto               as date format "99/99/9999" initial today label "Data  EmissÆo" column-label "Dt EmissÆo"
+            field tta_ind_tip_espec_docto          as character format "X(17)" initial "Normal" label "Tipo Esp‚cie" column-label "Tipo Esp‚cie"
+            field tta_ind_sit_tit_acr              as character format "X(13)" initial "Normal" label "Situa‡Æo T¡tulo" column-label "Situa‡Æo T¡tulo"
+            field tta_log_tit_acr_estordo          as logical format "Sim/NÆo" initial no label "Estornado" column-label "Estornado"
+            field tta_cod_indic_econ               as character format "x(8)" label "Moeda" column-label "Moeda"
+            field tta_val_origin_tit_acr           as decimal format ">>>,>>>,>>9.99" decimals 2 initial 0 label "Vl Original T¡tulo" column-label "Vl Original T¡tulo"
+            field tta_val_sdo_tit_acr              as decimal format ">>>,>>>,>>9.99" decimals 2 initial 0 label "Saldo T¡tulo" column-label "Saldo T¡tulo"
+            field ttv_rec_tit_acr                  as {&ROWID} 
+                &IF {&ROWID_READY} = NO &THEN
+                    format ">>>>>>9"
+                &ENDIF            
+            field ttv_cod_indic_movto              as character format "x(1)" label "Indic Movto" column-label "Indic Movto"
+            field ttv_val_sdo_tit_analis_cr        as decimal format "->>,>>>,>>>,>>9.99" decimals 2 label "Vl An lise Cr‚dito" column-label "Vl An lise Cr‚dito"
+            index tt_chave                        
+                  tta_cod_empresa                  ascending
+                  tta_cod_estab                    ascending
+                  tta_cod_espec_docto              ascending
+                  tta_cod_ser_docto                ascending
+                  tta_cod_tit_acr                  ascending
+                  tta_cod_parcela                  ascending
+            index tt_tipo_espec                   
+                  tta_ind_tip_espec_docto          ascending.
+        
+        def temp-table tt_tit_ap_analise_credito no-undo
+            field tta_cod_empresa                  as character format "x(3)" label "Empresa" column-label "Empresa"
+            field tta_cod_estab                    as character format "x(3)" label "Estabelecimento" column-label "Estab"
+            field tta_cdn_fornecedor               as Integer format ">>>,>>>,>>9" initial 0 label "Fornecedor" column-label "Fornecedor"
+            field tta_cod_ser_docto                as character format "x(3)" label "S‚rie Documento" column-label "S‚rie"
+            field tta_cod_espec_docto              as character format "x(3)" label "Esp‚cie Documento" column-label "Esp‚cie"
+            field tta_cod_tit_ap                   as character format "x(10)" label "T¡tulo" column-label "T¡tulo"
+            field tta_cod_parcela                  as character format "x(02)" label "Parcela" column-label "Parc"
+            field tta_dat_vencto_tit_ap            as date format "99/99/9999" initial today label "Data Vencimento" column-label "Dt Vencto"
+            field tta_dat_emis_docto               as date format "99/99/9999" initial today label "Data  EmissÆo" column-label "Dt EmissÆo"
+            field tta_ind_tip_espec_docto          as character format "X(17)" initial "Normal" label "Tipo Esp‚cie" column-label "Tipo Esp‚cie"
+            field tta_ind_sit_tit_ap               as character format "X(13)" label "Situa‡Æo" column-label "Situa‡Æo"
+            field tta_log_tit_ap_estordo           as logical format "Sim/NÆo" initial no label "Estornado" column-label "Estornado"
+            field tta_cod_indic_econ               as character format "x(8)" label "Moeda" column-label "Moeda"
+            field tta_val_origin_tit_ap            as decimal format "->>>,>>>,>>9.99" decimals 2 initial 0 label "Valor Original" column-label "Valor Original"
+            field tta_val_sdo_tit_ap               as decimal format "->>>,>>>,>>9.99" decimals 2 initial 0 label "Valor Saldo" column-label "Valor Saldo"
+            field ttv_rec_tit_ap                   as {&ROWID} 
+                &IF {&ROWID_READY} = NO &THEN
+                    format ">>>>>>9" initial ?
+                &ENDIF
+            field ttv_cod_indic_movto              as character format "x(1)" label "Indic Movto" column-label "Indic Movto"
+            field ttv_val_sdo_tit_analis_cr        as decimal format "->>,>>>,>>>,>>9.99" decimals 2 label "Vl An lise Cr‚dito" column-label "Vl An lise Cr‚dito"
+            index tt_chave                        
+                  tta_cod_empresa                  ascending
+                  tta_cod_estab                    ascending
+                  tta_cdn_fornecedor               ascending
+                  tta_cod_ser_docto                ascending
+                  tta_cod_espec_docto              ascending
+                  tta_cod_tit_ap                   ascending
+                  tta_cod_parcela                  ascending
+            index tt_tipo_espec                   
+                  tta_ind_tip_espec_docto          ascending.
+
+        /*** DefinicÆo temp-table - Integra‡Æo API EMS5 - Retorna informa‡äes de cr‚dito por safra ***/
+        DEFINE TEMP-TABLE tt-emitente-safra NO-UNDO 
+            FIELD cod-emitente                 as integer   format ">>>>>>>>9"          /* C½digo do emitente */
+            FIELD cod-safra                    as character format "9999/9999"          /* C½digo da safra */
+            FIELD de-tit-abe-nao-venc-safra-cr as decimal   format ">>>,>>>,>>>,>>9.99" /* Saldo de t­tulos a receber n’o vencidos */
+            FIELD de-tit-abe-nao-venc-safra-ap as decimal   format ">>>,>>>,>>>,>>9.99" /* Saldo de t­tulos a pagar n’o vencidos */
+            FIELD de-ap-ant-safra              as decimal   format ">>>,>>>,>>>,>>9.99" /* Saldo das antecipa»„es */
+            index cod-emitente-safra is primary cod-emitente cod-safra.
+
+        /*** DefinicÆo temp-table - Armazena as informa‡äes de cr‚dito agrupadas por safra de todos os pedidos em abertos/atendido parcial ***/
+        DEFINE TEMP-TABLE tt-emit-safra-dis NO-UNDO
+            FIELD cod-emitente      		        LIKE ems2mult.emitente.cod-emitente
+            FIELD cod-safra             		AS char FORMAT "9999/9999"
+            FIELD lim-cred-safra-prod                   AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Limite Cr‚dito Safra/Produto            (A)  ***/
+            FIELD rec-dep-safra                         AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Valor Recibo Dep¢sito Safra             (B)  ***/
+            FIELD totvlap-safra        		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Total Pedidos Aprovado/Avaliados Safra  (C)  ***/
+            FIELD totvlaa-safra       		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Total Pedidos a Aprovar Safra           (D)  ***/
+            FIELD vl-nota-safra      		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Nota Fiscal nÆo Atualizada CR Safra     (E)  ***/
+            FIELD cr-sl-ab-safra      		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** T¡tulos Abertos NÆo Vencidos CR Safra   (F)  ***/
+            FIELD cr-tot-tit-venc      		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** T¡tulos Abertos Vencidos CR             (G)  ***/
+            FIELD ap-sl-ab-safra       		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** T¡tulos Abertos NÆo Vencidos AP Safra   (H)  ***/
+            FIELD ap-sl-venc     		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** T¡tulos Abertos Vencidos AP             (I)  ***/
+            FIELD ap-ant-sem-safra     		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Valor Antecipa‡äes AP                   (J)  ***/
+            FIELD saldo-safra-prod     		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Saldo Atual Limite Safra/Produto        (T)  ***/
+            FIELD lim-cred-safra-val                    AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Limite Cr‚dito Safra/Valor              (A1) ***/
+            FIELD ap-ant-safra                          AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Valor Antecipa‡äes AP Safra             (B1) ***/
+            FIELD saldo-safra-val      		        AS DECIMAL FORMAT ">>>,>>>,>>>,>>9.99"  /*** Saldo Atual Limite Safra/Valor          (T1) ***/
+            INDEX id-emit-safra IS PRIMARY cod-emitente cod-safra.
+        
+        /*** Defini‡Æo temp-table ***/    
+        DEFINE TEMP-TABLE tt-emit-safra-agrup NO-UNDO LIKE tt-emit-safra-dis.
+        DEFINE BUFFER     b-tt-emit-safra-dis FOR  tt-emit-safra-dis.
+
+&ENDIF
+/*** FIM - Graos x Aval. Cred ***/
+
+
+/* Temp-table de retorno de erros no EMS 5.0 */
+DEFINE TEMP-TABLE tt-erros-analise-credito NO-UNDO 
+    FIELD cod-emitente      AS INTEGER   FORMAT ">>>>>>9" 
+    FIELD cod-mensagem      AS INTEGER   FORMAT ">>>>,>>9"
+    FIELD des-msg           AS CHARACTER FORMAT "x(50)"
+    FIELD help-msg          AS CHARACTER FORMAT "x(50)".
+
+{btb/btb009za.i} /* Temp-table de erros tt_erros_conexao */
+
+/* Temp-table para ganho de performance */
+DEFINE TEMP-TABLE tt-empresa-estab NO-UNDO 
+    FIELD cod-estabel    LIKE ems2mult.estabelec.cod-estabel
+    FIELD ep-codigo      LIKE ems2mult.empresa.ep-codigo.
+
+DEF VAR h-btb009za           AS HANDLE                    NO-UNDO.
+
+DEF VAR de-saldo-cr          LIKE ems2mult.estatist.vl-maior-tit   NO-UNDO.
+DEF VAR de-saldo-ap          LIKE ems2mult.est-ap.vl-maior-doc     NO-UNDO.
+DEF VAR de-vl-nota           LIKE nota-fiscal.vl-tot-nota NO-UNDO.
+DEF VAR i-nr-mesina          LIKE ems2mult.emitente.nr-mesina      NO-UNDO.
+DEF VAR l-ems5               AS LOGICAL                   NO-UNDO.
+DEF VAR l-erro-ems5          AS LOGICAL                   NO-UNDO.
+DEF VAR l-chama-upc-item     AS LOGICAL                   NO-UNDO.
+DEF VAR l-chama-upc-titulo   AS LOGICAL                   NO-UNDO.
+DEF VAR i-tot-tit-cr         AS INTEGER                   NO-UNDO.
+DEF VAR i-x                  AS INTEGER                   NO-UNDO.
+DEF VAR i-nr-meses           AS INTEGER                   NO-UNDO.
+DEF VAR i-dias-atraso        AS INTEGER                   NO-UNDO.
+DEF VAR d-cr-ult-atraso      AS DATE                      NO-UNDO.
+DEF VAR de-cr-ant-aberto     AS DECIMAL                   NO-UNDO.
+DEF VAR de-cr-sl-aberto      AS DECIMAL                   NO-UNDO.
+DEF VAR de-ap-ant-aberto     AS DECIMAL                   NO-UNDO.
+DEF VAR de-ap-sl-aberto      AS DECIMAL                   NO-UNDO.
+DEF VAR de-pd-sl-ap-forc     AS DECIMAL                   NO-UNDO.
+DEF VAR de-tot-ad            AS DECIMAL                   NO-UNDO.
+DEF VAR de-tot-tit           AS DECIMAL                   NO-UNDO.
+DEF VAR da-ult-ven           AS DATE                      NO-UNDO.
+DEF VAR de-fator-2           AS DECIMAL                   NO-UNDO. /* Contem cotacao da moeda do LC */
+DEF VAR de-totvlap           AS DECIMAL                   NO-UNDO.
+DEF VAR de-totvlre           AS DECIMAL                   NO-UNDO.
+DEF VAR de-totvlaa           AS DECIMAL                   NO-UNDO.
+DEF VAR i-total-ped          AS INTEGER                   NO-UNDO.
+DEF VAR i-tot-pdap           AS INTEGER                   NO-UNDO.
+DEF VAR i-tot-pdre           AS INTEGER                   NO-UNDO.
+DEF VAR i-tot-pdaa           AS INTEGER                   NO-UNDO.
+DEF VAR i-tot-pdcr           AS INTEGER                   NO-UNDO.
+DEF VAR de-saldo             AS DECIMAL                   NO-UNDO.
+DEF VAR l-vendor             AS LOGICAL                   NO-UNDO.
+DEF VAR l-inativo            AS LOGICAL                   NO-UNDO.
+DEF VAR l-inativo-mp         AS LOGICAL                   NO-UNDO.
+DEF VAR l-cheque-devol       AS LOGICAL                   NO-UNDO.     
+DEF VAR c-msg-aval           AS CHARACTER                 NO-UNDO.
+DEF VAR l-matriz-safra       AS LOGICAL                   NO-UNDO.
+DEF VAR l-abrange-matriz     AS LOGICAL                   NO-UNDO.
+
+DEF VAR l-aval-cr-multi-empres AS LOG                     NO-UNDO.
+def var log-spp as logical no-undo initial no.
+
+/* cheques */               
+DEF VAR i-qtde-dias          AS INTEGER                   NO-UNDO INITIAL 0.
+DEF VAR i-qtde-cheque        AS INTEGER                   NO-UNDO INITIAL 0.
+DEF VAR de-tot-cheque        AS DECIMAL                   NO-UNDO.
+DEF VAR i-qtde-limite        AS INTEGER                   NO-UNDO.
+DEF VAR de-tot-limite        AS DECIMAL                   NO-UNDO.
+
+DEF VAR l-ja-conec-emsbas    AS LOGICAL                   NO-UNDO.
+DEF VAR l-ja-conec-emsuni    AS LOGICAL                   NO-UNDO.
+DEF VAR l-ja-conec-emsfin    AS LOGICAL                   NO-UNDO.
+
+DEF VAR mp-dt-ult-ven        AS DATE                      NO-UNDO INITIAL ?.
+DEF VAR mp-dt-ult-atr        AS DATE                      NO-UNDO INITIAL ?.
+DEF VAR mp-vl-dup-atr        AS DECIMAL                   NO-UNDO INITIAL 0.
+DEF VAR mp-vl-ad-atr         AS DECIMAL                   NO-UNDO INITIAL 0.
+DEF VAR mp-vl-cr-abe         AS DECIMAL                   NO-UNDO INITIAL 0.
+DEF VAR mp-vl-ap-abe         AS DECIMAL                   NO-UNDO INITIAL 0.
+
+DEF VAR i-ep-codigo-resum    LIKE ems2mult.empresa.ep-codigo       NO-UNDO.
+DEF VAR c-cod-estabel-resum  LIKE ems2mult.estabelec.cod-estabel   NO-UNDO.
+
+DEFINE VARIABLE de-valor AS DECIMAL NO-UNDO.
+{cdp/cdapi013.i10} /* Defini»„es Monitoramento */
+
+FIND FIRST para-ped     NO-LOCK NO-ERROR.   
+&IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN
+    ASSIGN c-cm-cod-estabel = para-ped.estab-padrao.
+    /* Engenharia Separacao Modulo MPD - Avalia»’o Cr²dito */
+    {cmp/cm9999.i2}
+&endif
+
+/*** Projeto Graos x Aval Credito ***/
+&IF '{&BF_DIS_VERSAO_EMS}' >= '2.062' &THEN 
+    {cdp/cdapi013.i60} /*** Verifica se o m¢dulo de grÆos est  implantado - atualiza a vari vel l-mod-graos ***/
+    
+    DEF VAR de-ap-sl-ab-safra      AS DECIMAL                   NO-UNDO.
+    DEF VAR de-cr-sl-ab-safra      AS DECIMAL                   NO-UNDO.
+    DEF VAR de-saldo-safra         AS DECIMAL                   NO-UNDO.
+    DEF VAR de-ap-sl-venc          AS DECIMAL                   NO-UNDO.
+    DEF VAR de-ap-ant-sem-safra    AS DECIMAL                   NO-UNDO.
+    DEF VAR de-totvlap-safra       AS DECIMAL                   NO-UNDO.
+    DEF VAR de-totvlaa-safra       AS DECIMAL                   NO-UNDO.
+    DEF VAR de-vl-nota-safra       AS DECIMAL                   NO-UNDO.
+    
+    DEF VAR avail-gg-limite        AS LOGICAL                   NO-UNDO.
+    DEF VAR h-cdapi013a            AS HANDLE                    NO-UNDO.
+            
+    def var d-cr-tot-tit-venc  as decimal no-undo.
+    def var d-ap-sl-venc       as decimal no-undo.
+    def var d-ap-ant-sem-safra as decimal no-undo.
+&ENDIF
+
+&IF DEFINED (bf_dis_usu_moeda_cred) &THEN  
+    ASSIGN de-fator-2 = 1.
+&else
+    /* Grava o de-fator-2 que cont²m a cotacao da moeda de credito */    
+    IF  para-ped.moeda-libcre = 0 THEN 
+        ASSIGN de-fator-2 = 1.
+    ELSE DO:
+        {pdp/pd9100.i "para-ped.moeda-libcre" "today" "de-fator-2"}
+    END.
+&endif
+
+
+/* Buscar valores do CR/AP do EMS 5.0 caso esteja implantado */
+IF  CAN-FIND(funcao WHERE funcao.cd-funcao = "adm-acr-ems-5.00"
+                      AND funcao.ativo     = YES 
+                      AND funcao.log-1     = YES)
+OR  CAN-FIND(funcao WHERE funcao.cd-funcao = "adm-apb-ems-5.00"
+                      AND funcao.ativo     = YES 
+                      AND funcao.log-1     = YES) THEN DO:
+    ASSIGN l-ems5 = YES.
+END.
+
+
+/******************** Definicoes de Funcoes Internas ***********************/
+FUNCTION fn-indice RETURNS DECIMAL (INPUT i-moeda AS INTEGER).
+    DEF VAR de-fator-1 AS DECIMAL NO-UNDO.
+    IF i-moeda <> 0 THEN DO:
+       {pdp/pd9100.i "i-moeda" "today" "de-fator-1"}
+    END.
+    ELSE  
+       ASSIGN de-fator-1 = 1.
+    RETURN (de-fator-1 / de-fator-2). 
+END FUNCTION. 
+
+
+/******************* Definicoes de Procedures Internas **********************/
+
+PROCEDURE pi-cria-tt-emitente.
+
+    &IF INTEGER(ENTRY(1,PROVERSION,".")) >= 9 &THEN
+        EMPTY TEMP-TABLE tt-emitente NO-ERROR.
+    &ELSE
+        FOR EACH tt-emitente:
+            DELETE tt-emitente.
+        END.
+    &ENDIF
+    
+    IF  emitente.ind-abrange-aval = 1 THEN DO:
+        ASSIGN l-matriz-safra = no.
+        CREATE tt-emitente.
+        ASSIGN tt-emitente.cod-emitente      = emitente.cod-emitente
+               tt-emitente.nome-abrev        = emitente.nome-abrev
+               tt-emitente.nr-mesina         = emitente.nr-mesina
+               tt-emitente.cod-gr-cli        = emitente.cod-gr-cli
+               tt-emitente.nr-peratr         = emitente.nr-peratr
+                      /*   Informa»„es para o EMS 5.0   */
+               tt-emitente.nr-cheque-devol   = emitente.nr-cheque-devol
+               tt-emitente.vl-max-devol      = emitente.vl-max-devol
+               tt-emitente.qtd-dias          = &IF "{&bf_dis_versao_ems}" >= "2.062" &THEN 
+                                                   emitente.periodo-devol
+                                               &else
+                                                   IF emitente.periodo-devol = 0 THEN para-ped.periodo-devol
+                                                   ELSE emitente.periodo-devol
+                                               &endif
+               tt-emitente.identific         = emitente.identific    
+               tt-emitente.moeda-credito     = 0 /*moeda usada no EMS5. sempre deve trazer os titulos para moeda 0*/
+               tt-emitente.de_saldo_cr       = 0
+               tt-emitente.de_saldo_ap       = 0
+               tt-emitente.de_tot_tit_atr_cr = 0
+               tt-emitente.de_tot_ad_cr      = 0
+               tt-emitente.de_cr_ant_aberto  = 0
+               tt-emitente.de_ap_ant_aberto  = 0.
+               
+        /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+        &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+            if l-modul-graos then /*** M¢dulo de GrÆos implantado - cd0101 ***/
+               RUN pi-cria-tt-emit-safra-dis.
+        &endif
+        /*** Fim - Proj Graos ***/
+
+    END.
+    ELSE DO:
+        ASSIGN l-matriz-safra = yes.
+
+        FOR EACH b-emitente
+            FIELDS (b-emitente.cod-emitente
+                    b-emitente.nome-abrev
+                    b-emitente.nr-mesina
+                    b-emitente.cod-gr-cli
+                    b-emitente.nr-peratr
+                    b-emitente.nome-emit
+                    /* estes campos n’o podem ser apagados conforme FO 1026.441*/
+                    b-emitente.nr-cheque-devol
+                    b-emitente.vl-max-devol
+                    b-emitente.identific
+                    b-emitente.periodo-devol 
+                    &IF DEFINED (bf_dis_usu_moeda_cred) &THEN  
+                        b-emitente.moeda-libcre
+                    &ENDIF   
+
+                    ) USE-INDEX ch-matriz 
+            WHERE b-emitente.nome-matriz      = emitente.nome-matriz
+            AND   b-emitente.ind-abrange-aval = 2 NO-LOCK:
+
+            CREATE tt-emitente.
+            ASSIGN tt-emitente.cod-emitente = b-emitente.cod-emitente
+                   tt-emitente.nome-abrev   = b-emitente.nome-abrev
+                   tt-emitente.nr-mesina    = b-emitente.nr-mesina
+                   tt-emitente.cod-gr-cli   = b-emitente.cod-gr-cli
+                   tt-emitente.nr-peratr    = b-emitente.nr-peratr
+                   /* Informa»„es para o EMS 5.0 */
+                   tt-emitente.nr-cheque-devol   = emitente.nr-cheque-devol
+                   tt-emitente.vl-max-devol      = emitente.vl-max-devol
+                   tt-emitente.qtd-dias          = &IF '{&bf_dis_versao_ems}' >= '2.062' &THEN 
+                                                       b-emitente.periodo-devol
+                                                   &else
+                                                       IF b-emitente.periodo-devol = 0 THEN para-ped.periodo-devol
+                                                       ELSE b-emitente.periodo-devol
+                                                   &endif
+                   tt-emitente.identific         = b-emitente.identific                                                       
+                   tt-emitente.moeda-credito     = 0 /*moeda usada no EMS5. sempre deve trazer os titulos para moeda 0*/
+                   tt-emitente.de_saldo_cr       = 0
+                   tt-emitente.de_saldo_ap       = 0
+                   tt-emitente.de_tot_tit_atr_cr = 0
+                   tt-emitente.de_tot_ad_cr      = 0	
+                   tt-emitente.de_cr_ant_aberto  = 0
+                   tt-emitente.de_ap_ant_aberto  = 0.
+
+            /* Monitoramento dados usados na avalia»’o */
+            {cdp/cdapi013.i20 "51" "string(b-emitente.cod-emitente) + chr(24) + b-emitente.nome-emit"}
+
+
+            /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+            &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                if l-modul-graos then /*** M¢dulo de GrÆos implantado - cd0101 ***/
+                   RUN pi-cria-tt-emit-safra-dis.
+            &endif
+            /*** Fim - Proj Graos ***/
+
+        END.
+    END.
+
+END PROCEDURE.
+
+
+/*** Projeto GrÆso x Aval. Cr‚dito ***/
+PROCEDURE pi-cria-tt-emit-safra-dis:
+&IF '{&BF_DIS_VERSAO_EMS}' >= '2.062' &THEN
+
+    &IF '{&BF_DIS_VERSAO_EMS}' >= "2.08":U &THEN    
+       IF avail ped-venda and ped-venda.cod-safra <> "00000000" THEN DO:
+    &ELSE
+       IF avail ped-venda and SUBSTRING(ped-venda.char-2,101,8) <> "00000000" THEN DO:
+    &ENDIF 
+
+          &IF '{&BF_DIS_VERSAO_EMS}' >= "2.08":U &THEN               
+              find first tt-emitente-safra
+                   where tt-emitente-safra.cod-emitente            = tt-emitente.cod-emitente
+                     and tt-emitente-safra.cod-safra               = ped-venda.cod-safra      no-error.
+          &ELSE
+              find first tt-emitente-safra
+                   where tt-emitente-safra.cod-emitente            = tt-emitente.cod-emitente
+                     and tt-emitente-safra.cod-safra               = SUBSTRING(ped-venda.char-2,101,8) no-error.
+          &ENDIF
+
+          if not avail tt-emit-safra-dis then do:
+          
+
+             create tt-emitente-safra.
+             assign tt-emitente-safra.cod-emitente                 = tt-emitente.cod-emitente
+                    tt-emitente-safra.cod-safra             	   = &IF '{&BF_DIS_VERSAO_EMS}' >= "2.08":U &THEN ped-venda.cod-safra
+                                                                     &ELSE SUBSTRING(ped-venda.char-2,101,8) 
+                                                                     &ENDIF
+                    tt-emitente-safra.de-tit-abe-nao-venc-safra-cr = 0        
+                    tt-emitente-safra.de-tit-abe-nao-venc-safra-ap = 0        
+                    tt-emitente-safra.de-ap-ant-safra     	   = 0.	        
+
+             create tt-emit-safra-dis.
+             assign tt-emit-safra-dis.cod-emitente                 = tt-emitente.cod-emitente
+                    tt-emit-safra-dis.cod-safra                    = &IF '{&BF_DIS_VERSAO_EMS}' >= "2.08":U &THEN ped-venda.cod-safra
+                                                                     &ELSE SUBSTRING(ped-venda.char-2,101,8) 
+                                                                     &ENDIF
+                    tt-emit-safra-dis.lim-cred-safra-prod          = 0                       
+                    tt-emit-safra-dis.rec-dep-safra                = 0                       
+                    tt-emit-safra-dis.totvlap-safra                = 0                    
+                    tt-emit-safra-dis.totvlaa-safra                = 0
+                    tt-emit-safra-dis.vl-nota-safra                = 0
+                    tt-emit-safra-dis.cr-sl-ab-safra               = 0
+                    tt-emit-safra-dis.cr-tot-tit-venc              = 0
+                    tt-emit-safra-dis.ap-sl-venc                   = 0
+                    tt-emit-safra-dis.ap-sl-ab-safra               = 0
+                    tt-emit-safra-dis.ap-ant-sem-safra             = 0
+                    tt-emit-safra-dis.saldo-safra-prod             = 0
+                    tt-emit-safra-dis.lim-cred-safra-val           = 0
+                    tt-emit-safra-dis.ap-ant-safra                 = 0
+                    tt-emit-safra-dis.saldo-safra-val              = 0.
+                    
+          end.
+       END.
+&ENDIF
+END.
+/*** FIM - Projeto GrÆso x Aval. Cr‚dito ***/
+
+PROCEDURE pi-determina-limite.
+
+    DEF OUTPUT PARAM de-lim-credito AS DECIMAL NO-UNDO.
+
+    ASSIGN de-lim-credito = 0.
+    FOR EACH tt-emitente NO-LOCK:
+        FOR FIRST b-emitente 
+            FIELDS (b-emitente.dt-lim-cre
+                    b-emitente.lim-credito
+                    b-emitente.char-1
+                    b-emitente.dt-fim-cred
+                    b-emitente.lim-adicional 
+                    b-emitente.moeda-libcre
+                    &IF DEFINED (bf_dis_usu_moeda_cred)
+                    &THEN b-emitente.moeda-libcre
+                    &ENDIF)
+            WHERE b-emitente.cod-emitente = tt-emitente.cod-emitente NO-LOCK:
+            ASSIGN de-lim-credito = de-lim-credito 
+                                  + (IF b-emitente.dt-lim-cre >= TODAY   
+                                     THEN (b-emitente.lim-credito * fn-indice(&IF DEFINED (bf_dis_usu_moeda_cred)
+                                                                              &THEN b-emitente.moeda-libcre
+                                                                              &ELSE para-ped.moeda-libcre
+                                                                              &ENDIF)) ELSE 0 )
+                                  + (IF b-emitente.dt-fim-cred >= TODAY  
+                                     THEN (b-emitente.lim-adicional * fn-indice(&IF DEFINED (bf_dis_usu_moeda_cred)
+                                                                               &THEN b-emitente.moeda-libcre
+                                                                               &ELSE para-ped.moeda-libcre
+                                                                               &ENDIF)) ELSE 0 ) .
+        END.
+    END.
+
+    /*---------- UPC -----------*/
+    IF  c-nom-prog-dpc-mg97  <> "" 
+    OR  c-nom-prog-appc-mg97 <> "" 
+    OR  c-nom-prog-upc-mg97  <> "" THEN DO:
+        
+        IF  INDEX(PROGRAM-NAME(1),".w") = 0 THEN DO: /* evita que haja conflito de UPCs quando esta include estÿ definida em programas com interface */
+
+                CREATE tt-epc.                                       
+                ASSIGN tt-epc.cod-event     = "Credit-Evaluation"    
+                       tt-epc.cod-parameter = "pi-determina-limite". 
+                
+                CREATE tt-epc.
+                ASSIGN tt-epc.cod-event     = "Credit-Evaluation"
+                       tt-epc.cod-parameter = "value-rRowid-emitente"
+                       tt-epc.val-parameter = STRING(rowid(Emitente)).
+        
+                CREATE tt-epc.
+                ASSIGN tt-epc.cod-event     = "Credit-Evaluation"
+                       tt-epc.cod-parameter = "value-limite-credito"
+                       tt-epc.val-parameter = STRING(de-lim-credito).
+                {include/i-epc201.i "Credit-Evaluation"}
+        
+                FIND FIRST tt-epc NO-LOCK 
+                    WHERE tt-epc.cod-event     = "Credit-Evaluation"
+                    AND   tt-epc.cod-parameter = "pi-determina-limite" NO-ERROR.
+                IF  AVAIL tt-epc 
+                AND DEC(tt-epc.val-parameter) <> 0 THEN
+                    ASSIGN de-lim-credito = DEC(tt-epc.val-parameter).
+        end.
+    end.
+
+End PROCEDURE.    
+
+PROCEDURE pi-limite-cred-safra:
+
+    DEF INPUT  PARAM p-l-matriz               AS LOGICAL NO-UNDO.
+    DEF OUTPUT PARAM de-lim-cred-safra      AS DECIMAL NO-UNDO.
+    
+    &IF '{&BF_DIS_VERSAO_EMS}' >= '2.062' &THEN
+    
+        DEF VAR de-lim-prod                     AS DECIMAL NO-UNDO.
+        DEF VAR de-lim-val                      AS DECIMAL NO-UNDO.
+                    
+        IF  CONNECTED("emsgra") THEN DO:
+            
+            FOR EACH tt-emit-safra-dis NO-LOCK,
+               FIRST b-emitente
+               WHERE  b-emitente.cod-emitente = tt-emit-safra-dis.cod-emitente NO-LOCK:
+            
+                ASSIGN de-lim-prod = 0
+                       de-lim-val  = 0.
+                       
+                IF NOT VALID-HANDLE(h-cdapi013a) THEN
+                    RUN cdp/cdapi013a.p PERSISTENT SET h-cdapi013a.
+                    
+                    RUN pi-verifica-gg-limite IN h-cdapi013a(INPUT  tt-emit-safra-dis.cod-emitente,
+                                                             INPUT  tt-emit-safra-dis.cod-safra,
+                                                             OUTPUT de-lim-prod,
+                                                             OUTPUT de-lim-val,
+                                                             OUTPUT avail-gg-limite).
+                    IF VALID-HANDLE(h-cdapi013a) THEN DO:
+                        DELETE PROCEDURE h-cdapi013a.
+                        ASSIGN h-cdapi013a = ?.
+                    END.
+            
+                /*FOR FIRST gg-limite
+                    WHERE gg-limite.cod-emitente = tt-emit-safra-dis.cod-emitente
+                      and gg-limite.des-safra    = tt-emit-safra-dis.cod-safra NO-LOCK:*/
+            
+                    ASSIGN de-lim-prod =  (de-lim-prod * fn-indice(&IF DEFINED (bf_dis_usu_moeda_cred)
+                                                                       &THEN b-emitente.moeda-libcre
+                                                                       &ELSE para-ped.moeda-libcre
+                                                                       &ENDIF)) /*** Limite Cr‚dito Safra/Produto (A) ***/
+                           de-lim-val  =  (de-lim-val * fn-indice(&IF DEFINED (bf_dis_usu_moeda_cred)
+                                                                       &THEN b-emitente.moeda-libcre
+                                                                       &ELSE para-ped.moeda-libcre
+                                                                       &ENDIF)) /*** Limite Cr‚dito Safra/Produto (A1) ***/ .
+                /*END.*/
+                
+                ASSIGN de-lim-cred-safra                     = de-lim-cred-safra                     + de-lim-prod
+                       tt-emit-safra-dis.lim-cred-safra-prod = tt-emit-safra-dis.lim-cred-safra-prod + de-lim-prod
+                       tt-emit-safra-dis.lim-cred-safra-val  = tt-emit-safra-dis.lim-cred-safra-val  + de-lim-val.
+            END.
+        END.    
+    &ENDIF
+END.
+
+PROCEDURE pi-credito-automatico.
+
+    ASSIGN tt-param-aval.cod-sit-aval = 3.
+
+    IF  tt-param-aval.efetiva THEN DO:
+        {utp/ut-liter.i Autom tica *}
+        IF  AVAIL ped-venda THEN DO:
+            FIND CURRENT ped-venda EXCLUSIVE-LOCK NO-ERROR.
+            ASSIGN ped-venda.cod-sit-aval = 3
+                   ped-venda.user-aprov   = RETURN-VALUE 
+                   ped-venda.quem-aprovou = RETURN-VALUE 
+                   ped-venda.dt-apr-cred  = TODAY 
+                   ped-venda.desc-bloq-cr = ""
+                   ped-venda.desc-forc-cr = "".
+                   
+            run pi-envia-email-credito (input ped-venda.nr-pedcli,
+                                        input ped-venda.nome-abrev).               
+ 
+        END.
+    END.
+END PROCEDURE.
+
+PROCEDURE pi-verifica-cliente.
+
+    FIND FIRST tt-erros-aval 
+         WHERE tt-erros-aval.cod-emitente = emitente.cod-emitente
+           AND tt-erros-aval.cd-erro     <> 4095 NO-LOCK NO-ERROR.
+
+    IF  AVAIL tt-erros-aval THEN DO:
+        ASSIGN tt-param-aval.cod-sit-aval = 4.
+        IF  tt-param-aval.efetiva THEN DO:
+            RUN utp/ut-msgs.p (input "msg":u, input tt-erros-aval.cd-erro, input "").
+            ASSIGN c-msg-aval = RETURN-VALUE.
+            IF  AVAIL ped-venda THEN DO:
+                FIND CURRENT ped-venda EXCLUSIVE-LOCK NO-ERROR.
+                ASSIGN ped-venda.cod-sit-aval = 4
+                       ped-venda.user-aprov   = ""
+                       ped-venda.quem-aprovou = ""
+                       ped-venda.dt-apr-cred  = ?
+                       ped-venda.desc-bloq    = c-msg-aval
+                       ped-venda.desc-forc-cr = "".    
+                       
+                run pi-envia-email-credito (input ped-venda.nr-pedcli,
+                                            input ped-venda.nome-abrev).
+                
+            END.
+        END.       
+    END.
+END PROCEDURE.
+
+Procedure pi-verifica-mp.
+
+    def var da-ult-venda  like resum-emit.pd-ult-venda    no-undo initial ?.
+    def var da-ult-atraso like resum-emit.cr-ult-atraso   no-undo initial ?.
+    def var de-dp-atraso  like resum-emit.cr-dp-atraso    no-undo initial 0.
+    def var de-ad-atraso  like resum-emit.cr-av-db-atraso no-undo initial 0.
+    def var de-sl-ab-cr   like resum-emit.cr-sl-aberto    no-undo initial 0.
+    def var de-sl-ab-ap   like resum-emit.ap-sl-aberto    no-undo initial 0.
+    def var c-branco      as char init "".
+
+    /* para leitura do resumo de emitentes */
+    find first tt-maq-ep-est-aux no-error.
+    if  not avail tt-maq-ep-est-aux then
+        run cdp/cdapi013mp.p (input  "gera_tt-maq-ep-est-aux",
+                              output table tt-maq-ep-est-aux).
+
+    assign mp-vl-cr-abe  = 0
+           mp-dt-ult-ven = ?
+           mp-dt-ult-atr = ?
+           mp-vl-dup-atr = 0
+           mp-vl-ad-atr  = 0
+           mp-vl-ap-abe  = 0.
+
+    {cdp/cd7300.i5 "001" c-branco}
+
+    for each tt-emitente no-lock:
+        assign de-sl-ab-cr = 0
+               da-ult-venda = ?
+               de-sl-ab-ap = 0
+               de-dp-atraso = 0
+               de-ad-atraso = 0
+               de-sl-ab-cr = 0
+               da-ult-atraso = ?.
+
+        for each tt-maq-ep-est-aux, 
+
+            each  resum-emit 
+            fields (resum-emit.cod-estabel
+                    resum-emit.pd-sl-aberto
+                    resum-emit.pd-vl-faturado
+                    resum-emit.pd-ult-venda
+                    resum-emit.ap-sl-aberto
+                    resum-emit.ap-ant-aberto
+                    resum-emit.cr-dp-atraso
+                    resum-emit.cr-av-db-atraso
+                    resum-emit.cr-sl-aberto
+                    resum-emit.cr-ant-aberto
+                    resum-emit.cr-ult-atraso
+                    resum-emit.nome-abrev
+                    resum-emit.cd-maquina
+                    resum-emit.ep-codigo) no-lock use-index ch-emitente 
+            where resum-emit.nome-abrev  = tt-emitente.nome-abrev
+            and   resum-emit.cd-maquina  = tt-maq-ep-est-aux.cd-maquina
+            and   resum-emit.cod-estabel = tt-maq-ep-est-aux.cod-estabel
+            and   resum-emit.ep-codigo   = tt-maq-ep-est-aux.ep-codigo:
+
+            for first estabelec 
+                where estabelec.cod-estabel = resum-emit.cod-estabel no-lock:
+
+                if  estabelec.cons-pd then
+                    de-sl-ab-cr = de-sl-ab-cr + resum-emit.pd-sl-aberto.
+
+                if  estabelec.cons-ft then
+                    assign de-sl-ab-cr  = de-sl-ab-cr + resum-emit.pd-vl-faturado
+                           da-ult-venda = if  da-ult-venda = ?
+                                          or   resum-emit.pd-ult-venda > da-ult-venda
+                                          then resum-emit.pd-ult-venda
+                                          else da-ult-venda.
+
+                if  estabelec.cons-ap then
+                    de-sl-ab-ap = de-sl-ab-ap + resum-emit.ap-sl-aberto
+                                              - resum-emit.ap-ant-aberto.
+
+                if  estabelec.cons-cr then
+                    assign de-dp-atraso  = de-dp-atraso + resum-emit.cr-dp-atraso
+                           de-ad-atraso  = de-ad-atraso + resum-emit.cr-av-db-atraso
+                           de-sl-ab-cr   = de-sl-ab-cr  + resum-emit.cr-sl-aberto
+                                                        - resum-emit.cr-ant-aberto
+                           da-ult-atraso = if  da-ult-atraso = ?
+                                           or  resum-emit.cr-ult-atraso > da-ult-atraso
+                                           then resum-emit.cr-ult-atraso
+                                           else da-ult-atraso.
+
+                /* Monitoramento dados usados na avalia»’o */
+                if  resum-emit.cr-ult-atraso <> ? then do:
+                    {cdp/cdapi013.i20 "52" "resum-emit.nome-abrev + chr(24) + string(resum-emit.cd-maquina-gerac) + chr(24) + STRING(resum-emit.ep-codigo) + chr(24) + resum-emit.cod-estabel + chr(24) + string(resum-emit.pd-sl-aberto) + chr(24) + string(resum-emit.pd-vl-faturado) + chr(24) + string(resum-emit.pd-ult-venda) + chr(24) + string(resum-emit.ap-sl-aberto) + chr(24) + string(resum-emit.ap-ant-aberto) + chr(24) + string(resum-emit.cr-dp-atraso) + chr(24) + string(resum-emit.cr-av-db-atraso) + chr(24) + string(resum-emit.cr-sl-aberto) + chr(24) + string(resum-emit.cr-ant-aberto) + chr(24) + string(resum-emit.cr-ult-atraso) + chr(24) + string(de-fator-2)"}
+                end.
+                else do:
+                    {cdp/cdapi013.i20 "52" "resum-emit.nome-abrev + chr(24) + string(resum-emit.cd-maquina-gerac) + chr(24) + STRING(resum-emit.ep-codigo) + chr(24) + resum-emit.cod-estabel + chr(24) + string(resum-emit.pd-sl-aberto) + chr(24) + string(resum-emit.pd-vl-faturado) + chr(24) + string(resum-emit.pd-ult-venda) + chr(24) + string(resum-emit.ap-sl-aberto) + chr(24) + string(resum-emit.ap-ant-aberto) + chr(24) + string(resum-emit.cr-dp-atraso) + chr(24) + string(resum-emit.cr-av-db-atraso) + chr(24) + string(resum-emit.cr-sl-aberto) + chr(24) + string(resum-emit.cr-ant-aberto) + chr(24) + '' + chr(24) + string(de-fator-2)"}
+                end.
+            end.
+
+        end.
+
+        assign mp-dt-ult-ven = if mp-dt-ult-ven = ? 
+                               or da-ult-venda > mp-dt-ult-ven
+                               then da-ult-venda 
+                               else mp-dt-ult-ven    
+               mp-dt-ult-atr = if mp-dt-ult-atr = ? 
+                               or da-ult-atraso > mp-dt-ult-atr
+                               then da-ult-atraso 
+                               else mp-dt-ult-atr
+               mp-vl-dup-atr = mp-vl-dup-atr + de-dp-atraso
+               mp-vl-ad-atr  = mp-vl-ad-atr  + de-ad-atraso
+               mp-vl-cr-abe  = mp-vl-cr-abe  + ( de-sl-ab-cr / de-fator-2 )
+               mp-vl-ap-abe  = mp-vl-ap-abe  + ( de-sl-ab-ap / de-fator-2 ).
+
+    end.       
+
+End Procedure.
+
+PROCEDURE pi-saldo-cr:
+    DEF INPUT PARAM i-param-aval AS INTEGER NO-UNDO.
+
+    DEF VAR de-saldo-tit      LIKE ems2mult.titulo.vl-saldo  NO-UNDO.
+    DEF VAR de-indice-cr      AS DECIMAL            NO-UNDO.
+    DEF VAR i-dias-maxatr     AS INTEGER            NO-UNDO.
+    DEF VAR i-dias-admatr     AS INTEGER            NO-UNDO.
+
+    IF  emitente.ind-abrange-aval = 1 THEN 
+        FOR FIRST b-emitente 
+            FIELDS (b-emitente.periodo-devol
+                    b-emitente.char-1
+                    b-emitente.lim-credito
+                    b-emitente.nr-cheque-devol
+                    b-emitente.vl-max-devol)
+            WHERE ROWID(b-emitente) = ROWID(emitente) NO-LOCK:
+        END.
+    ELSE 
+        FOR FIRST b-emitente 
+            FIELDS (b-emitente.periodo-devol
+                    b-emitente.char-1
+                    b-emitente.lim-credito
+                    b-emitente.nr-cheque-devol
+                    b-emitente.vl-max-devol)
+            WHERE b-emitente.nome-abrev = emitente.nome-matriz NO-LOCK:
+        END.
+
+    ASSIGN i-qtde-dias    = &IF "{&bf_dis_versao_ems}" >= "2.062" &THEN 
+                                b-emitente.periodo-devol
+                            &else
+                                IF b-emitente.periodo-devol = 0 THEN para-ped.periodo-devol
+                                ELSE b-emitente.periodo-devol
+                            &endif    
+           i-qtde-limite  = &IF "{&bf_dis_versao_ems}" >= "2.062" &THEN 
+                                b-emitente.nr-cheque-devol
+                            &else
+                                IF b-emitente.nr-cheque-devol = 0 THEN para-ped.nr-cheque-devol
+                                ELSE b-emitente.nr-cheque-devol
+                            &endif    
+           de-tot-limite  = &IF "{&bf_dis_versao_ems}" >= "2.062" &THEN 
+                                b-emitente.vl-max-devol
+                            &else    
+                                IF b-emitente.vl-max-devol = 0 THEN para-ped.vl-max-devol 
+                                ELSE b-emitente.vl-max-devol
+                            &endif    
+           l-cheque-devol = NO.
+    /* cheque */
+
+    ASSIGN de-tot-ad        = 0
+           de-tot-tit       = 0
+           de-saldo-cr      = 0
+           de-cr-sl-aberto  = 0
+           de-cr-ant-aberto = 0
+           i-tot-tit-cr     = 0.
+
+    FIND FIRST param-global NO-LOCK NO-ERROR. 
+    FIND FIRST para-ped     NO-LOCK NO-ERROR.
+
+    &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN
+        ASSIGN c-cm-cod-estabel = IF AVAIL ped-venda THEN ped-venda.cod-estabel ELSE para-ped.estab-padrao.
+        /* Engenharia Separacao Modulo MPD - Avalia»’o Cr²dito */
+        {cmp/cm9999.i2}
+		
+			assign de-perc-max-dup = dec(trim(substring(b-emitente.char-1,141,6))) no-error.
+			
+			if de-perc-max-dup > 0 then
+				assign d-cm-val-atraso-max = (de-perc-max-dup * b-emitente.lim-credito) / 100.
+			
+    &endif
+
+
+    ASSIGN i-dias-maxatr = &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN i-cm-num-dia-atraso &else para-ped.dias-maxatr &endif
+           i-dias-admatr = &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN i-cm-num-dia-aviso  &else para-ped.dias-admatr &endif.
+
+
+    /*************************** INICIO UPC ******************************************************************************/
+    IF c-nom-prog-dpc-mg97  <> "" OR 
+       c-nom-prog-appc-mg97 <> "" OR 
+       c-nom-prog-upc-mg97  <> "" THEN DO:
+
+       IF  INDEX(PROGRAM-NAME(1),".w") = 0 THEN DO: /* evita que haja conflito de UPCs quando esta include estÿ definida em programas com interface */
+
+           /**** EPC para determinar o nœmero mÿximo de dias em atraso ****/
+
+           FOR EACH tt-epc
+               WHERE tt-epc.cod-event = "Dias-Atraso":
+               DELETE tt-epc.
+           END.
+
+           CREATE tt-epc.
+           ASSIGN tt-epc.cod-event     = "Dias-Atraso"
+                  tt-epc.cod-parameter = "rowid-emitente"
+                  tt-epc.val-parameter = STRING(ROWID(b-emitente)).
+
+           {include/i-epc201.i "Dias-Atraso"}
+
+           FIND FIRST tt-epc WHERE 
+                      tt-epc.cod-event     = "Dias-Atraso" AND 
+                      tt-epc.cod-parameter = "nr-max-dias-atraso" NO-ERROR.
+           IF  AVAIL tt-epc THEN
+               ASSIGN i-dias-maxatr = INTEGER(tt-epc.val-parameter) NO-ERROR.
+
+
+           /***************************************************************/
+
+       END.
+    END.
+    /*************************** FIM UPC ******************************************************************************/
+
+    ASSIGN i-empresa = &IF DEFINED(bf_resum_emit) &THEN 
+                           i-ep-codigo-resum
+                       &ELSE 
+                           &IF "{&mguni_version}" >= "2.071" &THEN
+                                IF  i-ep-codigo-resum <> "" THEN i-ep-codigo-resum ELSE param-global.empresa-prin
+                           &ELSE
+                                IF  i-ep-codigo-resum <> 0 THEN i-ep-codigo-resum  ELSE param-global.empresa-prin
+                           &ENDIF
+                       &ENDIF.
+
+    &IF DEFINED (bf_dis_consiste_conta) &THEN 
+
+        &IF DEFINED(bf_resum_emit) &THEN
+               FIND estabelec WHERE 
+                    estabelec.cod-estabel = c-cod-estabel-resum NO-LOCK NO-ERROR.
+        &ELSE
+               IF  c-cod-estabel-resum <> "" THEN
+                   FIND estabelec WHERE 
+                        estabelec.cod-estabel = c-cod-estabel-resum NO-LOCK NO-ERROR.
+               ELSE
+               FIND estabelec WHERE 
+                    estabelec.cod-estabel = para-ped.estab-padrao NO-LOCK NO-ERROR.
+        &ENDIF
+
+        /* Knupp - Para ganho de performance */                          
+        find first tt-empresa-estab no-lock
+             where tt-empresa-estab.cod-estabel = estabelec.cod-estabel no-error. 
+        if  not avail tt-empresa-estab then do:
+            RUN cdp/cd9970.p (input rowid(estabelec),
+                              OUTPUT i-empresa).
+            create tt-empresa-estab.
+            assign tt-empresa-estab.cod-estabel = estabelec.cod-estabel
+                   tt-empresa-estab.ep-codigo   = i-empresa.
+        end.
+        assign i-empresa = tt-empresa-estab.ep-codigo.
+
+    &ENDIF 
+
+    IF  l-ems5 THEN DO: 
+
+        if not valid-handle (h-btb009za) then
+           RUN btb/btb009za.p persistent set h-btb009za.
+
+        run pi-conecta-ems5 (INPUT YES, /* conecta */
+                             INPUT  i-empresa,
+                             OUTPUT l-erro-ems5).
+
+
+        IF  l-erro-ems5 THEN 
+            RETURN.
+
+
+        /*************************** INICIO UPC ******************************************************************************/
+        IF c-nom-prog-dpc-mg97  <> "" OR 
+           c-nom-prog-appc-mg97 <> "" OR 
+           c-nom-prog-upc-mg97  <> "" THEN DO:
+
+            /* CHAMADA UPC - Vicunha-CE */
+            /* Avalia o Cr²dito do cliente pelo valor, e desconsidera o mÿximo de dias de atraso cadastrado no PD0301.
+               A upc retorna se o campo Considera Dias OU Valores na Avalia»’o de Cr²dito estÿ selecionado ou n’o no PD0301,
+               tabela extens’o da para-ped */
+
+            /* Passarÿ por aqui quando estiver rodando pela segunda vez a pi-Bloco-Avalia-credito */
+
+            IF  INDEX(PROGRAM-NAME(1),".w") = 0 THEN DO: /* evita que haja conflito de UPCs quando esta include estÿ definida em programas com interface */
+
+                FIND FIRST tt-epc WHERE 
+                           tt-epc.cod-event     = "aval-credito-valor" AND 
+                           tt-epc.cod-parameter = "handle cdapi013" NO-LOCK NO-ERROR.
+                IF  AVAIL tt-epc THEN DO:
+                    FOR EACH tt-epc WHERE 
+                             tt-epc.cod-event = "verifica-log-cons-dias-ou-val" :
+                        DELETE tt-epc.
+                    END.
+                    CREATE tt-epc.
+                    ASSIGN tt-epc.cod-event     = "verifica-log-cons-dias-ou-val"
+                           tt-epc.cod-parameter = "log-cons-dias-ou-val".
+
+                    {include/i-epc201.i "verifica-log-cons-dias-ou-val"}
+
+                    FIND FIRST tt-epc WHERE 
+                               tt-epc.cod-event     = "verifica-log-cons-dias-ou-val" AND 
+                               tt-epc.cod-parameter = "log-cons-dias-ou-val" AND 
+                               tt-epc.val-parameter = "yes" NO-ERROR.
+                    /* Se o campo Considera Dias OU Valores na Avalia»’o de Cr²dito estÿ selecionado, ent’o desconsidera DIAS, e s½ considera VALOR */
+                    IF  AVAIL tt-epc THEN 
+                        ASSIGN i-dias-maxatr = 0
+                               i-dias-admatr = 0.
+                END.
+            END.   
+            /* FIM CHAMADA UPC - Vicunha-CE */
+        END.
+        /*************************** FIM UPC ******************************************************************************/
+
+        /*** FO 1.960.297 ***/
+        l-aval-cr-multi-empres = no.
+        
+        &IF "{&BF_DIS_VERSAO_EMS}" >= "2.062" &Then
+        
+                FIND dist-emitente WHERE
+                     dist-emitente.cod-emitente = emitente.cod-emitente NO-LOCK NO-ERROR.
+                     
+                IF AVAIL dist-emitente THEN DO:
+                   &IF "{&BF_DIS_VERSAO_EMS}" >= "2.08" &Then 
+                       if dist-emitente.log-avaliac-cr-multi-empres then
+                          l-aval-cr-multi-empres = yes.
+                   &Else
+                       if dist-emitente.log-2 then
+                          l-aval-cr-multi-empres = yes.
+                   &ENDIF
+                END.
+
+        &ENDIF
+
+        if l-aval-cr-multi-empres then do: /*** FO 1.960.297 ***/
+                
+            &IF "{&BF_DIS_VERSAO_EMS}" < "2.062" &Then        
+                 run prgfin/acr/acr777zb.py (input 1,
+                                             INPUT ?,
+                                             INPUT ?,
+                                             INPUT ?,
+                                             INPUT ?,
+                                             INPUT i-dias-maxatr,
+                                             INPUT-OUTPUT TABLE tt-emitente,
+                                             OUTPUT TABLE tt-erros-analise-credito,
+                                             INPUT i-dias-admatr).
+            &ELSE
+                 /*** A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 e tratar inf. do projeto Graos x Aval Credito ***/
+                 run prgfin/acr/acr777zd.py (input 1,                                           /*** VersÆo de Integra‡Æo       ***/
+                                             INPUT ?,                                           /*** Empresa                    ***/
+                                             INPUT ?,                                           /*** Empresa Externa            ***/
+                                             INPUT ?,                                           /*** Estabelecimento            ***/
+                                             INPUT ?,                                           /*** Estabelecimento Externo    ***/
+                                             INPUT i-dias-maxatr,                               /*** M ximo Dias de Atraso      ***/
+                                             INPUT i-dias-admatr,                               /*** M ximo Dias de Atraso AD   ***/
+                                             INPUT yes,                                         /*** Valida Cheque ?            ***/
+                                             INPUT no,                                          /*** Retorna Dados ?            ***/
+                                             INPUT-OUTPUT TABLE tt_tit_acr_analise_credito,     
+                                             INPUT-OUTPUT TABLE Tt_tit_ap_analise_credito,      
+                                             INPUT-OUTPUT TABLE tt-emitente,                    
+                                             INPUT-OUTPUT TABLE tt-emitente-safra,
+                                             INPUT-OUTPUT TABLE tt-erros-analise-credito).
+            &ENDIF
+        end.
+        else do:
+        
+                &IF DEFINED(bf_resum_emit) &THEN    
+                
+                    &IF "{&BF_DIS_VERSAO_EMS}" < "2.062" &Then        
+                        RUN prgfin/acr/acr777zb.py (input 1,
+                                                    INPUT ?,
+                                                    INPUT ?,
+                                                    INPUT ?,
+                                                    INPUT c-cod-estabel-resum,
+                                                    INPUT i-dias-maxatr,
+                                                    INPUT-OUTPUT TABLE tt-emitente,
+                                                    OUTPUT TABLE tt-erros-analise-credito,
+                                                    INPUT i-dias-admatr).
+                    &ELSE
+                        /*** A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 e tratar inf. do projeto Graos x Aval Credito ***/
+                        RUN prgfin/acr/acr777zd.py (input 1,                                            /*** VersÆo de Integra‡Æo       ***/
+                                                    INPUT ?,                                            /*** Empresa                    ***/
+                                                    INPUT ?,                                            /*** Empresa Externa            ***/
+                                                    INPUT ?,                                            /*** Estabelecimento            ***/
+                                                    INPUT c-cod-estabel-resum,                          /*** Estabelecimento Externo    ***/
+                                                    INPUT i-dias-maxatr,                                /*** M ximo Dias de Atraso      ***/
+                                                    INPUT i-dias-admatr,                                /*** M ximo Dias de Atraso AD   ***/
+                                                    INPUT yes,                                          /*** Valida Cheque ?            ***/
+                                                    INPUT no,                                           /*** Retorna Dados ?            ***/
+                                                    INPUT-OUTPUT TABLE tt_tit_acr_analise_credito,
+                                                    INPUT-OUTPUT TABLE Tt_tit_ap_analise_credito,
+                                                    INPUT-OUTPUT TABLE tt-emitente,
+                                                    INPUT-OUTPUT TABLE tt-emitente-safra,
+                                                    INPUT-OUTPUT TABLE tt-erros-analise-credito).
+                    &ENDIF
+                    
+                &ELSE
+                
+                    &IF "{&BF_DIS_VERSAO_EMS}" < "2.062" &Then
+                        run prgfin/acr/acr777zb.py (input 1,
+                                                    INPUT ?,
+                                                    INPUT i-empresa,
+                                                    INPUT ?,
+                                                    INPUT ?,
+                                                    INPUT i-dias-maxatr,
+                                                    INPUT-OUTPUT TABLE tt-emitente,
+                                                    OUTPUT TABLE tt-erros-analise-credito,
+                                                    INPUT i-dias-admatr).
+                    &ELSE
+                        /*** A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 e tratar inf. do projeto Graos x Aval Credito ***/
+                        run prgfin/acr/acr777zd.py (input 1,                                            /*** VersÆo de Integra‡Æo       ***/
+                                                    INPUT ?,                                            /*** Empresa                    ***/
+                                                    INPUT i-empresa,                                    /*** Empresa Externa            ***/
+                                                    INPUT ?,                                            /*** Estabelecimento            ***/
+                                                    INPUT ?,                                            /*** Estabelecimento Externo    ***/
+                                                    INPUT i-dias-maxatr,                                /*** M ximo Dias de Atraso      ***/
+                                                    INPUT i-dias-admatr,                                /*** M ximo Dias de Atraso AD   ***/
+                                                    INPUT yes,                                          /*** Valida Cheque ?            ***/
+                                                    INPUT yes,                                           /*** Retorna Dados ?            ***/         
+                                                    INPUT-OUTPUT TABLE tt_tit_acr_analise_credito,
+                                                    INPUT-OUTPUT TABLE Tt_tit_ap_analise_credito,
+                                                    INPUT-OUTPUT TABLE tt-emitente,
+                                                    INPUT-OUTPUT TABLE tt-emitente-safra,
+                                                    INPUT-OUTPUT TABLE tt-erros-analise-credito).
+                                                   
+                    &ENDIF
+                                                    
+                &ENDIF
+        end.
+		
+		RUN pi-conecta-ems5 (INPUT  NO, /* desconecta */
+                             INPUT  i-empresa,
+                             OUTPUT l-erro-ems5). 
+
+        if valid-handle(h-btb009za) then do:
+           delete procedure h-btb009za.
+           assign h-btb009za = ?.
+        end.   
+
+    END. 
+
+    IF c-nom-prog-dpc-mg97  <> "" OR 
+       c-nom-prog-appc-mg97 <> "" OR 
+       c-nom-prog-upc-mg97  <> "" THEN DO:
+
+        /* Se o programa chamador ² um .p */
+        IF  INDEX(PROGRAM-NAME(1),".w") = 0 THEN DO: 
+           FOR EACH tt-epc WHERE 
+                    tt-epc.cod-event = "call-upc-Verify-Titulo":
+               DELETE tt-epc.
+           END.
+           
+           {include/i-epc201.i "call-upc-Verify-Titulo"}
+                
+           IF CAN-FIND (FIRST tt-epc WHERE 
+                              tt-epc.cod-event     = "call-upc-Verify-Titulo" AND 
+                              tt-epc.cod-parameter = "return" AND 
+                              tt-epc.val-parameter = STRING("yes") ) THEN 
+              ASSIGN l-chama-upc-titulo = YES.
+       END.    
+    END.
+    
+    if  index(PROVERSION,"webspeed":U) = 0 AND can-find (first funcao where funcao.cd-funcao = "spp-monitor-aval-credito":U and funcao.ativo) then
+        assign log-spp = YES.
+    else
+        assign log-spp = no.
+
+    FOR EACH tt-emitente NO-LOCK:
+
+        IF  l-ems5 THEN DO:
+            ASSIGN de-cr-ant-aberto = de-cr-ant-aberto + tt-emitente.de_cr_ant_aberto
+                   de-cr-sl-aberto  = de-cr-sl-aberto  + tt-emitente.de_saldo_cr
+                   de-tot-ad        = de-tot-ad        + tt-emitente.de_tot_ad_cr
+                   de-tot-tit       = de-tot-tit       + tt-emitente.de_tot_tit_atr_cr.
+            /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+            &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                IF l-modul-graos THEN DO: /*** M¢dulo de GrÆos implantado - cd0101 ***/
+
+                    /*** T¡tulos abertos nÆo vencidos no CR por Safra (F) ***/
+                    FOR EACH tt-emitente-safra
+                       WHERE tt-emitente-safra.cod-emitente = tt-emitente.cod-emitente,
+                       FIRST tt-emit-safra-dis 
+                           WHERE tt-emit-safra-dis.cod-emitente = tt-emitente-safra.cod-emitente
+                           AND   tt-emit-safra-dis.cod-safra    = tt-emitente-safra.cod-safra:
+                
+                        ASSIGN de-cr-sl-ab-safra                 = de-cr-sl-ab-safra                 + tt-emitente-safra.de-tit-abe-nao-venc-safra-cr
+                               tt-emit-safra-dis.cr-sl-ab-safra  = tt-emit-safra-dis.cr-sl-ab-safra  + tt-emitente-safra.de-tit-abe-nao-venc-safra-cr
+                               tt-emit-safra-dis.cr-tot-tit-venc = tt-emit-safra-dis.cr-tot-tit-venc + tt-emitente.de_tot_tit_atr_cr.
+                    END.
+                END.
+            &endif
+            /*** Fim - Proj Graos ***/
+
+        END.
+        ELSE DO:                
+            FOR EACH titulo FIELDS (titulo.vl-saldo-me
+                                    titulo.tipo 
+                                    titulo.mo-codigo
+                                    titulo.dt-vencimen
+                                    titulo.cod-esp
+                                    titulo.ep-codigo
+                                    titulo.cod-estabel
+                                    titulo.nr-docto
+                                    titulo.parcela
+                                    titulo.serie) USE-INDEX chave-cli WHERE 
+                     titulo.ep-codigo = i-empresa AND 
+                     titulo.dt-liq      = 12/31/9999 AND 
+                     &IF DEFINED(bf_resum_emit) &THEN
+                         titulo.cod-estabel = c-cod-estabel-resum AND 
+                     &ENDIF
+                     titulo.cod-emitente = tt-emitente.cod-emitente AND  
+                     titulo.situacao    <> 3 AND 
+                     titulo.vl-saldo     > 0 AND
+                     titulo.tipo        <> 3 NO-LOCK:
+
+		        IF l-chama-upc-titulo = YES THEN DO: 
+                
+                   /* se o programa chamador ² um .p */
+                   IF  INDEX(PROGRAM-NAME(1),".w") = 0 THEN DO: 
+                       FOR EACH tt-epc WHERE 
+                                tt-epc.cod-event = "Verify-Titulo":
+                           DELETE tt-epc.
+                       END.
+
+                       CREATE tt-epc.
+                       ASSIGN tt-epc.cod-event     = "Verify-Titulo"
+                              tt-epc.cod-parameter = "titulo_rowid"
+                              tt-epc.val-parameter = STRING(ROWID(titulo)).
+
+                       {include/i-epc201.i "Verify-Titulo"}
+
+                       FIND FIRST tt-epc WHERE 
+                                  tt-epc.cod-event     = "Verify-Titulo" AND 
+                                  tt-epc.cod-parameter = "Error" AND 
+                                  tt-epc.val-parameter = STRING("yes") NO-ERROR.
+                       IF AVAIL tt-epc THEN NEXT.
+                   END.    
+
+                END.
+
+                ASSIGN de-saldo-tit = titulo.vl-saldo-me.
+
+                /* Antecipacao ou Nota Credito ou Recibo */    
+                IF  titulo.tipo = 2 OR titulo.tipo = 5 OR titulo.tipo = 7 THEN   
+                    ASSIGN de-cr-ant-aberto = de-cr-ant-aberto 
+                                            + ( de-saldo-tit * fn-indice(titulo.mo-codigo) ).
+                ELSE DO:
+                    ASSIGN de-cr-sl-aberto = de-cr-sl-aberto 
+                                           + ( de-saldo-tit * fn-indice(titulo.mo-codigo) ).
+
+                    IF  titulo.mo-codigo = 0 THEN 
+                        ASSIGN de-indice-cr = 1.
+                    ELSE DO:
+                        {pdp/pd9100.i "titulo.mo-codigo" "today" "de-indice-cr"}
+                    END.
+                    FOR FIRST esp-doc FIELDS () WHERE 
+                              esp-doc.cod-esp = titulo.cod-esp AND 
+                              esp-doc.tipo    = 6 NO-LOCK:
+                    END.
+
+                    IF  AVAIL esp-doc AND 
+                        titulo.dt-vencimen < TODAY - i-dias-admatr THEN 
+                        ASSIGN de-tot-ad = de-tot-ad + (de-saldo-tit * de-indice-cr).
+                    IF  NOT AVAIL esp-doc AND 
+                        titulo.dt-vencimen < TODAY - i-dias-maxatr THEN 
+                        ASSIGN de-tot-tit = de-tot-tit + (de-saldo-tit * de-indice-cr).
+                END.
+                ASSIGN i-tot-tit-cr = i-tot-tit-cr + 1.
+
+                /* Monitoramento dados usados na avalia»’o */
+                if log-spp then
+                        RUN pi-monitor-tabelas IN THIS-PROCEDURE (INPUT 30, INPUT string(string(titulo.ep-codigo) + chr(24) + titulo.cod-estabel + chr(24) + titulo.cod-esp + chr(24) + titulo.serie + chr(24) + titulo.nr-docto + chr(24) + titulo.parcela + chr(24) + string(titulo.tipo) + chr(24) + string(de-saldo-tit) + chr(24) + string(de-indice-cr))).
+
+            END.
+
+            IF  (i-param-aval = 2 OR i-param-aval = 3) OR i-qtde-dias > 0 THEN 
+                FOR EACH cheque FIELDS (cheque.vl-cheque
+                                        cheque.cod-banco
+                                        cheque.agencia
+                                        cheque.conta-corren
+                                        cheque.nr-cheque
+                                        cheque.situacao-cheque
+                                        cheque.dt-devolucao) NO-LOCK WHERE 
+                         cheque.cod-emitente     = tt-emitente.cod-emitente AND 
+                         cheque.ep-codigo-mvto   = i-empresa AND 
+                        (cheque.situacao-cheque = 1 OR cheque.situacao-cheque = 5) :
+
+                    FIND FIRST relacto-titulo-cheque WHERE 
+                               relacto-titulo-cheque.cod-banco    = cheque.cod-banco    AND 
+                               relacto-titulo-cheque.agencia      = cheque.agencia      AND 
+                               relacto-titulo-cheque.conta-corren = cheque.conta-corren AND 
+                               relacto-titulo-cheque.nr-cheque    = cheque.nr-cheque
+                               &IF DEFINED(bf_resum_emit) &THEN
+                                   AND relacto-titulo-cheque.cod-estabel = c-cod-estabel-resum
+                               &ENDIF
+                               NO-LOCK NO-ERROR.
+
+                    IF  AVAIL relacto-titulo-cheque THEN DO:
+                        IF  cheque.situacao-cheque = 5 AND TODAY - cheque.dt-devolucao < i-qtde-dias THEN 
+                            ASSIGN i-qtde-cheque = i-qtde-cheque + 1
+                                   de-tot-cheque = de-tot-cheque + cheque.vl-cheque.
+
+                        ASSIGN de-saldo-cr = de-saldo-cr + (cheque.vl-cheque / de-fator-2).
+
+                        /* Monitoramento dados usados na avalia»’o */
+                        {cdp/cdapi013.i20 "31" "string(cheque.cod-banco) + chr(24) + cheque.agencia + chr(24) + cheque.conta-corren + chr(24) + string(cheque.nr-cheque) + chr(24) + string(cheque.vl-cheque) + chr(24) + string(de-fator-2)"}
+
+                    END.
+                END.            
+
+            IF  i-qtde-cheque > i-qtde-limite OR 
+                de-tot-cheque > de-tot-limite THEN DO:
+                ASSIGN l-cheque-devol = YES.
+            END.
+
+        END.
+    END.            
+
+    ASSIGN de-saldo-cr = de-saldo-cr + (de-cr-sl-aberto - de-cr-ant-aberto).
+
+    /*---------- UPC -----------*/
+    IF  c-nom-prog-dpc-mg97  <> "" 
+    OR  c-nom-prog-appc-mg97 <> "" 
+    OR  c-nom-prog-upc-mg97  <> "" THEN DO:
+        
+        IF  INDEX(PROGRAM-NAME(1),".w") = 0 THEN DO: /* evita que haja conflito de UPCs quando esta include estÿ definida em programas com interface */
+
+                CREATE tt-epc.                                            
+                ASSIGN tt-epc.cod-event     = "Credit-Evaluation"        
+                       tt-epc.cod-parameter = "pi-after-determina-saldo"
+                       tt-epc.val-parameter = (STRING(de-tot-ad) + ";" + STRING(de-tot-tit) + ";" + STRING(de-saldo-cr)). 
+                
+                CREATE tt-epc.                                            
+                ASSIGN tt-epc.cod-event     = "Credit-Evaluation"
+                       tt-epc.cod-parameter = "value-rRowid-emitente"
+                       tt-epc.val-parameter = (STRING(rowid(emitente))). 
+                {include/i-epc201.i "Credit-Evaluation"}
+        
+                FIND FIRST tt-epc NO-LOCK 
+                    WHERE tt-epc.cod-event     = "Credit-Evaluation"
+                    AND   tt-epc.cod-parameter = "pi-after-determina-saldo" NO-ERROR.
+                IF AVAIL tt-epc THEN
+                    ASSIGN de-tot-ad   = DEC(ENTRY(1,tt-epc.val-parameter,";"))
+                           de-tot-tit  = DEC(ENTRY(2,tt-epc.val-parameter,";"))
+                           de-saldo-cr = DEC(ENTRY(3,tt-epc.val-parameter,";")). 
+        end.                           
+    end.
+
+END PROCEDURE.
+
+PROCEDURE pi-verifica-mesina.
+
+    DEF VAR da-movto         AS DATE NO-UNDO.
+    DEF VAR dt-estatistica   AS DATE FORMAT "99/99/9999" NO-UNDO.
+    DEF VAR dt-emissao-nota  AS DATE FORMAT "99/99/9999" NO-UNDO.
+    
+    IF NOT AVAIL cm-param THEN DO:
+       IF AVAIL ped-venda THEN
+          FIND FIRST cm-param
+               WHERE cm-param.cod-estabel = ped-venda.cod-estabel NO-LOCK NO-ERROR.
+    END.   
+       
+    IF AVAIL cm-param AND TRIM(SUBSTRING(cm-param.cod-livre-1,3,1)) = "S" THEN DO:
+       ASSIGN l-abrange-matriz = YES.
+    END.
+    ELSE DO:
+       ASSIGN l-abrange-matriz = NO.
+    END.
+    
+    FOR EACH tt-emitente NO-LOCK:
+
+        IF l-abrange-matriz = NO AND AVAIL PED-VENDA THEN DO:
+           IF tt-emitente.cod-emitente <> ped-venda.cod-emitente THEN NEXT.  
+        END.
+        
+        IF l-abrange-matriz THEN
+           ASSIGN da-ult-ven = ?.
+
+        FIND b-emitente WHERE 
+             b-emitente.cod-emitente = tt-emitente.cod-emitente NO-LOCK NO-ERROR.
+
+        IF   b-emitente.data-implant > da-ult-ven OR 
+             da-ult-ven              = ?  THEN  
+             ASSIGN da-ult-ven  = b-emitente.data-implant.
+
+        ASSIGN da-movto    = 01/01/1901.
+               i-nr-mesina = tt-emitente.nr-mesina.
+
+        &IF DEFINED(bf_resum_emit) &THEN
+        &ELSE    
+            IF  i-nr-mesina = 0 THEN  
+                NEXT.
+        &ENDIF
+
+        FOR FIRST estatist FIELDS (estatist.dt-ult-tit) WHERE 
+                  estatist.cod-emitente = tt-emitente.cod-emitente NO-LOCK:
+            ASSIGN da-movto = estatist.dt-ult-tit.
+        END.
+
+        FOR LAST nota-fiscal FIELDS (nota-fiscal.dt-emis-nota) WHERE 
+                 nota-fiscal.cod-emitente = tt-emitente.cod-emitente AND 
+                 nota-fiscal.replica-nf   = NO AND 
+                 nota-fiscal.dt-cancela   = ? NO-LOCK:
+
+            IF  nota-fiscal.dt-emis-nota > da-movto THEN   
+                ASSIGN da-movto = nota-fiscal.dt-emis-nota.
+        END.
+
+        /************ Monitoramento dados usados na avalia»’o ***********/
+        IF  AVAILABLE estatist AND 
+            estatist.dt-ult-tit <> ? THEN 
+            ASSIGN dt-estatistica = estatist.dt-ult-tit.
+        ELSE 
+            ASSIGN dt-estatistica = 01/01/1901.
+
+        IF  AVAILABLE nota-fiscal AND 
+            nota-fiscal.dt-emis-nota = ? THEN 
+            ASSIGN dt-emissao-nota = nota-fiscal.dt-emis-nota.
+        ELSE 
+            ASSIGN dt-emissao-nota = 01/01/1901.       
+        {cdp/cdapi013.i20 "53" "string(tt-emitente.cod-emitente) + chr(24) + string(dt-estatistica) + chr(24) + string(dt-emissao-nota)"}
+        /************ fim monitoramanto *********************************/
+
+        ASSIGN da-ult-ven = IF  da-movto > da-ult-ven 
+                            THEN da-movto 
+                            ELSE da-ult-ven.
+
+        ASSIGN i-nr-meses = (YEAR(TODAY)      * 12 + MONTH(TODAY))
+                          - (YEAR(da-ult-ven) * 12 + MONTH(da-ult-ven)) - 1
+               l-inativo  = (i-nr-meses > i-nr-mesina).  
+
+        IF  mp-dt-ult-ven <> ? THEN DO:
+            IF  da-ult-ven < mp-dt-ult-ven THEN 
+                ASSIGN l-inativo = NO.
+
+            ASSIGN i-nr-meses   = ( YEAR(TODAY)         * 12 + MONTH(TODAY) )
+                                - ( YEAR(mp-dt-ult-ven) * 12 + MONTH(mp-dt-ult-ven) ) - 1.
+                   l-inativo-mp = ( i-nr-meses > i-nr-mesina ).
+        END.
+        
+        IF l-abrange-matriz AND l-inativo    THEN LEAVE.
+        IF l-abrange-matriz AND l-inativo-mp THEN LEAVE.
+       
+    END.
+    
+END PROCEDURE.  
+
+PROCEDURE pi-verifica-atraso.
+
+    DEF VAR i-dias-atraso AS INTEGER NO-UNDO.
+    DEF VAR i-periodos    AS INTEGER NO-UNDO.
+    DEF VAR i-meses       AS INTEGER NO-UNDO.  
+
+    IF  emitente.ind-abrange-aval = 1 THEN 
+        FOR FIRST b-emitente  FIELDS (b-emitente.cod-gr-cli
+                                      b-emitente.nr-peratr
+                                      b-emitente.cdn-atraso-max) WHERE 
+            ROWID(b-emitente) = ROWID(emitente) NO-LOCK:
+        END.
+    ELSE 
+        FOR FIRST b-emitente FIELDS (b-emitente.cod-gr-cli
+                                     b-emitente.nr-peratr
+                                     b-emitente.cdn-atraso-max) WHERE 
+                  b-emitente.nome-abrev = emitente.nome-matriz NO-LOCK:
+        END.
+
+    FOR FIRST gr-cli FIELDS (gr-cli.cod-gr-cli gr-cli.atraso-max) WHERE 
+              gr-cli.cod-gr-cli = b-emitente.cod-gr-cli NO-LOCK:
+    END.
+
+
+    /* Monitoramento dados usados na avalia»’o */
+    {cdp/cdapi013.i20 "50" "string(gr-cli.cod-gr-cli) + chr(24) + string(gr-cli.atraso-max)"}
+
+    ASSIGN i-dias-atraso = if b-emitente.cdn-atraso-max > 0 then b-emitente.cdn-atraso-max else gr-cli.atraso-max   
+           i-periodos    = b-emitente.nr-peratr.
+
+    FOR EACH tt-emitente NO-LOCK,
+        FIRST b-emitente FIELDS (b-emitente.cod-emitente 
+                                 b-emitente.cod-gr-cli) WHERE 
+              b-emitente.cod-emitente = tt-emitente.cod-emitente NO-LOCK:
+
+        FIND LAST emit-estat WHERE 
+                  emit-estat.cod-emitente = b-emitente.cod-emitente AND 
+                  emit-estat.cod-gr-emit  = b-emitente.cod-gr-cli NO-LOCK NO-ERROR.
+                               
+        IF AVAIL emit-estat THEN
+           ASSIGN i-meses = (YEAR(TODAY) * 12 + MONTH(TODAY))
+                          - (YEAR(emit-estat.data) * 12 + MONTH(emit-estat.data)) - 1.
+
+        IF i-meses <= i-periodos THEN
+            DO  i-x = 1 TO i-periodos:
+                
+                IF  AVAIL emit-estat  THEN DO:
+
+                    /* Monitoramento dados usados na avalia»’o */
+                    {cdp/cdapi013.i20 "32" "string(emit-estat.cod-gr-emit) + chr(24) + string(emit-estat.cod-emitente) + chr(24) + string(emit-estat.data) + chr(24) + string(emit-estat.valor-rec) + chr(24) + string(emit-estat.vl-tot-rec) + chr(24) + string(i-dias-atraso)"}
+    
+                    if  emit-estat.valor-rec > 0  AND 
+                        emit-estat.vl-tot-rec   > 0 THEN 
+                        IF (emit-estat.valor-rec / emit-estat.vl-tot-rec) > i-dias-atraso THEN DO:
+                            ASSIGN d-cr-ult-atraso = emit-estat.data.
+                            LEAVE.
+                        END.
+                END.
+                ELSE 
+                LEAVE.
+
+            FIND PREV emit-estat WHERE 
+                      emit-estat.cod-emitente = b-emitente.cod-emitente AND 
+                      emit-estat.cod-gr-emit  = b-emitente.cod-gr-cli NO-LOCK NO-ERROR.    
+        END.
+    END.
+
+END PROCEDURE.   
+
+PROCEDURE pi-saldo-ap.
+
+    ASSIGN de-ap-ant-aberto = 0 
+           de-ap-sl-aberto  = 0.
+
+    FIND FIRST param-global NO-LOCK NO-ERROR. 
+    FIND FIRST para-ped     NO-LOCK NO-ERROR.
+
+    &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN
+        ASSIGN c-cm-cod-estabel = IF AVAIL ped-venda THEN ped-venda.cod-estabel ELSE para-ped.estab-padrao.
+        /* Engenharia Separacao Modulo MPD - Avalia»’o Cr²dito */
+        {cmp/cm9999.i2}
+			
+			assign de-perc-max-dup = dec(trim(substring(b-emitente.char-1,141,6))) no-error.
+			
+			if de-perc-max-dup > 0 then
+				assign d-cm-val-atraso-max = (de-perc-max-dup * b-emitente.lim-credito) / 100.
+
+    &endif
+
+    ASSIGN i-empresa = &IF DEFINED(bf_resum_emit) &THEN 
+                           i-ep-codigo-resum
+                       &ELSE 
+                           &IF "{&mguni_version}" >= "2.071" &THEN
+                                IF  i-ep-codigo-resum <> "" THEN i-ep-codigo-resum ELSE param-global.empresa-prin
+                           &ELSE
+                                IF  i-ep-codigo-resum <> 0 THEN i-ep-codigo-resum  ELSE param-global.empresa-prin
+                           &ENDIF
+                       &ENDIF.   
+
+    &IF DEFINED (bf_dis_consiste_conta) &THEN
+        &IF DEFINED(bf_resum_emit) &THEN
+            FIND estabelec WHERE estabelec.cod-estabel = c-cod-estabel-resum NO-LOCK NO-ERROR.
+        &ELSE
+            IF  c-cod-estabel-resum <> "" THEN
+                FIND estabelec WHERE estabelec.cod-estabel = c-cod-estabel-resum NO-LOCK NO-ERROR.
+            ELSE
+            FIND estabelec WHERE estabelec.cod-estabel = para-ped.estab-padrao NO-LOCK NO-ERROR.
+        &ENDIF        
+
+        /* Knupp - Para ganho de performance */                          
+        find first tt-empresa-estab no-lock
+             where tt-empresa-estab.cod-estabel = estabelec.cod-estabel no-error. 
+        if  not avail tt-empresa-estab then do:
+            RUN cdp/cd9970.p (input rowid(estabelec),
+                              OUTPUT i-empresa).
+            create tt-empresa-estab.
+            assign tt-empresa-estab.cod-estabel = estabelec.cod-estabel
+                   tt-empresa-estab.ep-codigo   = i-empresa.
+        end.
+        assign i-empresa = tt-empresa-estab.ep-codigo.
+    &ENDIF              
+    
+    if  index(PROVERSION,"webspeed":U) = 0 AND can-find (first funcao where funcao.cd-funcao = "spp-monitor-aval-credito":U and funcao.ativo) then
+        ASSIGN log-spp = YES.
+    else
+        assign log-spp = no.
+
+    IF  l-erro-ems5 THEN  
+        RETURN.
+
+    FOR EACH tt-emitente 
+        WHERE tt-emitente.identific = 3 NO-LOCK:
+
+        
+        &IF "{&BF_DIS_VERSAO_EMS}" >= "2.02" &THEN  
+             FIND dist-emitente WHERE 
+                  dist-emitente.cod-emitente = tt-emitente.cod-emitente NO-LOCK NO-ERROR.
+             IF AVAIL dist-emitente THEN DO:
+                &IF "{&BF_DIS_VERSAO_EMS}" >= "2.04" &THEN  
+                  &IF "{&BF_DIS_VERSAO_EMS}" < "2.05" &THEN 
+                     IF SUBSTRING(dist-emitente.char-1,1,1) = "2" THEN
+                        NEXT.
+                  &ENDIF
+                &ENDIF        
+
+                &IF "{&BF_DIS_VERSAO_EMS}" >= "2.05" &THEN 
+                  IF dist-emitente.log-consid-ap-lim-cr = NO THEN
+                     NEXT.
+                &ENDIF
+             END.
+        &ENDIF
+
+        IF  l-ems5 THEN DO:
+
+            ASSIGN de-ap-sl-aberto  = de-ap-sl-aberto + tt-emitente.de_saldo_ap
+                   de-ap-ant-aberto = de-ap-ant-aberto + tt-emitente.de_ap_ant_aberto.
+                   
+            /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+            &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                IF l-modul-graos THEN DO: /*** M¢dulo de GrÆos implantado - cd0101 ***/
+
+                    /*** T¡tulos abertos nÆo vencidos no CR por Safra (F) ***/
+                    FOR EACH tt-emitente-safra
+                       WHERE tt-emitente-safra.cod-emitente     = tt-emitente.cod-emitente,
+                       FIRST tt-emit-safra-dis
+                           WHERE tt-emit-safra-dis.cod-emitente = tt-emitente-safra.cod-emitente
+                           AND   tt-emit-safra-dis.cod-safra    = tt-emitente-safra.cod-safra:
+
+                       ASSIGN de-ap-sl-venc                      = tt-emitente.de_tot_tit_atr_ap             /*** T¡tulos Abertos Vencidos no AP (com ou sem safra relacionado) (H) ***/
+                              de-ap-ant-sem-safra                = tt-emitente.de_ap_ant_sem_safra           /*** Antecipa‡äes em aberto sem safra relacionada (J) ***/
+                              de-ap-sl-ab-safra                  = tt-emitente-safra.de-tit-abe-nao-venc-safra-ap  /*** T¡tulos Abertos NÆo Vencidos no AP por Safra (I) ***/
+                              tt-emit-safra-dis.ap-sl-venc       = tt-emitente.de_tot_tit_atr_ap            
+                              tt-emit-safra-dis.ap-ant-sem-safra = tt-emitente.de_ap_ant_sem_safra          
+                              tt-emit-safra-dis.ap-sl-ab-safra   = tt-emitente-safra.de-tit-abe-nao-venc-safra-ap
+                              tt-emit-safra-dis.ap-ant-safra     = tt-emitente-safra.de-ap-ant-safra.
+                    END.
+                END.
+            &endif
+            /*** Fim - Proj Graos ***/
+
+
+            /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+            &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                if l-modul-graos then DO: /*** M¢dulo de GrÆos implantado - cd0101 ***/
+                
+                    ASSIGN de-ap-sl-venc        = tt-emitente.de_tot_tit_atr_ap     /*** T¡tulos Abertos Vencidos no AP (com ou sem safra relacionado) (H) ***/
+                           de-ap-ant-sem-safra  = tt-emitente.de_ap_ant_sem_safra.  /*** Antecipa‡äes em aberto sem safra relacionada (J) ***/
+                
+                    /*** T¡tulos Abertos NÆo Vencidos no AP por Safra (I) ***/
+                    FOR EACH tt-emitente-safra:
+                
+                        ASSIGN de-ap-sl-ab-safra = de-ap-sl-ab-safra + tt-emitente-safra.de-tit-abe-nao-venc-safra-ap.
+                
+                    END.
+                END.
+            &endif
+            /*** Fim - Proj Graos ***/
+        END.
+        ELSE 
+            FOR EACH tit-ap FIELDS (tit-ap.ep-codigo
+                                    tit-ap.cod-fornec
+                                    tit-ap.cod-estabel
+                                    tit-ap.cod-esp
+                                    tit-ap.serie
+                                    tit-ap.nr-docto
+                                    tit-ap.parcela
+                                    tit-ap.tipo
+                                    tit-ap.vl-saldo-me
+                                    tit-ap.moeda) USE-INDEX codigo WHERE 
+                     tit-ap.ep-codigo   = i-empresa AND 
+                     &IF DEFINED(bf_resum_emit) &THEN
+                         tit-ap.cod-estabel = c-cod-estabel-resum AND 
+                     &ENDIF
+                     tit-ap.cod-fornec  =  tt-emitente.cod-emitente AND 
+                     tit-ap.dt-liq      = 12/31/9999 AND
+                     tit-ap.tipo        <> 3 NO-LOCK:            
+
+                IF  tit-ap.tipo = 2 OR 
+                    tit-ap.tipo = 4 THEN 
+                    ASSIGN de-ap-ant-aberto = de-ap-ant-aberto +  ( tit-ap.vl-saldo-me * fn-indice(tit-ap.moeda) ). 
+                ELSE 
+                    ASSIGN de-ap-sl-aberto = de-ap-sl-aberto + ( tit-ap.vl-saldo-me * fn-indice(tit-ap.moeda) ).
+
+                /* Monitoramento dados usados na avalia»’o */
+                IF log-spp then do:
+                    RUN pi-monitor-tabelas IN THIS-PROCEDURE (INPUT 40, INPUT string(string(tit-ap.ep-codigo) + chr(24) + string(tit-ap.cod-fornec) + chr(24) + tit-ap.cod-estabel + chr(24) + tit-ap.cod-esp + chr(24) + tit-ap.serie + chr(24) + tit-ap.nr-docto + chr(24) + tit-ap.parcela + chr(24) + string(tit-ap.tipo) + chr(24) + string(tit-ap.vl-saldo-me) + chr(24) + string(tit-ap.moeda) + chr(24) + string(fn-indice(tit-ap.moeda)))).
+                end.
+
+            END.
+    END.
+
+    ASSIGN de-saldo-ap = de-ap-sl-aberto - de-ap-ant-aberto.
+
+END PROCEDURE.
+
+PROCEDURE pi-saldo-ap-safra.
+
+    &IF '{&BF_DIS_VERSAO_EMS}' >= '2.062' &THEN 
+        ASSIGN de-ap-sl-venc        = tt-emitente.de_tot_tit_atr_ap     /*** T¡tulos Abertos Vencidos no AP (com ou sem safra relacionado) (H) ***/
+               de-ap-ant-sem-safra  = tt-emitente.de_ap_ant_sem_safra.  /*** Antecipa‡äes em aberto sem safra relacionada (J) ***/
+
+        /*** T¡tulos Abertos NÆo Vencidos no AP por Safra (I) ***/
+        FOR EACH tt-emitente-safra:
+        
+            ASSIGN de-ap-sl-ab-safra = de-ap-sl-ab-safra + tt-emitente-safra.de-tit-abe-nao-venc-safra-ap.
+        
+        END.
+    &ENDIF
+END.
+
+PROCEDURE pi-verifica-pd.
+
+    /* Alterado para utilizar o buffer da ped-venda (bf-ped-venda), e n’o mais a pr½pria tabela, pois no retorno desta procedure,
+       no cdapi013.p, estava sendo desposicionada a tabela ped-venda, gerando alguns erros. */
+
+    DEF VAR de-valor-item  AS   DECIMAL             NO-UNDO.
+    DEF VAR i-cod-sit-aval AS   INTEGER             NO-UNDO.
+    DEF VAR i-nr-pedido    LIKE ped-venda.nr-pedido NO-UNDO.
+
+    ASSIGN i-total-ped = 0
+           i-tot-pdap  = 0
+           i-tot-pdre  = 0
+           i-tot-pdaa  = 0
+           de-totvlap  = 0
+           de-totvlre  = 0
+           de-totvlaa  = 0
+           de-pd-sl-ap-forc = 0.
+
+    IF AVAIL tt-param-aval THEN 
+       ASSIGN i-nr-pedido = tt-param-aval.nr-pedido.
+
+    assign l-considera-replica-pd = no.
+
+    run pi-executa-upc.
+
+    /*************************** INICIO UPC ******************************************************************************/
+    IF c-nom-prog-dpc-mg97  <> "" OR 
+       c-nom-prog-appc-mg97 <> "" OR 
+       c-nom-prog-upc-mg97  <> "" THEN DO:
+
+        IF  INDEX(PROGRAM-NAME(1),".w") = 0 THEN DO: /* evita que haja conflito de UPCs quando esta include estÿ definida em programas com interface */
+           FOR EACH tt-epc WHERE 
+                    tt-epc.cod-event = "call-Upc-Verify-ped-item":
+               DELETE tt-epc.
+           END.
+
+           CREATE tt-epc.
+           ASSIGN tt-epc.cod-event     = "call-Upc-Verify-ped-item"
+                  tt-epc.cod-parameter = "return"
+                  tt-epc.val-parameter = STRING("no").
+
+            {include/i-epc201.i "call-Upc-Verify-ped-item"}
+
+           IF CAN-FIND (FIRST tt-epc WHERE 
+                              tt-epc.cod-event     = "call-Upc-Verify-ped-item" AND 
+                              tt-epc.cod-parameter = "return" AND 
+                              tt-epc.val-parameter = STRING("yes") ) THEN 
+                            
+              ASSIGN l-chama-upc-item = YES.
+
+       END.    
+
+    END.
+    /*************************** FIM UPC ******************************************************************************/
+
+    FOR EACH tt-emitente NO-LOCK:    
+
+        FOR EACH bf-ped-venda NO-LOCK USE-INDEX ch-credito WHERE 
+            bf-ped-venda.nome-abrev        = tt-emitente.nome-abrev AND 
+            bf-ped-venda.cod-sit-ped      <= 2 AND /* aberto e atend. parcial */ 
+           (bf-ped-venda.replica-pd        = NO OR l-considera-replica-pd = YES),
+            EACH  natur-oper  /** CONSISTENCIA SE GERA OU NAO FATURAMENTO **/ WHERE
+                  natur-oper.nat-operacao = bf-ped-venda.nat-operacao AND 
+                  natur-oper.emite-duplic = YES NO-LOCK:
+            
+            /* N’o considera cota»’o para a avalia»’o de cr²dito
+               N’o considera pedidos incompletos para a avali»’o de cr²dito */ 
+            IF bf-ped-venda.log-cotacao 
+            OR bf-ped-venda.completo = no THEN
+                NEXT.
+                
+            if bf-ped-venda.nr-pedido = i-nr-pedido then
+                next.
+                
+            &IF DEFINED(bf_resum_emit) &THEN
+              if bf-ped-venda.cod-estabel <> c-cod-estabel-resum then
+                next. 
+            &ENDIF
+                                           
+            /* desconsiderar programa‡Æo de entrega com valores zerados, pois eles nÆo farÆo parte da avalia‡Æo */
+            IF  bf-ped-venda.esp-ped    = 2
+            AND bf-ped-venda.vl-liq-abe = 0 THEN NEXT.
+
+            ASSIGN i-cod-sit-aval = bf-ped-venda.cod-sit-aval.
+
+
+            IF AVAIL tt-param-aval THEN 
+                &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN
+                       IF ENTRY(1,tt-param-aval.programa,",") = "cm0202":U THEN DO:
+                &ELSE
+                       IF ENTRY(1,tt-param-aval.programa,",") = "pd0808":U THEN DO:
+                &ENDIF
+                  FIND tt-param-aval WHERE 
+                       tt-param-aval.nr-pedido = bf-ped-venda.nr-pedido NO-ERROR.
+                  /*
+                  ** se estÿ na sele»’o e n’o foi avaliado n’o considera saldo
+                  */
+                  IF AVAIL tt-param-aval AND tt-param-aval.cod-sit-aval < 2 THEN 
+                     NEXT.
+                  /*
+                  ** busca situa»’o da temp-table para evitar que situa»’o esteja incorreta caso simula»’o
+                  */
+                  IF AVAIL tt-param-aval AND tt-param-aval.cod-sit-aval > 1 THEN 
+                     ASSIGN i-cod-sit-aval = tt-param-aval.cod-sit-aval.
+                  FIND tt-param-aval WHERE 
+                       tt-param-aval.nr-pedido = i-nr-pedido NO-ERROR.
+               END.
+
+            ASSIGN i-total-ped = i-total-ped + 1.
+
+            /*** vers’o 2.03 ***/
+            &IF DEFINED(BF_DIS_ADM_PRECO) &THEN
+                IF  bf-ped-venda.cod-sit-com = 3 AND 
+                    NOT &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN l-cm-log-consid-cotas-credito &else para-ped.log-consid-cotas-credito &endif THEN  
+                    NEXT. 
+
+                IF  bf-ped-venda.ind-sit-descon = 3 AND 
+                    NOT &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN l-cm-log-consid-desco-credito &else para-ped.log-consid-desco-credito &endif THEN  
+                    NEXT.
+
+                IF  bf-ped-venda.cod-sit-preco = 3 AND 
+                    NOT &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN  l-cm-log-consid-precos-credito &else para-ped.log-consid-precos-credito &endif THEN  
+                    NEXT.
+            &ENDIF
+
+
+            /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+            &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                if l-modul-graos then /*** M¢dulo de GrÆos implantado - cd0101 ***/
+                   &IF '{&BF_DIS_VERSAO_EMS}' >= '2.08' &THEN
+                       FIND FIRST tt-emit-safra-dis
+                            WHERE tt-emit-safra-dis.cod-emitente = emitente.cod-emitente
+                              AND tt-emit-safra-dis.cod-safra    = bf-ped-venda.cod-safra NO-ERROR.
+                   &ELSE
+                       FIND FIRST tt-emit-safra-dis
+                            WHERE tt-emit-safra-dis.cod-emitente = emitente.cod-emitente
+                              AND tt-emit-safra-dis.cod-safra    = substring(bf-ped-venda.char-2,101,8) NO-ERROR.
+                   &ENDIF
+                IF not l-modul-graos
+                OR (    l-modul-graos
+                    and not avail tt-emit-safra-dis) then
+            &endif
+            /*** Fim - Proj Graos ***/
+
+            IF  i-cod-sit-aval = 2  /* Avaliados */ OR
+                i-cod-sit-aval = 3  /* Aprovados */ THEN
+                ASSIGN i-tot-pdap = i-tot-pdap + 1. 
+            ELSE 
+                IF  i-cod-sit-aval = 4 THEN /* Reprovados */
+                    ASSIGN i-tot-pdre = i-tot-pdre + 1.
+                ELSE  /* N’o avaliados */
+                    ASSIGN i-tot-pdaa = i-tot-pdaa + 1.
+
+            FOR EACH ped-item NO-LOCK USE-INDEX ch-item-ped WHERE 
+                ped-item.nome-abrev    = bf-ped-venda.nome-abrev AND 
+                ped-item.nr-pedcli     = bf-ped-venda.nr-pedcli AND 
+                ped-item.cod-sit-item <= 2,
+                FIRST b-natur-oper /* CONSISTENCIA GERA OU NAO FATURAMENTO */ FIELDS () NO-LOCK WHERE 
+                     b-natur-oper.nat-operacao = ped-item.nat-operacao AND 
+                     b-natur-oper.emite-duplic = YES:
+
+                IF  ped-item.ind-componen = 3 THEN 
+                    NEXT.
+
+                /*************************** INICIO UPC ******************************************************************************/
+                IF l-chama-upc-item = YES THEN DO: /* para usar esse ponto, deve ser setada essa variavel em outro evento de upc */
+
+                   /* Caroline - Petroflex - Inicio */
+
+                   IF  INDEX(PROGRAM-NAME(1),".w") = 0 THEN DO: /* evita que haja conflito de UPCs quando esta include estÿ definida em programas com interface */
+                       FOR EACH tt-epc WHERE 
+                                tt-epc.cod-event = "Verify-ped-item":
+                           DELETE tt-epc.
+                       END.
+
+                       CREATE tt-epc.
+                       ASSIGN tt-epc.cod-event     = "Verify-ped-item"
+                              tt-epc.cod-parameter = "ped-item rowid"
+                              tt-epc.val-parameter = STRING(ROWID(ped-item)).
+
+                       {include/i-epc201.i "Verify-ped-item"}
+
+                       FIND FIRST tt-epc WHERE 
+                                  tt-epc.cod-event     = "Verify-ped-item" AND 
+                                  tt-epc.cod-parameter = "Error" NO-ERROR.
+                       IF AVAIL tt-epc THEN NEXT.
+                   END.    
+
+                   /* Caroline - Petroflex - Fim */
+                END.
+                /*************************** FIM UPC ******************************************************************************/
+
+                ASSIGN de-valor-item = ped-item.vl-liq-abe * fn-indice(bf-ped-venda.mo-codigo).
+
+
+                IF l-chama-upc-item = YES THEN DO: /* para usar esse ponto, deve ser setada essa variavel em outro evento de upc */
+
+                   /* Francisco - Nitroquimia - Inicio */
+
+                   IF  INDEX(PROGRAM-NAME(1),".w") = 0 THEN DO: /* evita que haja conflito de UPCs quando esta include estÿ definida em programas com interface */
+                       FOR EACH tt-epc WHERE 
+                                tt-epc.cod-event = "avaliaValorEntrega":
+                           DELETE tt-epc.
+                       END.
+
+                       CREATE tt-epc.
+                       ASSIGN tt-epc.cod-event     = "avaliaValorEntrega"
+                              tt-epc.cod-parameter = "ped-item rowid"
+                              tt-epc.val-parameter = STRING(ROWID(ped-item)).
+
+                       {include/i-epc201.i "avaliaValorEntrega"}
+
+                       FIND FIRST tt-epc WHERE 
+                                  tt-epc.cod-event     = "avaliaValorEntrega" AND 
+                                  tt-epc.cod-parameter = "de-valor-item-upc" NO-ERROR.
+                       IF AVAIL tt-epc THEN DO:
+                           ASSIGN de-valor-item = dec(tt-epc.val-parameter).
+                       END.
+                   END.    
+
+                   /* Francisco - Nitroquimia - Fim */
+                END.
+                /*************************** FIM UPC ******************************************************************************/                    
+                &IF DEFINED(BF_DIS_ADM_PRECO) &THEN  /*** vers’o 2.03 ***/
+
+                    IF  bf-ped-venda.cod-sit-com = 3 AND 
+                        NOT &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN l-cm-log-consid-cotas-credito &else para-ped.log-consid-cotas-credito &endif THEN  
+                        NEXT.
+
+                    IF  bf-ped-venda.ind-sit-descon = 3 AND 
+                        NOT &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN l-cm-log-consid-desco-credito &else para-ped.log-consid-desco-credito &endif THEN  
+                        NEXT.
+
+                    IF  bf-ped-venda.cod-sit-preco = 3 AND 
+                        NOT &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN l-cm-log-consid-precos-credito &else para-ped.log-consid-precos-credito &endif THEN  
+                        NEXT.
+
+                &ENDIF
+
+                IF  i-cod-sit-aval = 2 /* Avaliados */ OR 
+                    i-cod-sit-aval = 3 /* Aprovados */ THEN DO:
+
+                    IF ped-item.dt-entrega <= (TODAY + &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN i-cm-num-horiz-fix &else para-ped.horiz-fixo &endif) THEN DO: 
+                       IF  bf-ped-venda.desc-forc-cr <> "" THEN 
+                           ASSIGN  de-pd-sl-ap-forc = de-pd-sl-ap-forc + de-valor-item.       
+
+                       /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+                       &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                           if l-modul-graos and avail tt-emit-safra-dis then /*** M¢dulo de GrÆos implantado - cd0101 ***/
+                              ASSIGN de-totvlap-safra                = de-totvlap-safra                 + de-valor-item /*** Total Pedidos Aprovado/Avaliados Safra (C) ***/ 
+                                     tt-emit-safra-dis.totvlap-safra = tt-emit-safra-dis.totvlap-safra  + de-valor-item.
+                           else
+                       &endif
+                       
+                       ASSIGN de-totvlap = de-totvlap + de-valor-item. 
+                       /*** Fim - Proj Graos ***/                
+
+                    END.             
+                END.
+                ELSE  
+                    IF  i-cod-sit-aval = 4 THEN DO: /* Reprovados */
+                        &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                            if not (l-modul-graos and SUBSTRING(bf-ped-venda.char-2,101,8) <> "") then /*** M¢dulo de GrÆos implantado - cd0101 ***/
+                        &endif
+                        &IF DEFINED(BF_DIS_ADM_PRECO) &THEN
+                            IF AVAIL tt-param-aval AND SUBSTR(tt-param-aval.programa,1,2) = "pd" THEN DO:
+                               IF ped-item.dt-entrega   <= (TODAY + &IF "{&bf_dis_versao_ems}":U >= "2.062":U &THEN i-cm-num-horiz-fix &else para-ped.horiz-fixo &endif ) THEN 
+                                  ASSIGN de-totvlre = de-totvlre + de-valor-item.
+                            END.
+                            ELSE
+                        &ENDIF
+                            ASSIGN de-totvlre = de-totvlre + de-valor-item.
+                    END.
+                    ELSE DO: /* NÆo avaliados */
+                    
+                        /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+                        &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                            if l-modul-graos and avail tt-emit-safra-dis then /*** M¢dulo de GrÆos implantado - cd0101 ***/
+                               ASSIGN de-totvlaa-safra                = de-totvlaa-safra                + de-valor-item  /*** Total Pedidos a Aprovar Safra (D) ***/
+                                      tt-emit-safra-dis.totvlaa-safra = tt-emit-safra-dis.totvlaa-safra + de-valor-item.
+                            else
+                        &endif
+                        
+                        ASSIGN de-totvlaa = de-totvlaa + de-valor-item.
+                        /*** Fim - Proj Graos ***/                
+
+                    END.
+                {cdp/cdapi013.i20 "11" "ped-item.nome-abrev + chr(24) + ped-item.nr-pedcli + chr(24) + string(ped-item.nr-sequencia) + chr(24) + ped-item.it-codigo + chr(24) + ped-item.cod-refer + chr(24) + string(ped-item.vl-liq-abe) + chr(24) + string(bf-ped-venda.mo-codigo) + chr(24) + string(fn-indice(bf-ped-venda.mo-codigo)) + chr(24) + string(ped-item.dt-entrega) + chr(24) + string(bf-ped-venda.cod-sit-aval)"}
+
+            END.
+        END.
+    END.
+
+    FIND tt-param-aval WHERE 
+         tt-param-aval.nr-pedido = i-nr-pedido NO-ERROR.
+
+
+END PROCEDURE.
+
+PROCEDURE pi-verifica-ft.
+
+    ASSIGN i-tot-pdcr = 0
+           de-vl-nota = 0.            
+
+    FOR EACH tt-emitente NO-LOCK:
+        FOR EACH  nota-fiscal FIELDS (nota-fiscal.cod-estabel
+                                      nota-fiscal.serie
+                                      nota-fiscal.nr-nota-fis
+                                      nota-fiscal.nr-fatura
+                                      nota-fiscal.ind-tip-nota
+                                      nota-fiscal.char-2)USE-INDEX ch-atual-cr WHERE 
+                  nota-fiscal.dt-atual-cr  = ?  AND 
+                  nota-fiscal.dt-cancela   = ?  AND 
+                  nota-fiscal.replica-nf   = NO AND 
+                  &IF DEFINED(bf_resum_emit) &THEN
+                    nota-fiscal.cod-estabel = c-cod-estabel-resum AND 
+                  &ENDIF
+                  nota-fiscal.cod-emitente = tt-emitente.cod-emitente NO-LOCK 
+            BREAK BY nota-fiscal.nr-fatura:
+
+            IF  LAST-OF(nota-fiscal.nr-fatura) THEN DO:
+
+                /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+                &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                    IF l-modul-graos THEN
+                       &IF '{&BF_DIS_VERSAO_EMS}' >= '2.08' &THEN
+                           FIND FIRST tt-emit-safra-dis
+                                WHERE tt-emit-safra-dis.cod-emitente = emitente.cod-emitente
+                                  AND tt-emit-safra-dis.cod-safra    = nota-fiscal.cod-safra NO-ERROR.
+                       &ELSE
+                           FIND FIRST tt-emit-safra-dis
+                                WHERE tt-emit-safra-dis.cod-emitente = emitente.cod-emitente
+                                  AND tt-emit-safra-dis.cod-safra    = substring(nota-fiscal.char-2,176,8) NO-ERROR.
+                       &ENDIF
+                &ENDIF
+                 /*** Fim - Proj Graos ***/ 
+
+                FOR EACH fat-duplic FIELDS (fat-duplic.vl-parcela) NO-LOCK WHERE 
+                         fat-duplic.cod-estabel = nota-fiscal.cod-estabel AND 
+                         fat-duplic.serie       = nota-fiscal.serie AND 
+                         fat-duplic.nr-fatura   = nota-fiscal.nr-fatura :
+                    IF  nota-fiscal.ind-tip-nota <> 10 THEN DO:
+                        
+                        /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+                        &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                            if l-modul-graos and avail tt-emit-safra-dis then /*** M¢dulo de GrÆos implantado - cd0101 ***/
+                               ASSIGN de-vl-nota-safra                = de-vl-nota-safra + ( fat-duplic.vl-parcela / de-fator-2 )  /*** Total Notas Fiscais nÆo atualizadas no CR da Safra (E) ***/
+                                      tt-emit-safra-dis.vl-nota-safra = tt-emit-safra-dis.vl-nota-safra + ( fat-duplic.vl-parcela / de-fator-2 ).
+                            else
+                        &endif
+                        
+                        ASSIGN de-vl-nota = de-vl-nota + ( fat-duplic.vl-parcela / de-fator-2 ).
+                        /*** Fim - Proj Graos ***/   
+                        
+                    END.
+                    ELSE DO:  
+                        /*** Projeto GrÆso x Aval. Cr‚dito - A partir do 2.06b dever  utilizar a api evolu¡da de integra‡Æo com o EMS5 ***/
+                        &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                            if l-modul-graos and avail tt-emit-safra-dis then /*** M¢dulo de GrÆos implantado - cd0101 ***/
+                               ASSIGN de-vl-nota-safra                = de-vl-nota-safra - (de-vl-nota + ( fat-duplic.vl-parcela / de-fator-2 ))  /*** Total Notas Fiscais nÆo atualizadas no CR da Safra (E) ***/
+                                      tt-emit-safra-dis.vl-nota-safra = tt-emit-safra-dis.vl-nota-safra - (de-vl-nota + ( fat-duplic.vl-parcela / de-fator-2 )).
+                            else
+                        &endif
+                        
+                        ASSIGN de-vl-nota = de-vl-nota - ( fat-duplic.vl-parcela / de-fator-2 ).
+                        /*** Fim - Proj Graos ***/   
+
+                    END.
+                END.
+            END.
+            
+            &if '{&BF_DIS_VERSAO_EMS}' >= '2.062' &then
+                if not l-modul-graos
+                or (    l-modul-graos
+                    and not can-find(
+                        &IF '{&BF_DIS_VERSAO_EMS}' >= '2.08' &THEN
+                            FIRST tt-emit-safra-dis
+                            WHERE tt-emit-safra-dis.cod-emitente = emitente.cod-emitente
+                              AND tt-emit-safra-dis.cod-safra    = nota-fiscal.cod-safra
+                        &ELSE
+                            FIRST tt-emit-safra-dis
+                            WHERE tt-emit-safra-dis.cod-emitente = emitente.cod-emitente
+                              AND tt-emit-safra-dis.cod-safra    = substring(nota-fiscal.char-2,176,8)
+                        &ENDIF
+                                )) then
+            &endif
+            ASSIGN i-tot-pdcr = i-tot-pdcr + 1.
+
+            /* Monitoramento dados usados na avalia»’o */
+            {cdp/cdapi013.i20 "20" "nota-fiscal.cod-estabel + chr(24) + nota-fiscal.serie + chr(24) + nota-fiscal.nr-nota-fis + chr(24) + nota-fiscal.nr-fatura + chr(24) + string(nota-fiscal.ind-tip-nota) + chr(24) + string(de-vl-nota) + chr(24) + string(de-fator-2)"}
+
+        END.
+    END.
+END PROCEDURE.
+
+PROCEDURE pi-seta-fator-2.
+    DEF INPUT PARAM i-moeda AS INT NO-UNDO.
+
+    /***************************************************
+    * Pre-processador de Usuario e Moeda de Credito   *
+    ***************************************************/
+    &IF DEFINED (bf_dis_usu_moeda_cred) &THEN 
+         /* Grava o de-fator-2 que cont²m a cotacao da moeda */
+         IF i-moeda = 0 THEN 
+            ASSIGN de-fator-2 = 1.
+         ELSE DO:
+            {pdp/pd9100.i "i-moeda" "today" "de-fator-2"}
+         END.
+    &ENDIF 
+END PROCEDURE.
+
+PROCEDURE pi-conecta-ems5 :
+    DEF INPUT  PARAM l-conecta   AS LOGICAL                     NO-UNDO.
+    DEF INPUT  PARAM p-empresa   LIKE param-global.empresa-prin NO-UNDO.
+    DEF OUTPUT PARAM l-erro-ems5 AS LOGICAL                     NO-UNDO.
+
+    ASSIGN l-erro-ems5 = NO.
+
+    IF  l-conecta THEN DO:
+
+        IF  SEARCH("prgint/utb/utb907za.py")  = ? AND 
+            SEARCH("prgint/utb/utb907za.r")   = ? THEN DO:
+            RUN utp/ut-msgs.p ( input "msg":u,input 6246,
+                                INPUT "prgint/utb/utb907za.py" ).
+            CREATE tt-erros-analise-credito.
+            ASSIGN tt-erros-analise-credito.cod-emitente = 0
+                   tt-erros-analise-credito.cod-mensagem = 6246
+                   tt-erros-analise-credito.des-msg      = RETURN-VALUE
+                   tt-erros-analise-credito.help-msg     = "prgint/utb/utb907za.py"                 
+                   l-erro-ems5 = YES.
+                  {utp/ut-liter.i Erros_Progress }
+        END.
+        ELSE DO:
+            IF  CONNECTED("emsuni") THEN 
+                ASSIGN l-ja-conec-emsuni = YES.
+            ELSE 
+                ASSIGN l-ja-conec-emsuni = NO.
+
+            IF  CONNECTED("emsbas") THEN  
+                ASSIGN l-ja-conec-emsbas = YES.
+            ELSE
+                ASSIGN l-ja-conec-emsbas = NO.
+
+            IF  CONNECTED("emsfin") THEN 
+                ASSIGN l-ja-conec-emsfin = YES.
+            ELSE 
+                ASSIGN l-ja-conec-emsfin = NO.
+
+            IF  l-ja-conec-emsuni = NO OR  
+                l-ja-conec-emsbas = NO OR 
+                l-ja-conec-emsfin = NO THEN DO:
+                RUN pi-conecta-bco IN h-btb009za (INPUT 1, /* Versao API  */
+                                                  INPUT 1, /* 1 - conexao, 2 - Desconexao */
+                                                  INPUT p-empresa, /* Codigo da empresa */
+                                                  INPUT "all":U, /* nome do banco */
+                                                  OUTPUT TABLE tt_erros_conexao). /* temp-table de erros */
+                IF  RETURN-VALUE <> "OK":U THEN DO:
+                    FIND FIRST tt_erros_conexao NO-LOCK NO-ERROR.
+                    IF AVAIL tt_erros_conexao THEN DO:
+                       RUN utp/ut-msgs.p ( input "msg":u,
+                                           INPUT tt_erros_conexao.cd-erro,
+                                           INPUT tt_erros_conexao.param-1).
+                       CREATE tt-erros-analise-credito.
+                       ASSIGN tt-erros-analise-credito.cod-emitente = 0
+                              tt-erros-analise-credito.cod-mensagem = tt_erros_conexao.cd-erro
+                              tt-erros-analise-credito.des-msg      = tt_erros_conexao.param-1
+                              tt-erros-analise-credito.help-msg     = ""                  
+                              l-erro-ems5 = YES.
+                       /* Quando for apresentada essas duas mensagens, ref a conex’o de banco, mostrar sempre o help da msg 25822 */
+                       IF tt_erros_conexao.cd-erro = 25822 OR 
+                          tt_erros_conexao.cd-erro = 25823 THEN DO:
+                          RUN utp/ut-msgs.p ( input "help":u,
+                                              INPUT 25822,
+                                              INPUT "").                       
+                          ASSIGN tt-erros-analise-credito.des-msg  = TRIM(RETURN-VALUE).
+                       END.
+                       {utp/ut-liter.i Erros_Progress }
+
+                    END.               
+                END.
+                ELSE DO:
+                    IF  NOT CONNECTED("emsuni") THEN DO: 
+                        RUN utp/ut-msgs.p (input "msg":u, input 17718, input "emsuni").
+                        CREATE tt-erros-analise-credito.
+                        ASSIGN tt-erros-analise-credito.cod-emitente = 0
+                               tt-erros-analise-credito.cod-mensagem = 17718
+                               tt-erros-analise-credito.des-msg      = RETURN-VALUE 
+                               tt-erros-analise-credito.help-msg     = "EMSUNI"
+                               l-erro-ems5 = YES.
+                        {utp/ut-liter.i Erros_Progress }                    
+
+                    END.
+
+                    IF  NOT CONNECTED("emsbas") THEN DO: 
+                        RUN utp/ut-msgs.p (input "msg":u, input 17718, input "emsbas").
+                        CREATE tt-erros-analise-credito.
+                        ASSIGN tt-erros-analise-credito.cod-emitente = 0
+                               tt-erros-analise-credito.cod-mensagem = 17718
+                               tt-erros-analise-credito.des-msg      = RETURN-VALUE 
+                               tt-erros-analise-credito.help-msg     = "EMSBAS"
+                               l-erro-ems5 = YES.
+                        {utp/ut-liter.i Erros_Progress }                    
+                    END.
+
+                    IF  NOT CONNECTED("emsfin") THEN DO:
+                        RUN utp/ut-msgs.p (input "msg":u, input 17718, input "emsfin").
+                        CREATE tt-erros-analise-credito.
+                        ASSIGN tt-erros-analise-credito.cod-emitente = 0
+                               tt-erros-analise-credito.cod-mensagem = 17718
+                               tt-erros-analise-credito.des-msg      = RETURN-VALUE 
+                               tt-erros-analise-credito.help-msg     = "EMSFIN"
+                               l-erro-ems5 = YES.
+                        {utp/ut-liter.i Erros_Progress }
+                   END.
+                END.  
+            END. 
+        END.
+    END.
+
+    IF  NOT l-conecta OR l-erro-ems5 THEN DO:
+        IF  l-ja-conec-emsuni = NO OR l-ja-conec-emsbas = NO OR l-ja-conec-emsfin = NO THEN DO: 
+            RUN pi-conecta-bco IN h-btb009za (INPUT 1, /* Versao API  */
+                                              INPUT 2, /* 1 - conexao, 2 - Desconexao */
+                                              INPUT p-empresa, /* Codigo da empresa */
+                                              INPUT "all":U, /* nome do banco */
+                                              OUTPUT TABLE tt_erros_conexao). /* temp-table de erros */
+            IF RETURN-VALUE <> "OK":U THEN DO:
+                FIND FIRST tt_erros_conexao NO-LOCK NO-ERROR.
+                IF AVAIL tt_erros_conexao THEN DO:
+                   RUN utp/ut-msgs.p ( input "msg":u,
+                                       INPUT tt_erros_conexao.cd-erro,
+                                       INPUT tt_erros_conexao.param-1).
+                   CREATE tt-erros-analise-credito.
+                   ASSIGN tt-erros-analise-credito.cod-emitente = 0
+                          tt-erros-analise-credito.cod-mensagem = tt_erros_conexao.cd-erro
+                          tt-erros-analise-credito.des-msg      = tt_erros_conexao.param-1
+                          tt-erros-analise-credito.help-msg     = ""                  
+                          l-erro-ems5 = yes.
+                   /* Quando for apresentada essas duas mensagens, ref a conex’o de banco, mostrar sempre o 
+                      help da msg 25822 */
+                   IF tt_erros_conexao.cd-erro = 25822 OR 
+                      tt_erros_conexao.cd-erro = 25823 THEN DO:
+                      RUN utp/ut-msgs.p ( input "help":u,
+                                          INPUT 25822,
+                                          INPUT "").                       
+                      ASSIGN tt-erros-analise-credito.des-msg  = TRIM(RETURN-VALUE).
+                   END.
+                   {utp/ut-liter.i Erros_Progress }                    
+                END.
+            END.
+        END.
+    END.   
+
+END PROCEDURE.
+
+PROCEDURE pi-seta-empresa-estabel.
+    DEF INPUT PARAM i-empr-aux    LIKE empresa.ep-codigo     NO-UNDO.
+    DEF INPUT PARAM c-cod-estabel LIKE estabelec.cod-estabel NO-UNDO.
+
+    ASSIGN i-ep-codigo-resum   = i-empr-aux
+           c-cod-estabel-resum = c-cod-estabel.
+
+END PROCEDURE.
+
+/* Procedure monitoramento dados usados na avalia»’o */
+{cdp/cdapi013.i21}
+
+procedure pi-recebe-tt-maq-ep-est-aux:
+
+    /* Esta procedure permite que uma UPC alterar o conteœdo da tt-maq-ep-est-aux */
+    def input param table for tt-maq-ep-est-aux.
+
+end procedure.
+
+procedure pi-envia-email-credito:
+
+    define input param p-nr-pedcli  as char no-undo.
+    define input param p-nome-abrev as char no-undo.
+    
+    DEF VAR h-bodi605   AS HANDLE NO-UNDO.    
+    DEF VAR h-pdapi513e AS HANDLE NO-UNDO. 
+    
+    IF NOT AVAIL para-ped THEN
+       FIND FIRST para-ped NO-LOCK NO-ERROR.
+       
+    IF SUBSTRING(para-ped.char-1,64,3) = "YES" THEN DO: /* Verifica se o parƒmetro de hist¢rico de pedido esta ativo no PD0301 */
+    
+       IF NOT VALID-HANDLE(h-bodi605) THEN
+          RUN dibo/bodi605.p PERSISTENT SET h-bodi605.
+      
+       RUN logCredito IN h-bodi605 (INPUT p-nr-pedcli,
+                                    INPUT p-nome-abrev).
+                                             
+       IF VALID-HANDLE(h-bodi605) THEN DELETE PROCEDURE h-bodi605.
+    END.                                    
+    
+    IF NOT VALID-HANDLE(h-pdapi513e) THEN
+       RUN pdp/pdapi513e.p PERSISTENT SET h-pdapi513e. 
+                                        
+    RUN piMandaEmailCredito IN h-pdapi513e (INPUT p-nr-pedcli,    
+                                            INPUT p-nome-abrev).  
+                                                        
+    IF VALID-HANDLE(h-pdapi513e) THEN DELETE PROCEDURE h-pdapi513e.    
+    
+end procedure.
+
+/* CDAPI013.I1 */

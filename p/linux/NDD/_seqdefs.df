@@ -1,0 +1,17 @@
+
+ADD SEQUENCE "seq-int-ndd-envio"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+
+
+ADD SEQUENCE "seq-int-ndd-retorno"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+
+.
+PSC
+cpstream=ibm850
+.
+0000000177

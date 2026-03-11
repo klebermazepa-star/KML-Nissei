@@ -1,0 +1,19 @@
+       
+    FOR FIRST {1}
+        WHERE {1}.CodEstabelNF = ttDet.CodEstabelNF
+          AND {1}.SerieNF      = ttDet.SerieNF     
+          AND {1}.NrNotaFisNF  = ttDet.NrNotaFisNF 
+          AND {1}.NrSeqFatNF   = ttDet.NrSeqFatNF
+          AND {1}.itcodigonf   = ttDet.ItCodigoNF :
+          
+        CREATE ttICMSDanfe.
+        BUFFER-COPY {1} TO ttICMSDanfe NO-ERROR.
+        
+        ASSIGN ttDanfeItem.s              = ttICMSDanfe.orig + ttICMSDanfe.CST
+               ttDanfeItem.vlbcicmit      = STRING({ftp/ft0518f.i8 ttICMSDanfe.vBC}    , "->>>,>>>,>>>,>>9.99":U)
+               ttDanfeItem.vlicmit        = STRING({ftp/ft0518f.i8 ttICMSDanfe.vICMS}  , "->>>,>>>,>>>,>>9.99":U)
+               ttDanfeItem.icm            = STRING({ftp/ft0518f.i8 ttICMSDanfe.pICMS}  , "->>9.99":U)
+               /*ICMS ST*/
+               ttDanfeItem.vlbcicmit-st   = STRING({ftp/ft0518f.i8 ttICMSDanfe.vBCST}  , "->>>,>>>,>>>,>>9.99":U)
+               ttDanfeItem.vlicmit-st     = STRING({ftp/ft0518f.i8 ttICMSDanfe.vICMSST}, "->>>,>>>,>>>,>>9.99":U).
+    END.

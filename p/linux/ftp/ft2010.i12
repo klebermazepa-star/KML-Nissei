@@ -1,0 +1,284 @@
+/*****************************************************************************
+**
+** ftp/ft2010.i12 - Buscar numero da nota fiscal da tabela ser-estab
+**
+** Este include atualiza os campo c-nr-nota e c-nr-fatura
+** 
+** 1 - tt-docto     / tt-remito
+** 2 - nr-nota-fis  / nr-remito 
+** 3 - nr-fatura    / nr-remito
+** 4 - dt-emis-nota / dt-remito
+** 5 - l-busca-numero (Sim/NÆo)
+**
+******************************************************************************/
+
+find serie where serie.serie = {1}.serie no-lock no-error.
+
+/* Travar registro ser-estab da serie da nota  */
+repeat:
+    find ser-estab
+         where ser-estab.cod-estabel = {1}.cod-estabel
+         and   ser-estab.serie       = {1}.serie
+         exclusive-lock no-wait no-error.
+    if  not avail ser-estab
+    and locked ser-estab then
+        pause 1 no-message.
+    else 
+        leave.
+end.
+
+/* Travar registro ser-estab da serie vinculada da serie da nota  */
+if  serie.serie <> serie.serie-vinc then repeat:
+    find b-ser-estab
+         where b-ser-estab.cod-estabel = {1}.cod-estabel
+         and   b-ser-estab.serie       = serie.serie-vinc
+         exclusive-lock no-wait no-error.
+
+    if  not avail b-ser-estab
+    and locked b-ser-estab then
+        pause 1 no-message.
+    else 
+        leave.
+end.
+
+assign l-grava = yes.
+
+if  not l-busca-numero then do:
+    /* ============================================================== */
+    /* -------------------------------------------------- */        
+    /* Chamada DPC                                        */
+    /* FT2010-US.P - Verifica se grava numero Nota Manual  */
+    /* -------------------------------------------------- */
+    create tt-epc.
+    assign tt-epc.cod-event     = "Write the document number?"
+           tt-epc.cod-parameter = "Rowid SER-ESTAB"
+           tt-epc.val-parameter = string(rowid(ser-estab)).
+    
+    create tt-epc.
+    assign tt-epc.cod-event     = "Write the document number?"
+           tt-epc.cod-parameter = "Document Number"
+           tt-epc.val-parameter = {1}.{2}.
+       
+    {include/i-epc201.i "Write the document number?"}
+
+    find tt-epc where 
+         tt-epc.cod-event     = "Write the document number?" and
+         tt-epc.cod-parameter = "Answer"               no-error.
+    if  avail tt-epc then
+        assign l-grava = if tt-epc.val-parameter = "yes" then yes else no.
+
+    for each tt-epc where tt-epc.cod-event = "Write the document number?": delete tt-epc. end.                     
+
+    /* ============================================================== */    
+end.    
+           
+/* Atualizar numero da ultima nota e da ultima fatura emitidas */
+&if '{&bf_libera_15_posicoes}' = 'yes' &then 
+    assign c-nr-ultima-nota = trim(string(dec(ser-estab.nr-ult-nota),">>>>>>>>9999999")).
+&else
+    assign c-nr-ultima-nota = trim(string(dec(ser-estab.nr-ult-nota),">>>9999999")).
+&endif
+
+
+if  l-grava = no then  
+    assign c-nr-nota = {1}.{2}.
+else do:
+    assign ser-estab.nr-ult-nota = if  {5} /* l-busca-numero */
+                                   then trim(string(dec(ser-estab.nr-ult-nota) + 1))
+                                   else {1}.{2}.
+    
+    if  not {5}
+    and i-pais-impto-usuario <> 1
+    and c-nr-ultima-nota >= {1}.{2} then do:
+        if  not session:remote then do:
+            run utp/ut-msgs.p (input "show",
+                               input "25634",
+                               input "").
+        
+        end.
+        stop.
+    end.
+
+    /* ============================================================== */
+    /* -------------------------------------------------- */                
+    /* Chamada DPC                                        */
+    /* FT2010-US.P - Controla o n£mero do dcto cfme range */
+    /* -------------------------------------------------- */                
+    create tt-epc.
+    assign tt-epc.cod-event     = "Controlling Document Numbers"
+           tt-epc.cod-parameter = "Rowid SER-ESTAB"
+           tt-epc.val-parameter = string(rowid(ser-estab)).
+       
+    {include/i-epc201.i "Controlling Document Numbers"}
+
+    find tt-epc where 
+         tt-epc.cod-event     = "Controlling Document Numbers" and
+         tt-epc.cod-parameter = "nr-ult-nota"            no-error.
+    if  avail tt-epc and {5} then   /* l-busca-numero */
+        assign ser-estab.nr-ult-nota = tt-epc.val-parameter.
+
+    for each tt-epc where tt-epc.cod-event = "Controlling Document Numbers": delete tt-epc. end.                 
+    /* ============================================================== */
+
+    /* tratamento de verifica‡Æo do nr. da nota fiscal para diferentes paises */
+    run pi-atualiza-nr-nota-fatura (input ser-estab.nr-ult-nota, 
+                                    output c-nr-nota ).
+                                    
+    if &if "{&bf_dis_versao_ems}" < "2.07":U &then                               
+           substring(ser-estab.char-1,1,3) = "yes"                               
+       &else                                                                     
+           ser-estab.log-nf-eletro = yes                                         
+       &endif then do:                                                                                       
+                                                                                 
+       if dec(c-nr-nota) >= 1000000000 THEN  /* atribui 1 se nr >= 1000000000 */ 
+          assign c-nr-nota = string(1,"9999999").                                                      
+                                                                                 
+    end.                                                                         
+                                    
+    &IF '{&bf_dis_versao_ems}' >= '2.062' &THEN
+        IF {5}                       AND
+           i-pais-impto-usuario <> 1 AND 
+           i-pais-impto-usuario <> 3 THEN REPEAT:
+           IF CAN-FIND(FIRST numer-reserva 
+                       WHERE numer-reserva.cod-estabel = ser-estab.cod-estabel 
+                         AND numer-reserva.serie       = ser-estab.serie      
+                         AND numer-reserva.nr-nota-fis = c-nr-nota) THEN
+              ASSIGN c-nr-nota = IF i-pais-impto-usuario = 2 THEN 
+                                    TRIM(STRING(INT(c-nr-nota) + 1, '9999999'))
+                                 ELSE TRIM(STRING(INT(c-nr-nota) + 1, '>9999999')).
+           ELSE LEAVE.             
+        END.
+     
+        /*************************** Chamada EPC ******************************/    
+        IF  i-pais-impto-usuario <> 1 AND
+           (c-nom-prog-dpc-mg97  <> ""
+        OR  c-nom-prog-appc-mg97 <> ""
+        OR  c-nom-prog-upc-mg97  <> "") THEN DO:
+        
+            FOR EACH tt-epc:
+                DELETE tt-epc.
+            END.
+        
+            CREATE tt-epc.
+            ASSIGN tt-epc.cod-event     = "controleNumeroFatura"
+                   tt-epc.cod-parameter = "nr-nota-fis"
+                   tt-epc.val-parameter =  c-nr-nota.
+
+            {include/i-epc201.i "controleNumeroFatura"}
+          
+            IF RETURN-VALUE = "NOK":U THEN DO:
+               ASSIGN ser-estab.nr-ult-nota = TRIM(STRING(INT(c-nr-ultima-nota), '9999999'))
+                      l-erro                = YES.
+               RETURN "NOK":U .
+            END.
+        END.
+        /******************************* Fim EPC ******************************/ 
+        
+     &ENDIF
+     
+    assign ser-estab.nr-ult-nota = c-nr-nota .
+  
+end.    
+
+if  ser-estab.ind-nff
+and can-find(funcao where funcao.cd-funcao = "spp-fat-ser-est"
+                    and   funcao.ativo) then
+    assign c-nr-fatura = c-nr-nota.
+else 
+if  serie.serie <> serie.serie-vinc then do:
+    
+    assign b-ser-estab.nr-ult-fat = if {5} /* l-busca-numero */
+                                        then trim(string(dec(b-ser-estab.nr-ult-fat) + 1)) 
+                                    else {1}.{3}.
+    
+    /* tratamento de verifica‡Æo do nr. da fatura para diferentes paises */
+    run pi-atualiza-nr-nota-fatura (input b-ser-estab.nr-ult-fat, 
+                                    output c-nr-fatura).
+    
+    if &if "{&bf_dis_versao_ems}" < "2.07":U &then                              
+           substring(b-ser-estab.char-1,1,3) = "yes"                                  
+       &else                                                                    
+           b-ser-estab.log-nf-eletro = yes                                        
+       &endif then do:                                                                                          
+                                                                                
+       if dec(c-nr-fatura) >= 1000000000 THEN  /* atribui 1 se nr >= 1000000000 */
+          assign c-nr-fatura = string(1,"9999999").                                                        
+                                                                                
+    end.                                                                        
+    
+    assign b-ser-estab.nr-ult-fat = c-nr-fatura.
+                                            
+end.
+else do:
+    assign ser-estab.nr-ult-fat = if {5} /* l-busca-numero */
+                                      then trim(string(dec(ser-estab.nr-ult-fat) + 1)) 
+                                  else {1}.{3}.
+                                  
+
+    /* tratamento de verifica‡Æo do nr. da fatura para diferentes paises */
+    run pi-atualiza-nr-nota-fatura (input ser-estab.nr-ult-fat, 
+                                    output c-nr-fatura).
+                                    
+    if &if "{&bf_dis_versao_ems}" < "2.07":U &then                                 
+           substring(ser-estab.char-1,1,3) = "yes"                               
+       &else                                                                       
+           ser-estab.log-nf-eletro = yes                                         
+       &endif then do:                                                             
+                               
+       if dec(c-nr-fatura) >= 1000000000 THEN  /* atribui 1 se nr >= 1000000000 */ 
+          assign c-nr-fatura = string(1,"9999999").                                
+                                                                                                                 
+    end.                                                                           
+
+    assign ser-estab.nr-ult-fat = c-nr-fatura.
+
+end.
+
+if  l-grava = yes then do:
+    /* Atualizar data do ultimo faturamento */
+    if  {1}.{4} <> ser-estab.dt-ult-fat then do:
+
+        assign ser-estab.dt-ult-fat = {1}.{4}.
+     
+        /* Atualizar data do proximo faturamento */
+        if  ser-estab.ind-prox-dt = yes then do:
+
+            assign da-data-aux = ser-estab.dt-ult-fat.
+
+            /* Contar ate o numero de dias em aberto */
+            conta-dias:
+            do  i-cont = 1 to ser-estab.nr-dias-abe:
+
+                /* Desconsiderar dias nao uteis */
+                dia-util:
+                do  while true:
+                    assign da-data-aux = da-data-aux + 1.
+                    find calen-coml
+                         where calen-coml.cod-estabel = {1}.cod-estabel   
+                         and   calen-coml.ep-codigo   = param-global.empresa-prin 
+                         and   calen-coml.data        = da-data-aux
+                         no-lock no-error.
+                    /* Caso nao encontre o calen-coml entao soma o numero de dias
+                       em aberto direto na data do ultimo faturamento */
+                    if  not avail calen-coml then do:
+                        assign da-data-aux = ser-estab.dt-ult-fat +
+                                             ser-estab.nr-dias-abe.
+                        leave conta-dias.   
+                    end.
+
+                    /* Se for dia util entao encerra o loop */
+                    if  calen-coml.tipo-dia = 1 then
+                        leave.
+                end. 
+            end. 
+
+            assign ser-estab.dt-prox-fat = da-data-aux.
+        end.
+        else 
+            assign ser-estab.dt-prox-fat = ?.
+    end.
+end.
+
+
+/* ftp/ft2010.i12 */
+

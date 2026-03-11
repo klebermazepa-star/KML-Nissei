@@ -1,0 +1,17 @@
+/******************************************************************************
+**
+** ftp/ft2010.i7 - Copiar campos: tt-fat-repre para fat-repre
+**
+******************************************************************************/
+
+create fat-repre.
+assign fat-repre.cod-estabel = nota-fiscal.cod-estabel
+       fat-repre.serie       = nota-fiscal.serie
+       fat-repre.nr-fatura   = nota-fiscal.nr-fatura
+       fat-repre.nome-ab-rep = tt-fat-repre.nome-ab-rep
+       fat-repre.perc-comis  = tt-fat-repre.perc-comis
+       fat-repre.comis-emis  = tt-fat-repre.comis-emis.
+
+/* ftp/ft2010.i7 */
+
+

@@ -1,0 +1,111 @@
++----------------------------------------------------------------------------------------------------------------------------------+
+|                       Lay-out do Arquivo para Importação Notas Pepsico                                                           |
+|----------------------------------------------------------------------------------------------------------------------------------|
+|                                          Formato: CSV                                                                            |
+|----------------------------------------------------------------------------------------------------------------------------------|
+| Ordem |     Descrição                                   |  Conteudo    | Formato              | Obrig.                           |
+|----------------------------------------------------------------------------------------------------------------------------------|
+| Registro 1 - Cabe‡alho Nota (int-ds-docto-xml)                                                                                   |
+|----------------------------------------------------------------------------------------------------------------------------------|
+|    1  | Tipo Registro - 1                               |    Inteiro   |    9                 | SIM                              |
+|    2  | Cnpj Fornecedor                                 |    character |   x(20)              | SIM                              |                         
+|    3  | Serie Nota                                      |    character |   x(5)               | SIM                              | 	 
+|    4  | Número Nota                                     |    character |   x(16)              | SIM                              |
+|    5  | Natureza de Operação                            |    character |   x(06)              |                                  |
+|    6  | Número Pedido                                   |    integer   |  >>>>>,>>9           |                                  |
+|    7  | Data Transação (Data Baixa Estoque)             |    date      |  99/99/9999          | SIM                              |
+|    8  | CNPJ Estabelecimento                            |    character |   x(20)              | SIM                              |
+|    9  | Dt emissão Nota                                 |    date      |  99/99/9999          | SIM                              |
+|    10 | Total Desconto Nota                             |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    11 | Valor Cofins Nota                               |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    12 | Valor ICMS Nota                                 |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    13 | Valor ICMS Desnon Nota                          |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    14 | Valor IPI                                       |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    15 | Valor Outras                                    |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    16 | Valor Pis                                       |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    17 | Valor Mercadoria                                |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    18 | Valor ICMS ST Nota                              |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    19 | Valor Base de cálculo ICMS NOTA                 |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    20 | Valor Base de cáclulo ST Nota                   |    decimal   |  >>>>,>>>,>>9.99999  |                                  |
+|    21 | Valor Total Nota Fiscal                         |    decimal   |  >,>>>,>>>,>>>,>>9.99|                                  |
+|    22 | Valor Seguro Nota                               |    decimal   |  >>>>>,>>>,>>9.99999 |                                  |
+|    23 | Valor Frete Nota                                |    decimal   |  >>>>>,>>>,>>9.99999 |                                  |
+|    24 | observa‡“es nota                                |    character |  x(2000)             |                                  |
+|    25 | Chave NF-E Nota                                 |    character |  x(60)               |                                  |
+|----------------------------------------------------------------------------------------------------------------------------------|
+| Registro 2 - Itens da Nota (int-ds-it-docto-xml)                                                                                 |
+|----------------------------------------------------------------------------------------------------------------------------------|
+|    1  | Tipo Registro - 2                               |    Inteiro   |    9                  | SIM                             |
+|    2  | Cnpj Fornecedor                                 |    character |   x(20)               | SIM                             |                         
+|    3  | Serie Nota                                      |    character |   x(5)                | SIM                             | 	 
+|    4  | Número Nota                                     |    character |   x(16)               | SIM                             |
+|    5  | Natureza de Operação                            |    character |   x(06)               |                                 |
+|    6  | Número Pedido                                   |    integer   |  >>>>>,>>9            |                                 |
+|    7  | Data Transação (Data Baixa Estoque)             |    date      |  99/99/9999           | SIM                             |                                     
+|    8  | C¢digo do Item                                  |    character |   x(16)               |                                 |
+|    9  | Data Validade lote                              |    date      |  99/99/9999           |                                 |
+|   10  | Desconto Item                                   |    decimal   | >>>>,>>>,>>9.99999    |                                 |
+|   11  | Valor cofins Item                               |    decimal   | >>>>,>>>,>>9.99999    |                                 |
+|   12  | Valor ICMS Item                                 |    decimal   |  >>>>,>>>,>>9.99999   |                                 |
+|   13  | Valor ICMS Desnon Item                          |    decimal   |  >>>>,>>>,>>9.99999   |                                 |
+|   14  | Valor IPI Item                                  |    decimal   | >>>>,>>>,>>9.99999    |                                 |
+|   15  | Valor Outras Item                               |    decimal   | >>>>,>>>,>>9.99999    |                                 |
+|   16  | Valor Pis do item                               |    decimal   | >>>>,>>>,>>9.99999    |                                 |
+|   17  | Valor Unit rio Produto                          |    decimal   | >>>>,>>>,>>9.99999    |                                 |
+|   18  | Valor ICMS ST Item                              |    decimal   | >>>>,>>>,>>9.99999    |                                 |
+|   19  | Valor Base de c lculo ICMS ITEM                 |    decimal   | >>>>,>>>,>>9.99999    |                                 |
+|   20  | Valor Base de c clulo ST Item                   |    decimal   | >>>>,>>>,>>9.99999    |                                 |
+|   21  | Valor total item                                |    decimal   | >,>>>,>>>,>>>,>>9.99  |                                 |
+|   22  | Valor ICMS St Item                              |    decimal   | >>>>>,>>>,>>9.99999   |                                 |
+|   23  | Valor Base calculo cofins Item                  |    decimal   | >>>>>,>>>,>>9.99999   |                                 |
+|   24  | narrativa item                                  |    character |  x(2000)              |                                 |
+|   25  | Lote do item                                    |    character |  x(20)                |                                 |
+|   26  | Sequencia do Item na nota                       |    integer   |  >>>,>>9              | SIM                             |
+|   27  | Quantidade do item                              |    Decimal   |   >>>>,>>>,>>9.99999  | SIM                             |
+|   28  | Unidade de medida                               |    character |   x(03)               |                                 |
+|   29  | Valor base de c lculo IPI Item                  |    decimal   |  >>>>,>>>,>>9.99999   |                                 |
+|   30  | Valor base de c lculo PIS Item                  |    decimal   |  >>>>,>>>,>>9.99999   |                                 |
+|   31  | Valor Base ST Retido Item                       |    decimal   |  >>>>,>>>,>>9.99999   |                                 |
+|   32  | Valor ICMS ST Retido Item                       |    decimal   |  >>>>,>>>,>>9.99999   |                                 |
+|   33  | Percentual ICMS ITEM                            |    decimal   |  >>9.99               |                                 |
+|   34  | Percentual Pis ITEM                             |    decimal   |  >>9.99               |                                 |
+|   35  | Percentual Cofins ITEM                          |    decimal   |  >>9.99               |                                 |
+|   36  | Perc. Red. BC                                   |    decimal   |  >>9.9999             |                                 |
+|   37  | Valor base st Pis                               |    decimal   |  >>>>>,>>>,>>9.99999  |                                 |
+|   38  | Valor base st Cofins                            |    decimal   | >>>>>,>>>,>>9.99999   |                                 |
++---------------------------------------------------------------------------------------------------------------------------------|+
++---------------------------------------------------------------------------------------------------------------------------------+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       	 		 								 
+

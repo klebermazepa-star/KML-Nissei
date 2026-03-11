@@ -1,0 +1,20 @@
+/********************************************************************************
+***
+*** crp/crapi009.i1 - Cria TempTable de Retorno da Consistˆncia.
+***
+********************************************************************************/
+create tt-retorno-nota.
+assign tt-retorno-nota.cod-erro   = {1}
+       tt-retorno-nota.desc-erro  = {3}
+       tt-retorno-nota.situacao   = {2}
+       tt-retorno-nota.cod-chave  = tt-nota-db-cr.referencia   + "," +
+                                 string(tt-nota-db-cr.sequencia)  + "," +
+                                 string(tt-nota-db-cr.ep-codigo)  + "," +
+                                        tt-nota-db-cr.cod-estabel + "," +                       
+                                        tt-nota-db-cr.cod-esp     + "," +
+                                        tt-nota-db-cr.serie       + "," +
+                                        tt-nota-db-cr.nr-docto    + "," +
+                                        tt-nota-db-cr.parcela
+       l-situacao = {2}.
+
+/* crp/crapi009.i1 */

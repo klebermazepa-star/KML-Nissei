@@ -1,0 +1,80 @@
+/**********************************************************************
+**
+**   CRAPI017.I2 - DEFINICAO DE TEMP-TABLE PARA ESTORNO DO TÖTULO
+**
+***********************************************************************/
+def temp-table tt-tot-tit-devol
+    field referencia     like titulo.referencia
+    field ep-codigo      like titulo.ep-codigo
+    field cod-empresa    as character format "x(3)"
+    field cod-estabel    like titulo.cod-estabel
+    field cod-estab-ems5 like titulo.cod-estabel
+    field cod-esp        like titulo.cod-esp
+    field serie          like titulo.serie
+    field nr-docto       like titulo.nr-docto
+    field cod-emitente   like titulo.cod-emitente
+    field tot-saldo      like titulo.vl-saldo
+    field tot-baixa      like titulo.vl-saldo
+    field mo-codigo      like docum-est.mo-codigo
+    field cotacao-dia    like docum-est.cotacao-dia
+    field dt-trans       like docum-est.dt-trans
+    field nr-docto-cr    like titulo.nr-docto
+    field serie-cr       like titulo.serie
+    field cod-esp-cr     like titulo.cod-esp 
+    field tp-codigo      like natur-oper.tp-rec-desp
+    field estorn-comis   like docum-est.estorn-comis
+    field sequencia      as   integer
+    field conta-devol    as   character format "x(20)"
+    field erro           as   logical
+    field serie-nota     as   character format "x(5)"
+    field nr-docto-nota  as   character format "x(16)"
+    field nat-operacao   as   character format "X(6)"
+    field cod-plano-ccusto   as character format "x(8)"
+    field cod-ccusto         as character format "x(20)"
+    field cod-plano-cta-ctbl as character format "x(8)"
+    index seq            is primary unique
+          sequencia
+    index titulo
+          serie
+          nr-docto
+          conta-devol
+          cod-ccusto.
+
+def temp-table tt-tot-tit-mp-devol
+    field referencia     like titulo.referencia
+    field ep-codigo      like titulo.ep-codigo
+    field cod-empresa    as character format "x(3)"
+    field cod-estabel    like titulo.cod-estabel
+    field cod-estab-ems5 like titulo.cod-estabel
+    field cod-esp        like titulo.cod-esp
+    field serie          like titulo.serie
+    field nr-docto       like titulo.nr-docto
+    field cod-emitente   like titulo.cod-emitente
+    field tot-saldo      like titulo.vl-saldo
+    field tot-baixa      like titulo.vl-saldo
+    field mo-codigo      like docum-est.mo-codigo
+    field cotacao-dia    like docum-est.cotacao-dia
+    field dt-trans       like docum-est.dt-trans
+    field nr-docto-cr    like titulo.nr-docto
+    field serie-cr       like titulo.serie
+    field cod-esp-cr     like titulo.cod-esp
+    field tp-codigo      like natur-oper.tp-rec-desp
+    field estorn-comis   like docum-est.estorn-comis
+    field sequencia      as   integer
+    field conta-devol    like titulo.conta-credito
+    field erro           as logical
+    field cod-maq-origem   like maquina.cd-maquina
+    field num-processo     as   integer format ">>>>>>>>9" initial 0
+    field num-sequencia    as   integer format ">>>>>9"    initial 0
+    field ind-tipo-movto   as   integer format "99"        initial 1
+    field serie-nota     as   character format "x(5)"
+    field nr-docto-nota  as   character format "x(16)"
+    field nat-operacao   as   character format "X(6)"
+    field cod-plano-ccusto   as character format "x(8)"
+    field cod-ccusto         as character format "x(20)"
+    field cod-plano-cta-ctbl as character format "x(8)"    
+    INDEX documento IS PRIMARY  cod-maq-origem
+                                num-processo
+                                num-sequencia.
+
+/* fim do include */

@@ -1,0 +1,25 @@
+/******************************************************************************
+**
+** ftp/ft2010.i8 - Copiar campos: tt-nota-trans para nota-trans 
+**
+******************************************************************************/
+create nota-trans.
+assign nota-trans.cod-estabel    = nota-fiscal.cod-estabel
+       nota-trans.serie          = nota-fiscal.serie
+       nota-trans.nr-nota-fis    = nota-fiscal.nr-nota-fis
+       nota-trans.aliquota-icm   = tt-nota-trans.aliquota-icm
+       nota-trans.perc-red-base  = tt-nota-trans.perc-red-base
+       nota-trans.cod-mensagem   = tt-nota-trans.cod-mensagem
+       nota-trans.ind-cobranca   = tt-nota-trans.ind-cobranca
+       nota-trans.vl-bicms       = tt-nota-trans.vl-bicms  
+       nota-trans.vl-icms        = tt-nota-trans.vl-icms
+       nota-trans.observacao     = 
+           if  tt-nota-trans.ind-icms-ret = yes
+           then "Frete autonomo com substituicao tributaria"
+           else "".
+           
+assign nota-trans.vl-servico     = fn_ajust_dec(tt-nota-trans.vl-servico, int(nota-fiscal.mo-codigo)) /*de-vl-servico*/.
+
+/* ftp/ft2010.i8 */
+
+

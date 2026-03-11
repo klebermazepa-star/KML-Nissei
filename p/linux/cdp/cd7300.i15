@@ -1,0 +1,31 @@
+{include/i_dbvers.i}
+&IF "{&mguni_version} " < "2.08" &THEN 
+
+/**********************************************************************************
+***
+*** CD7300.I15 - Cria‡Æo de Errors Efetiva‡Æo Natureza de Opera‡Æo
+***
+**********************************************************************************/
+
+for each RowErrors
+    where RowErrors.ErrorType   <> "INTERNAL":U
+      and RowErrors.ErrorSubType = "Error":U no-lock:
+
+    assign tt-control-rec.ind-situacao-atualiz = 1
+           tt-control-rec.ind-situacao-erro    = 2.
+
+    run utp/ut-msgs.p ( input "msg",
+                        input RowErrors.ErrorNumber,
+                        input RowErrors.ErrorParameters).
+    create tt-erros-rec.
+    assign tt-erros-rec.cod-maq-origem     = tt-natur-oper.cod-maq-origem
+           tt-erros-rec.num-processo       = tt-natur-oper.num-processo
+           tt-erros-rec.num-sequencia-erro = RowErrors.ErrorSequence
+           tt-erros-rec.cod-erro           = RowErrors.ErrorNumber
+           tt-erros-rec.des-erro           = return-value
+           tt-erros-rec.num-sequencia      = tt-natur-oper.num-sequencia.
+end.
+
+/* cd7300.i15 */
+
+&ENDIF

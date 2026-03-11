@@ -1,0 +1,869 @@
+/******************************************************************************
+**
+**  of0717.i2 - display do resumo de apuracao
+**
+******************************************************************************/
+def var l-impr-sep     as logical  init yes             no-undo. 
+def var de-debito      as decimal                       no-undo.
+def var de-credito     as decimal                       no-undo.
+def var de-deducao     as decimal                       no-undo.
+def var c-cpo          as char     extent 5             no-undo.
+def var de-vlr         as decimal  extent 5             no-undo.
+def var c-cpo2         as char     extent 5             no-undo.
+def var de-vlr2        as decimal  extent 5             no-undo. 
+def var de-vl-conv     as decimal  extent 43   init 0   no-undo.
+def var c-descr-3      as character    extent 8         no-undo.  
+def var de-valor-3     as decimal      extent 8         no-undo. 
+def var l-primeiro     as logical                       no-undo.
+
+def var de-vlr-1       as decimal.
+def var de-vlr-2       as decimal.
+
+def var total-1        as decimal.
+def var total-2        as decimal.
+def var total-3        as decimal.
+def var debito-1       as decimal.
+def var credito-1      as decimal.
+def var i-pag-print    as integer                       no-undo. 
+/*Variavel utilizada para controlar quebra de p†gina, esta variavel armazenarˇo número 
+de linhas a ser impresso*/
+
+assign c-cpo      = " "
+       de-vlr     = 0 
+       c-sepa     = if  c-sep <> "" 
+                    then c-sep 
+                    else "-"
+       de-imposto = 0.
+
+/*************************************************************/
+
+/* Inicio -- Projeto Internacional */
+DO:
+{utp/ut-liter.i "DêBITO_DO_IMPOSTO" *}
+put c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip                           
+    c-sep at 1 
+    c-sep at 4 
+    TRIM(RETURN-VALUE) FORMAT "X(17)"
+    c-sep at 82.
+
+{utp/ut-liter.i "VALORES" *}
+put TRIM(RETURN-VALUE) FORMAT "X(7)" 
+    at (if c-moeda <> "" then 90 else 104) 
+    c-sep at 132 skip
+    c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip                           
+    c-sep at 1
+    "|" at 4.
+
+{utp/ut-liter.i "COLUNA_AUXILIAR" *}
+put c-sep at (if c-moeda <> "" then 65 else 82) TRIM(RETURN-VALUE) FORMAT "X(15)" 
+    at (if c-moeda <> "" then 66 else 87)
+    c-sep at (if c-moeda <> "" then 102 else 107).
+
+{utp/ut-liter.i "SOMAS" *}
+put TRIM(RETURN-VALUE) FORMAT "X(5)" 
+    at (if c-moeda <> "" then 103 else 117).
+END. 
+
+if  c-moeda <> "" then    
+    put c-moeda        format "x(12)"                            to 132 skip.
+else
+    put c-sep at 132 skip         
+        c-sep at 1
+        "|" at 4
+        c-sep at 82
+        fill("-",24) format "x(24)" 
+        c-sep
+        fill("-",24) format "x(24)"
+        c-sep.
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_001_-_POR_SA÷DAS/PRESTAÄÂES_COM_DêBITO_DO_IMPOSTO" *}
+put c-sep at 1
+    TRIM(RETURN-VALUE) FORMAT "X(51)" at 4
+    c-sep at 82
+    c-sep at (if c-moeda <> "" then 87 else 107)
+    de-imp-deb              format ">>>>>,>>>,>>>,>>9.99"    
+    at (if c-moeda <> "" then 88 else 112).
+
+if  i-moeda <> 0 and de-vl-conv[1] > 0 then
+    put "|" at 4 de-vl-conv[1]           format ">>>>,>>>,>>>,>>9.999" to 131.
+
+assign i-pag-print = 1.
+
+for each imp-valor fields ( cod-lanc descricao) of apur-imposto no-lock:
+    if  imp-valor.cod-lanc = 2 then DO:
+        assign i-pag-print = i-pag-print + 1.    
+
+        run pi-print-editor (imp-valor.descricao, 76).
+        find first tt-editor no-error.
+        for each tt-editor where
+                 tt-editor.linha > 1
+                 AND LINE-COUNTER >= PAGE-SIZE:
+            assign i-pag-print = i-pag-print + 1.    
+        end.
+    END.
+end.
+
+{intprg/ni0302.i7}
+
+/******************/
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_002_-_OUTROS_DêBITOS_(DISCRIMINAR_ABAIXO)" *}
+put c-sep at 132 skip
+    c-sep at 1
+    TRIM(RETURN-VALUE) FORMAT "X(43)" at 4            
+    c-sep at 82
+    c-sep at 107
+    c-sep at 132 
+ /*   c-sep at 1 
+ *     "|" at 4
+ *     c-sep at 82
+ *     c-sep at 107
+ *     c-sep at 132 skip*/.
+
+if i-moeda <> 0  and (de-imp-deb + total-1) > 0  then
+    put "|" at 4 round((de-imp-deb + total-1) / de-conv,3)
+                                format ">>>>,>>>,>>>,>>9.999" to 131.
+
+for each imp-valor fields ( cod-lanc vl-lancamento descricao char-1) of apur-imposto no-lock:
+    if  imp-valor.cod-lanc = 2 
+    AND SUBSTRING(imp-valor.char-1,13,2) <> "05" then do:
+        run pi-acompanhar in h-acomp ( input string(imp-valor.vl-lancamento)).
+
+        if  line-counter >= page-size then do:       
+            assign i-num-pag = i-num-pag + 1.
+        end.
+
+        put skip c-sep at 1 
+            "  | ".
+        run pi-print-editor (imp-valor.descricao, 76).
+        find first tt-editor no-error.
+        if avail tt-editor then do:
+           if tt-editor.conteudo <> "" then
+              put tt-editor.conteudo format "x(76)" AT 06.
+           for each tt-editor where
+                    tt-editor.linha > 1:
+               if tt-editor.conteudo <> "" then do:     
+                  put c-sep at 82 c-sep at 107 c-sep at 132.
+                  put skip c-sep at 1 
+                      "  | " tt-editor.conteudo format "x(76)" at 06.
+               end.       
+           end.
+        end.
+        put c-sep at 82 imp-valor.vl-lancamento  at 89  c-sep at 107 c-sep at 132.
+        accumulate imp-valor.vl-lancamento (total).
+    end.
+end.
+
+if i-moeda <> 0 then 
+   put "|" at 4 round((accum total imp-valor.vl-lancamento) / de-conv,3) format ">>,>>>,>>>,>>9.999" to 107.
+else
+   put c-sep at 1   "|" at 4 c-sep at 82  c-sep at 107
+       (accum total imp-valor.vl-lancamento) format ">>>>>,>>>,>>>,>>9.99" at 112 c-sep at 132.
+
+assign total-1 = total-1 + (accum total imp-valor.vl-lancamento).
+
+
+assign i-pag-print = 7.
+
+for each imp-valor fields ( cod-lanc descricao) of apur-imposto no-lock:
+    if  imp-valor.cod-lanc = 3 then DO:
+        assign i-pag-print = i-pag-print + 1.    
+
+        run pi-print-editor (imp-valor.descricao, 76).
+        find first tt-editor no-error.
+        for each tt-editor where
+                 tt-editor.linha > 1
+                 AND LINE-COUNTER >= PAGE-SIZE:
+            assign i-pag-print = i-pag-print + 1.    
+        end.
+    END.
+end.
+
+{intprg/ni0302.i7}
+
+/****************************************************************************/
+
+put c-sep at 1 "D|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "ê|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "B|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "I|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "T|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "O|" at 3 c-sep at 82  c-sep at 107 c-sep at 132.
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_003_-_ESTORNO_DE_CRêDITOS_(DISCRIMINAR_ABAIXO)" *}
+put c-sep at 1
+    "  " + TRIM(RETURN-VALUE) FORMAT "X(52)"
+    c-sep at 82
+    c-sep at 107
+    c-sep at 132 skip.
+/*    c-sep at 1
+ *     "|" at 4
+ *     c-sep at 82
+ *     c-sep at 107
+ *     c-sep at 132.*/
+
+    
+for each imp-valor fields ( cod-lanc vl-lancamento descricao char-1) of apur-imposto no-lock:
+    if  imp-valor.cod-lanc = 3 
+    AND SUBSTRING(imp-valor.char-1,13,2) <> "05" then do:
+        run pi-acompanhar in h-acomp ( input string(imp-valor.vl-lancamento)).
+
+        if  line-counter >= page-size then do:       
+            assign i-num-pag = i-num-pag + 1.
+        end.
+
+        put skip c-sep at 1 
+            "  | "    .
+        run pi-print-editor (imp-valor.descricao, 76).
+        find first tt-editor no-error.
+        if avail tt-editor then do:
+           if tt-editor.conteudo <> "" then
+              put tt-editor.conteudo format "x(76)" AT 06.
+           for each tt-editor where
+                    tt-editor.linha > 1:
+               if tt-editor.conteudo <> "" then do:
+                  put c-sep at 82 c-sep at 107 c-sep at 132.
+                  put skip c-sep at 1 
+                      "  | " tt-editor.conteudo format "x(76)" at 06.
+               end.    
+           end.
+        end.
+        put c-sep at 82 imp-valor.vl-lancamento  at 89  c-sep at 107 c-sep at 132.
+        accumulate imp-valor.vl-lancamento (total).
+    end.
+end.
+
+assign total-1 = total-1 + (accum total imp-valor.vl-lancamento).
+
+if i-moeda <> 0 then 
+   put "|" at 4 round((accum total imp-valor.vl-lancamento) / de-conv,3) format ">>,>>>,>>>,>>9.999" to 107.
+else
+   put  c-sep at 1   "|" at 4 c-sep at 82  c-sep at 107
+       (accum total imp-valor.vl-lancamento) format ">>>>>,>>>,>>>,>>9.99" at 112  c-sep at 132.
+
+/****************************************************************************/
+
+put c-sep at 1.
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_004_-_SUBTOTAL" *}
+put TRIM(RETURN-VALUE) FORMAT "X(16)" at 4.
+
+put c-sep at 82
+    c-sep at (if c-moeda <> "" then 87 else 107)  
+    de-imp-deb + total-1    format ">>>>>,>>>,>>>,>>9.99" at 112  c-sep at 132.
+
+assign de-vlr-1 = de-imp-deb + total-1. /* para calculo da diferenáa (010 - 004)*/
+
+/*if i-moeda <> 0 then
+    put round((de-imp-deb + total-1) / de-conv,3)
+                                format ">>>>,>>>,>>>,>>9.999" to 89.*/
+
+/****************************************************************************/
+assign i-pag-print = 21.
+
+for each imp-valor fields ( cod-lanc descricao) of apur-imposto no-lock:  
+    if  imp-valor.cod-lanc = 6                                            
+    or  imp-valor.cod-lanc = 7 then do:                                      
+        assign i-pag-print = i-pag-print + 1.                             
+                                                                          
+        run pi-print-editor (imp-valor.descricao, 76).                        
+        find first tt-editor no-error.                                        
+        for each tt-editor where                                              
+                 tt-editor.linha > 1                                          
+                 AND LINE-COUNTER >= PAGE-SIZE:                               
+            assign i-pag-print = i-pag-print + 1.                             
+        end.  
+    end.                                                                   
+end.
+
+{intprg/ni0302.i7}.
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "CRêDITO_DO_IMPOSTO" *}
+put c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip                           
+    c-sep at 1  
+    c-sep at 4
+    TRIM(RETURN-VALUE) FORMAT "X(18)".
+
+{utp/ut-liter.i "|_005_-_POR_ENTRADAS/AQUISIÄÂES_COM_CRêDITO_DO_IMPOSTO" *}
+put c-sep at 82                                       
+    c-sep at 107
+    c-sep at 132 skip
+    c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip                           
+    c-sep at 1
+    TRIM(RETURN-VALUE) FORMAT "X(54)" at 4
+    c-sep at 82
+    c-sep at (if c-moeda <> "" then 87 else 107)       
+    de-imp-cre                 format ">>>>>,>>>,>>>,>>9.99" 
+    at (if c-moeda <> "" then 88 else 112) c-sep at 132.
+ 
+if i-moeda <> 0 then
+    put "|" at 4 round(de-imp-cre / de-conv,3) format ">>>>,>>>,>>>,>>9.999" to 131.
+
+/****************************************************************************/
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_006_-_OUTROS_CRêDITOS_(DISCRIMINAR_ABAIXO)" *}
+put c-sep at 1
+    TRIM(RETURN-VALUE) FORMAT "X(44)" at 4               
+    c-sep at 82
+    c-sep at 107
+    c-sep at 132 skip.
+/*    c-sep at 1
+ *     "|" at 4 
+ *     c-sep at 82
+ *     c-sep at 107
+ *     c-sep at 132 skip.*/
+ 
+for each imp-valor fields ( cod-lanc vl-lancamento descricao char-1) of apur-imposto no-lock:
+    if  imp-valor.cod-lanc = 6 
+    AND SUBSTRING(imp-valor.char-1,13,2) <> "05" then do:
+        run pi-acompanhar in h-acomp ( input string(imp-valor.vl-lancamento)).
+        
+        if  line-counter >= page-size then do:         
+            assign i-num-pag = i-num-pag + 1.
+        end.
+        
+        put skip c-sep at 1 
+            "  | "    .
+        run pi-print-editor (imp-valor.descricao, 76).
+        find first tt-editor no-error.
+        if avail tt-editor then do:
+           if tt-editor.conteudo <> "" then
+              put tt-editor.conteudo format "x(76)" AT 06.
+           for each tt-editor where
+                    tt-editor.linha > 1:
+               if tt-editor.conteudo <> "" then do:
+                  put c-sep at 82 c-sep at 107 c-sep at 132.
+                  put skip c-sep at 1 
+                      "  | " tt-editor.conteudo format "x(76)" at 06.
+               end.       
+           end.
+        end.
+        put c-sep at 82 imp-valor.vl-lancamento  at 89  c-sep at 107 c-sep at 132.
+        accumulate imp-valor.vl-lancamento (total).
+    end.
+end.
+
+assign total-2 = (accum total imp-valor.vl-lancamento). 
+
+if i-moeda <> 0 then 
+   put "|" at 4 round((accum total imp-valor.vl-lancamento) / de-conv,3) format ">>,>>>,>>>,>>9.999" to 107.
+else
+   put  c-sep at 1   "|" at 4 c-sep at 82  c-sep at 107
+       (accum total imp-valor.vl-lancamento) format ">>>>>,>>>,>>>,>>9.99" at 112  c-sep at 132.
+
+/****************************************************************************/
+
+assign i-pag-print = 9.
+
+for each imp-valor fields ( cod-lanc vl-lancamento descricao ) of apur-imposto no-lock:
+    if  imp-valor.cod-lanc = 7 then do:
+        assign i-pag-print = i-pag-print + 1.    
+
+        run pi-print-editor (imp-valor.descricao, 76).
+        find first tt-editor no-error.
+        for each tt-editor where
+                 tt-editor.linha > 1
+                 AND LINE-COUNTER >= PAGE-SIZE:
+            assign i-pag-print = i-pag-print + 1.    
+        end.
+    END.
+end.
+
+ {intprg/ni0302.i7}
+
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_007_-_ESTORNO_DE_DêBITOS_(DISCRIMINAR_ABAIXO)" *}
+put c-sep at 1
+    "  " + TRIM(RETURN-VALUE) FORMAT "X(51)"
+    c-sep at 82
+    c-sep at 107
+    c-sep at 132 skip.
+/*    c-sep at 1
+ *     "|" at 4 
+ *     c-sep at 82
+ *     c-sep at 107
+ *     c-sep at 132 skip.*/
+
+for each imp-valor fields ( cod-lanc vl-lancamento descricao char-1) of apur-imposto no-lock:
+    if  imp-valor.cod-lanc = 7 
+    AND SUBSTRING(imp-valor.char-1,13,2) <> "05" then do:
+        run pi-acompanhar in h-acomp ( input string(imp-valor.vl-lancamento)).
+
+        if  line-counter >= page-size then do:        
+            assign i-num-pag = i-num-pag + 1.
+        end.
+
+        put skip c-sep at 1 
+            "  | "    .
+        run pi-print-editor (imp-valor.descricao, 76).
+        find first tt-editor no-error.
+        if avail tt-editor then do:
+           if tt-editor.conteudo <> "" then
+              put tt-editor.conteudo format "x(76)" AT 06.
+           for each tt-editor where
+                    tt-editor.linha > 1:
+               if tt-editor.conteudo <> "" then do:
+                  put c-sep at 82 c-sep at 107 c-sep at 132.
+                  put skip c-sep at 1 
+                      "  | " tt-editor.conteudo format "x(76)" at 06.
+               end.    
+           end.
+        end.
+        put c-sep at 82 imp-valor.vl-lancamento  at 89  c-sep at 107 c-sep at 132.
+        accumulate imp-valor.vl-lancamento (total).
+    end.
+end.
+
+assign total-2 = total-2 + (accum total imp-valor.vl-lancamento).
+
+if  i-moeda <> 0 then 
+    put "|" at 4 round((accum total imp-valor.vl-lancamento) / de-conv,3) format ">>,>>>,>>>,>>9.999" to 107.
+else
+    put  c-sep at 1   "|" at 4 c-sep at 82  c-sep at 107
+        (accum total imp-valor.vl-lancamento) format ">>>>>,>>>,>>>,>>9.99" at 112  c-sep at 132.
+
+put c-sep at 1 "C|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "R|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "ê|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "D|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "I|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "T|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "O|" at 3 c-sep at 82  c-sep at 107 c-sep at 132.
+
+/****************************************************************************/
+
+assign i-pag-print = 5.
+
+{intprg/ni0302.i7}
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_008_-_SUBTOTAL" *}
+put c-sep at 1
+    " " + TRIM(RETURN-VALUE) FORMAT "X(18)" at 3 
+    c-sep at 82
+    c-sep at (if c-moeda <> "" then 87 else 107)
+    de-imp-cre + total-2  format ">>>>>,>>>,>>>,>>9.99" 
+    at (if c-moeda <> "" then 88 else 112) c-sep at 132.
+
+if  i-moeda <> 0 then
+    put "|" at 4 round((de-imp-cre + total-2) / de-conv,3)
+                                 format ">>>>,>>>,>>>,>>9.999" to 131 .
+
+/****************************************************************************/
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_009_-_SALDO_CREDOR_DO_PER÷ODO_ANTERIOR" *}
+put c-sep at 1
+    "|" at 4                                                      
+    c-sep at 82
+    c-sep at 107
+    c-sep at 132
+    c-sep at 1  
+    TRIM(RETURN-VALUE) FORMAT "X(40)" at 4
+    c-sep at 82
+    c-sep at (if c-moeda <> "" then 87 else 107) c-sep at 132. 
+
+for each imp-valor fields ( cod-lanc vl-lancamento ) of apur-imposto no-lock: 
+    if  imp-valor.cod-lanc = 9 then do:
+        run pi-acompanhar in h-acomp ( input string(imp-valor.vl-lancamento)).
+        accumulate imp-valor.vl-lancamento (total).
+    end.
+end.
+
+assign total-1 = total-1 + (accum total imp-valor.vl-lancamento).
+
+if  i-moeda <> 0 then 
+    put "|" at 4 round((accum total imp-valor.vl-lancamento) / de-conv,3) format ">>,>>>,>>>,>>9.999" to 107.
+else
+    put  c-sep at 1   "|" at 4 c-sep at 82  c-sep at 107
+        (accum total imp-valor.vl-lancamento) format ">>>>>,>>>,>>>,>>9.99" at 112  c-sep at 132.
+
+/****************************************************************************/
+
+assign total-3 = (accum total imp-valor.vl-lancamento).
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_010_-_TOTAL" *}
+put c-sep at 1
+    TRIM(RETURN-VALUE) FORMAT "X(13)" at 4            
+    c-sep at 82
+    c-sep at (if c-moeda <> "" then 87 else 107)
+    de-imp-cre + total-2 + total-3  format ">>>>>,>>>,>>>,>>9.99" 
+    at (if c-moeda <> "" then 88 else 112).
+
+assign de-vlr-2 = de-imp-cre + total-2 + total-3. /* para calculo da diferenáa (010 - 004)*/
+
+if  i-moeda <> 0 then
+    put "|" at 4 round((de-imp-cre + total-2 + total-3) / de-conv,3)
+                                    format ">>>>,>>>,>>>,>>9.999" to 131.
+put c-sep at 132 skip.
+/*
+ *     c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip.                          
+ * 
+ * do while l-impr-sep:
+ *    put c-sep at 1
+ *        c-sep at 132.
+ *    if line-counter > page-size then 
+ *        assign l-impr-sep = no.     
+ * end. */
+    
+
+assign de-debito  = de-vlr-1
+       de-credito = de-vlr-2
+       credito-1  = de-debito  - de-credito
+       debito-1   = de-credito - de-debito.
+
+if  debito-1 < 0 then 
+    assign debito-1 = 0.
+
+if  credito-1 < 0 then 
+    assign credito-1 = 0.
+
+/**************************************************/
+if  de-debito > de-credito then
+    assign debito-1  = de-debito - de-credito
+           credito-1 = 0.
+else
+    assign debito-1  = 0.
+          
+assign i-pag-print = 14. 
+
+for each imp-valor fields ( cod-lanc descricao) of apur-imposto no-lock:
+    if  imp-valor.cod-lanc = 12 then
+        assign i-pag-print = i-pag-print + 1.
+
+    run pi-print-editor (imp-valor.descricao, 76).
+    find first tt-editor no-error.
+    for each tt-editor where
+             tt-editor.linha > 1
+             AND LINE-COUNTER >= PAGE-SIZE:
+        assign i-pag-print = i-pag-print + 1.    
+    end.
+end.
+
+if l-separadores then
+   assign i-pag-print = i-pag-print - 1.
+
+{intprg/ni0302.i7}.
+                      
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "APURAÄ«O_DO_SALDO" *}
+put c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip  
+    c-sep at 1 
+    c-sep at 4 
+    TRIM(RETURN-VALUE) FORMAT "X(17)"
+    c-sep at 82                                       
+    c-sep at 107
+    c-sep at 132 skip
+    c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip
+    c-sep at 1.
+    
+{utp/ut-liter.i "|_011_-_SALDO_DEVEDOR(DêBITO_MENOS_CRêDITO)" *}
+put TRIM(RETURN-VALUE) FORMAT "X(43)" at 4
+    c-sep at 82
+    c-sep at (if c-moeda <> "" then 87 else 107)
+    debito-1                  format ">>>>>,>>>,>>>,>>9.99"
+    at (if c-moeda <> "" then 88 else 112) c-sep at 132 skip. 
+
+if  i-moeda <> 0 then
+    put "|" at 4 round(debito-1 / de-conv,3)
+                              format ">>>>,>>>,>>>,>>9.999" to 131.
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_012_-_DEDUÄÂES_(DISCRIMINAR_ABAIXO)" *}
+put c-sep at 1
+    "  " + TRIM(RETURN-VALUE) FORMAT "X(41)"
+    c-sep at 82
+    c-sep at 107
+    c-sep at 132 .
+
+for each imp-valor fields ( cod-lanc vl-lancamento descricao char-1) of apur-imposto no-lock: 
+    if  imp-valor.cod-lanc = 12 
+    AND SUBSTRING(imp-valor.char-1,13,2) <> "05" then do:
+        run pi-acompanhar in h-acomp ( input string(imp-valor.vl-lancamento)).
+        
+        if  line-counter >= page-size then do:         
+            assign i-num-pag = i-num-pag + 1.
+        end.
+
+        put c-sep at 1 
+            "  | ".
+        run pi-print-editor (imp-valor.descricao, 76).
+        find first tt-editor no-error.
+        if avail tt-editor then do:
+           if tt-editor.conteudo <> "" then
+              put tt-editor.conteudo format "x(76)" AT 06.
+           for each tt-editor where
+                    tt-editor.linha > 1:
+               if tt-editor.conteudo <> "" then do:     
+                  put c-sep at 82 c-sep at 107 c-sep at 132.
+                  put skip c-sep at 1 
+                      "  | " tt-editor.conteudo format "x(76)" at 06.
+               end.    
+           end.
+        end.
+        put c-sep at 82 imp-valor.vl-lancamento  at 89  c-sep at 107 c-sep at 132.
+        de-deducao = de-deducao + imp-valor.vl-lancamento.
+        accumulate imp-valor.vl-lancamento (total).
+    end.
+end.
+
+assign total-1 = total-1 + (accum total imp-valor.vl-lancamento).
+
+if  i-moeda <> 0 then 
+    put "|" at 4 round((accum total imp-valor.vl-lancamento) / de-conv,3) format ">>,>>>,>>>,>>9.999" to 107.
+else
+    put  c-sep at 1   "|" at 4 c-sep at 82  c-sep at 107
+        de-deducao format ">>>>>,>>>,>>>,>>9.99" at 112  c-sep at 132.
+
+
+/*assign de-imposto = (debito-1 - (accum total imp-valor.vl-lancamento)).
+if de-imposto < 0 then assign de-imposto = 0.*/
+
+/****************************************************************************/
+put c-sep at 1 "S|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "A|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "L|" at 3 c-sep at 82  c-sep at 107 c-sep at 132
+    c-sep at 1 "D|" at 3 c-sep at 82  c-sep at 107 c-sep at 132.
+
+if  de-debito > de-credito then
+    assign de-imposto = debito-1 - de-deducao.
+
+if de-imposto < 0 then
+   assign credito-1  = 0 - de-imposto
+          de-imposto = 0.
+          
+/* INICIO Chamada UPC */
+
+&if '{&bf_dis_versao_ems}' >= '2.062' &then
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_de-imposto"
+          tt-epc.cod-parameter = "cod-estabel"
+          tt-epc.val-parameter = apur-imposto.cod-estabel.
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_de-imposto"
+          tt-epc.cod-parameter = "dt-apur-ini"
+          tt-epc.val-parameter = string(apur-imposto.dt-apur-ini,"99/99/9999").
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_de-imposto"
+          tt-epc.cod-parameter = "dt-apur-fim"
+          tt-epc.val-parameter = string(apur-imposto.dt-apur-fim,"99/99/9999").
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_de-imposto"
+          tt-epc.cod-parameter = "tp-imposto"
+          tt-epc.val-parameter = string(apur-imposto.tp-imposto).
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_de-imposto"
+          tt-epc.cod-parameter = "de-imposto"
+          tt-epc.val-parameter = string(de-imposto).
+
+   {include/i-epc201.i "Value_of_de-imposto"}
+
+   find first tt-epc 
+        where tt-epc.cod-event     = "Value_of_de-imposto"
+        and   tt-epc.cod-parameter = "de-imposto" no-error.
+
+   if  avail tt-epc then
+       assign de-imposto = decimal(tt-epc.val-parameter).
+
+   for each tt-epc:
+       delete tt-epc.
+   end.
+&endif
+
+/* FIM Chamada UPC */
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "O|_013_-_IMPOSTO_A_RECOLHER" *}
+put c-sep at 1
+    " " + TRIM(RETURN-VALUE) FORMAT "X(29)"
+    c-sep at 82
+    c-sep at (if c-moeda <> "" then 87 else 107)
+    de-imposto                format ">>>>>,>>>,>>>,>>9.99" 
+    at (if c-moeda <> "" then 88 else 112) c-sep at 132.
+
+/****************************************************************************/
+
+if i-moeda <> 0 then
+    put "|" at 4 round(credito-1 / de-conv,3)
+                                  format ">>>>,>>>,>>>,>>9.999" to 131.
+
+if  de-debito < de-credito then
+    assign credito-1  = (de-credito - de-debito) + de-deducao.
+
+/* INICIO Chamada UPC */
+
+&if '{&bf_dis_versao_ems}' >= '2.062' &then
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_credito-1"
+          tt-epc.cod-parameter = "cod-estabel"
+          tt-epc.val-parameter = apur-imposto.cod-estabel.
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_credito-1"
+          tt-epc.cod-parameter = "dt-apur-ini"
+          tt-epc.val-parameter = string(apur-imposto.dt-apur-ini).
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_credito-1"
+          tt-epc.cod-parameter = "dt-apur-fim"
+          tt-epc.val-parameter = string(apur-imposto.dt-apur-fim).
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_credito-1"
+          tt-epc.cod-parameter = "tp-imposto"
+          tt-epc.val-parameter = string(apur-imposto.tp-imposto).
+   create tt-epc.
+   assign tt-epc.cod-event     = "Value_of_credito-1"
+          tt-epc.cod-parameter = "credito-1"
+          tt-epc.val-parameter = string(credito-1).
+
+   {include/i-epc201.i "Value_of_credito-1"}
+
+   find first tt-epc 
+        where tt-epc.cod-event     = "Value_of_credito-1"
+        and   tt-epc.cod-parameter = "credito-1" no-error.
+
+   if  avail tt-epc then
+       assign credito-1 = decimal(tt-epc.val-parameter).
+
+   for each tt-epc:
+       delete tt-epc.
+   end.
+&endif
+
+/* FIM Chamada UPC */
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "|_014_-_SALDO_CREDOR(CRêDITO_MENOS_DêBITO)" *}
+put c-sep at 1
+    TRIM(RETURN-VALUE) FORMAT "X(42)"  at 4
+    c-sep at 82            
+    c-sep at 107
+    c-sep at 132
+    c-sep at 1.
+    
+{utp/ut-liter.i "|_______A_TRANSPORTAR_PARA_O_PER÷ODO_SEGUINTE" *}
+put TRIM(RETURN-VALUE) FORMAT "X(45)" at 4
+    c-sep at 82
+    c-sep at (if c-moeda <> "" then 87 else 107)
+    credito-1                 format ">>>>>,>>>,>>>,>>9.99"
+    at (if c-moeda <> "" then 88 else 112) c-sep at 132.  
+
+/***************************/
+
+assign i-pag-print = 11.
+
+for each imposto-guia fields() of apur-imposto no-lock:
+    assign i-pag-print = i-pag-print + 1.
+end.
+
+for each tt-editor where tt-editor.linha > 1
+    AND LINE-COUNTER >= PAGE-SIZE:
+    assign i-pag-print = i-pag-print + 1.
+end.
+
+{intprg/ni0302.i7}.
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "INFORMAÄÂES_COMPLEMENTARES" *}
+put c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip                           
+    c-sep at 1  
+    TRIM(RETURN-VALUE) FORMAT "X(26)" at 30 
+    c-sep at 132 skip
+    c-sepa at 1 fill("-",130) format "x(130)" c-sepa skip.
+    
+{utp/ut-liter.i "GUIAS_DE_RECOLHIMENTO" *}
+put c-sep at 1 TRIM(RETURN-VALUE) FORMAT "X(22)" at 30 .
+
+{utp/ut-liter.i "GUIA_DE_INFORMAÄ«O" *}
+put TRIM(RETURN-VALUE) FORMAT "X(18)" at 90  
+    c-sep at 132
+    c-sep at 1
+    c-sep at 132 
+    c-sep at 1.
+    
+{utp/ut-liter.i "NÈMERO__DATA_____________________VALOR___ORG«O_ARRECADADOR________________DATA_DA_ENTREGA____LOCAL_DA_ENTREGA" *}
+put "               " + TRIM(RETURN-VALUE) FORMAT "X(124)"
+    c-sep at 132
+    c-sep at 1.
+    
+{utp/ut-liter.i "BANCO/REPARTIÄ«O" *}
+put "                                                                                                           (" + TRIM(RETURN-VALUE) + ")" FORMAT "X(125)"
+    c-sep at 132 
+    c-sep at 1
+    c-sep at 132. 
+
+assign l-primeiro = yes.
+
+for each imposto-guia fields ( nr-guia dt-guia vl-guia org-arrecad )
+         of apur-imposto no-lock:
+
+    run pi-acompanhar in h-acomp ( input string(imposto-guia.nr-guia)).
+
+    if  line-counter >= page-size then do:
+        assign i-num-pag = i-num-pag + 1.
+        page.
+    end.
+    
+    put c-sep at 1
+        imposto-guia.nr-guia     at 3   format ">>>>>>>>>>>>>>>>>>>9"
+        imposto-guia.dt-guia     at 25  format "99/99/9999" 
+        imposto-guia.vl-guia     at 37  format ">>>,>>>,>>>,>>9.99"   
+        imposto-guia.org-arrecad at 58  format "x(20)".
+             
+    if  l-primeiro then do:
+        put apur-imposto.dt-entrega  at  83 format "99/99/9999"
+            apur-imposto.loc-entrega at 102 format "x(30)" c-sep at 132.
+        assign l-primeiro = no.
+    end.
+    else 
+        put c-sep at 132.
+    
+end.
+
+run pi-print-editor (apur-imposto.observacao,80).
+
+/* Inicio -- Projeto Internacional */
+{utp/ut-liter.i "OBSERVAÄÂES" *}
+put c-sep at 1
+    c-sep at 132 skip
+    c-sep at 1 TRIM(RETURN-VALUE) + ": " FORMAT "X(15)".
+
+find first tt-editor no-error.
+
+if avail tt-editor then 
+   put tt-editor.conteudo at 15 c-sep at 132 skip.
+
+for each tt-editor where tt-editor.linha > 1:
+    run pi-imprime-termo(line-counter,1).
+    if  l-separadores then view frame f-diag.
+    else view frame f-cabec.
+    put c-sep at 1 tt-editor.conteudo at 15 c-sep at 132 skip.
+end.
+
+if  l-separadores then
+    assign c-linha-branco = c-sep + fill(" ",22) +
+           c-sep + fill(" ",20) + c-sep + fill(" ",21) + c-sep + fill(" ",21) +
+           c-sep + fill(" ",21) + c-sep + fill(" ",20) + c-sep
+           c-sepa = if c-sep <> "" then c-sep else "-".
+else
+    assign c-linha-branco = " ".
+ 
+assign l-impr-sep = yes. 
+
+do  while l-impr-sep:
+    
+    put c-sep at 1.       
+    
+    if  l-separadores then 
+        put c-sep at 132.
+    else
+        put c-sep at 132.
+    
+    if  line-counter >= page-size then
+        assign l-impr-sep = no.     
+end.  
+
+          
+/*  OF0717.I2  */                                          

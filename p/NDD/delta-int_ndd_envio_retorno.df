@@ -1,0 +1,85 @@
+
+ADD FIELD "protocolo" OF "int_ndd_envio" AS character 
+  DESCRIPTION "Protocolo de envio NDD"
+  FORMAT "x(12)"
+  INITIAL ""
+  LABEL "Protocolo"
+  POSITION 13
+  MAX-WIDTH 24
+  COLUMN-LABEL "Prot"
+  HELP "Protocolo de envio NDD"
+  ORDER 120
+
+ADD INDEX "NOTA" ON "int_ndd_envio" 
+  AREA "Schema Area"
+  INDEX-FIELD "cod_estabel" ASCENDING 
+  INDEX-FIELD "serie" ASCENDING 
+  INDEX-FIELD "nr_nota_fis" ASCENDING 
+  INDEX-FIELD "dt_envio" ASCENDING 
+  INDEX-FIELD "hr_envio" ASCENDING 
+
+ADD FIELD "cod_estabel" OF "int_ndd_retorno" AS character 
+  DESCRIPTION "Codigo do estabelecimento"
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelec"
+  POSITION 6
+  MAX-WIDTH 6
+  COLUMN-LABEL "Est"
+  HELP "Codigo do estabelecimento"
+  ORDER 50
+
+ADD FIELD "serie" OF "int_ndd_retorno" AS character 
+  DESCRIPTION "Serie da nota fiscal"
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 7
+  MAX-WIDTH 10
+  COLUMN-LABEL "Ser"
+  HELP "Serie da nota fiscal"
+  ORDER 60
+
+ADD FIELD "nr_nota_fis" OF "int_ndd_retorno" AS character 
+  DESCRIPTION "Numero da nota fiscal"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nr Nota"
+  POSITION 8
+  MAX-WIDTH 32
+  COLUMN-LABEL "Nota"
+  HELP "Numero da nota fiscal"
+  ORDER 70
+
+ADD FIELD "dt_envio" OF "int_ndd_retorno" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Dt Envio"
+  POSITION 9
+  MAX-WIDTH 4
+  ORDER 80
+
+ADD FIELD "hr_envio" OF "int_ndd_retorno" AS integer 
+  FORMAT ">>>,>>9"
+  INITIAL "0"
+  LABEL "Hr Envio"
+  POSITION 10
+  MAX-WIDTH 4
+  ORDER 90
+
+ADD FIELD "protocolo" OF "int_ndd_retorno" AS character 
+  DESCRIPTION "Protocolo de envio NDD"
+  FORMAT "x(12)"
+  INITIAL ""
+  LABEL "Protocolo"
+  POSITION 11
+  MAX-WIDTH 24
+  COLUMN-LABEL "Prot"
+  HELP "Protocolo de envio NDD"
+  ORDER 100
+
+.
+PSC
+cpstream=ibm850
+.
+0000005313

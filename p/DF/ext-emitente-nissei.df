@@ -1,0 +1,17 @@
+ADD FIELD "shelflife" OF "ext-emitente-nissei" AS integer 
+  DESCRIPTION "Shelflife"
+  FORMAT ">>>9"
+  INITIAL "0"
+  LABEL "Shelflife"
+  POSITION 5
+  MAX-WIDTH 4
+  COLUMN-LABEL "Shelflife"
+  HELP "Shelflife"
+  ORDER 50
+
+
+.
+PSC
+cpstream=ibm850
+.
+0000000989

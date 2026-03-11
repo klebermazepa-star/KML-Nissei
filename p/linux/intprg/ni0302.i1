@@ -1,0 +1,23 @@
+/***************************************************************************
+**
+**    OF0717.I1 - Impressao dos termos de abertura e encerramento
+**
+*****************************************************************************/
+
+do:
+    hide all no-pause.
+    page. 
+    /*run pi-print-editor ({1}.texto, 60).
+    put skip(10) space(41) {1}.descricao skip
+        space(41) fill("-", 40) format "x(40)" skip(5).
+    for each tt-editor:
+       put space(26) tt-editor.conteudo skip.
+    end.*/
+
+    run ofp/of0717b.p (input {1}.texto,
+                       input {1}.descricao).
+
+    page.
+end.
+
+/* OF0717.I1 */

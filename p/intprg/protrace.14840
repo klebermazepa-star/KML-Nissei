@@ -1,0 +1,114 @@
+=====================================================
+PROGRESS stack trace as of Thu Nov 29 14:14:54 2018
+=====================================================
+
+Progress OpenEdge Release 11.7 build 1592 SP03 on WINNT 
+
+Startup parameters:
+-pf C:\totvs\progress\oe11\startup.pf,-cpinternal ISO8859-1,-cpstream ISO8859-1,-cpcoll Basic,-cpcase Basic,-d dmy,-numsep 46,-numdec 44,(end .pf),-pf //192.168.200.77/Totvs12/scripts-8080/datasul.pf,-mmax 10248,-l 30720,-s 16384,-TB 31,-TM 32,-d dmy,-Bt 20480,-tmpbsize 8,-Mr 512,-D 2048,-nb 255,-Mm 16384,-cpstream ibm850,-cpterm iso8859-1,-inp 32000,-h 50,-numsep 46,-numdec 44,-noincrwarn,-T c:\totvs\progress\oework,-q,-ct 1,-wss,-mc,-db emsfnd,-ld emsfnd,-S 24000,-H 192.168.200.96,-N tcp,(end .pf),-ininame //192.168.200.77/Totvs12/scripts-8080/datasul-progress.ini,-p //192.168.200.77/Totvs12/scripts-8080/datasul-configxml-alias.r,-param ,,33490,999902,H+Xa3xBnuQPrzC4tosFfpjCIjtM=,0,,DI,8080,BB71839B6FF780D7BFBEAF36CD294DF5.W999DS0218080,192.168.200.77,menu-html,false,true,,192.168.200.70,w999ds020.intra.drogariasnissei.com.br,,,,,false,,true,-T T:\
+
+Exception code: E0000003 
+Fault address:  77055EF8 01:00014EF8 C:\Windows\SYSTEM32\KERNELBASE.dll
+
+Registers:
+EAX:001CE398
+EBX:00000002
+ECX:00000000
+EDX:00000003
+ESI:00000002
+EDI:0028EF60
+CS:EIP:0023:77055EF8
+SS:ESP:002B:001CE398  EBP:001CE3F4
+DS:002B  ES:002B  FS:0053  GS:002B
+Flags:00000246
+
+
+Debugging dll: C:\totvs\progress\oe11\bin\DBGHELP.DLL
+Symbol Path:
+ C:\totvs\progress\oe11\bin;C:\totvs\progress\oe11\pdbfiles
+
+
+Call Stack:
+Address   Frame
+77055EF8  001CE3F4  RaiseException+48
+73882FC4  001CE518  dbut_utfcomplen+6FA4
+7540020B  001CE534  WindowFromDC+16B
+75400219  001CE580  WindowFromDC+179
+74C04965  001CEA74  CloseThemeData+6A5
+73563B28  001CEAB4  dbut_utfIsLink+71388
+7387BF50  001CEACC  dbut_utfpsep+180
+7356433B  001CEB08  dbut_utfIsLink+71B9B
+735F0000  001CEC08  dbut_utfIsLink+FD860
+753F90D1  001CEC9C  CallNextHookEx+311
+753F932C  001CED10  CallNextHookEx+56C
+753FE0B8  001CED38  IsWindowVisible+38
+
+
+** ABL Stack Trace **
+
+--> call_sew_getHandle adeuib/_uibmain.p at line 6762  (adeuib/_uibmain.r)
+    call_sew adeuib/_uibmain.p at line 6657  (adeuib/_uibmain.r)
+    choose_codedit adeuib/_uibmain.p at line 7608  (adeuib/_uibmain.r)
+    USER-INTERFACE-TRIGGER adeuib/_uibmain.p at line 4958  (adeuib/_uibmain.r)
+    adeuib/_uibmain.p at line 5846  (adeuib/_uibmain.r)
+    _ab.p at line 394  (C:\totvs\progress\oe11\gui\_ab.r)
+    _RunTool adeedit/_proedit.p at line 2884  (adeedit/_proedit.r)
+    USER-INTERFACE-TRIGGER adeedit/_proedit.p at line 3236  (adeedit/_proedit.r)
+    adeedit/_proedit.p at line 12318  (adeedit/_proedit.r)
+    _edit.p at line 408  (C:\totvs\progress\oe11\gui\_edit.r)
+    pi-executa-programa-nao-cadastrado men/men702dd.p at line 1780  (\\192.168.200.77\Totvs12\fnd\men\men702dd.r)
+    pi-executa men/men702dd.p at line 1523  (\\192.168.200.77\Totvs12\fnd\men\men702dd.r)
+    executeProgram men/men906za.p at line 2432  (\\192.168.200.77\Totvs12\fnd\men\men906za.r)
+    men/men702dc.w at line 1768  (\\192.168.200.77\Totvs12\fnd\men\men702dc.r)
+    pi-executa-programa men/men702dd.p at line 1843  (\\192.168.200.77\Totvs12\fnd\men\men702dd.r)
+    pi-executa men/men702dd.p at line 1644  (\\192.168.200.77\Totvs12\fnd\men\men702dd.r)
+    executeProgram men/men906za.p at line 2432  (\\192.168.200.77\Totvs12\fnd\men\men906za.r)
+    protocolBroker men/men906za.p at line 3488  (\\192.168.200.77\Totvs12\fnd\men\men906za.r)
+    readProcedure men/men906za.p at line 3553  (\\192.168.200.77\Totvs12\fnd\men\men906za.r)
+    men/men906za.p at line -1  (\\192.168.200.77\Totvs12\fnd\men\men906za.r)
+    //192.168.200.77/Totvs12/scripts-8080/datasul-configxml-alias.r at line 20  (\\192.168.200.77\Totvs12\scripts-8080\datasul-configxml-alias.r)
+
+** Persistent procedures/Classes **
+
+Handle  File Name
+004605  adeshar/_mlmgr.r
+004483  adeuib/_abfuncs.r
+003971  adecomm/as-utils.r
+003374  adecomm/_winmenu.r
+001220  C:\totvs\progress\oe11\gui\_edit.r
+001218  \\192.168.200.77\Totvs12\fnd\men\men702dd.r
+001202  \\192.168.200.77\Totvs12\fnd\men\men702dc.r
+001200  \\192.168.200.77\Totvs12\fnd\men\men702dd.r
+001189  \\192.168.200.77\Totvs12\fnd\utp\windowstyles.r
+001178  \\192.168.200.77\Totvs12\fnd\utp\ut-rsocial.r
+001089  \\192.168.200.77\Totvs12\hcm\prghur\fpp\fp9200.r
+001068  \\192.168.200.77\Totvs12\fnd\btb\btb920aa.r
+000000  \\192.168.200.77\Totvs12\fnd\com\totvs\datasul\fluig\FluigProperties.r (STATIC)
+001055  \\192.168.200.77\Totvs12\fnd\com\totvs\datasul\eai\db\DBAppRepository.r
+001054  \\192.168.200.77\Totvs12\fnd\com\totvs\datasul\eai\db\DBHistoryManager.r
+001053  \\192.168.200.77\Totvs12\fnd\com\totvs\datasul\eai\db\DBMessageRepository.r
+001052  \\192.168.200.77\Totvs12\fnd\com\totvs\datasul\eai\db\DBConfigurationProvider.r
+001052  \\192.168.200.77\Totvs12\fnd\com\totvs\datasul\eai\IConfigurationProvider.r
+001051  \\192.168.200.77\Totvs12\eai2\com\totvs\datasul\util\Properties.r
+001049  \\192.168.200.77\Totvs12\eai2\com\totvs\datasul\eai\ConfigurationManager.r
+000000  \\192.168.200.77\Totvs12\eai2\com\totvs\datasul\eai\ConfigurationManager.r (STATIC)
+001047  \\192.168.200.77\Totvs12\fnd\com\totvs\datasul\eai\DatasulPropertyProvider.r
+001046  \\192.168.200.77\Totvs12\eai2\com\totvs\datasul\eai\EAILog.r
+000000  \\192.168.200.77\Totvs12\eai2\com\totvs\datasul\eai\EAILog.r (STATIC)
+001041  \\192.168.200.77\Totvs12\fnd\btb\btb906zb.r
+001040  \\192.168.200.77\Totvs12\fnd\prgtec\btb\btb901zo.r
+001035  \\192.168.200.77\Totvs12\ems2\utp\ut-log.r
+001015  \\192.168.200.77\Totvs12\fnd\btb\btb432zg.r
+001013  \\192.168.200.77\Totvs12\fnd\btb\btb432za.r
+001006  \\192.168.200.77\Totvs12\fnd\utp\ut-encode.r
+001005  \\192.168.200.77\Totvs12\fnd\utp\ut-func.r
+001004  \\192.168.200.77\Totvs12\fnd\utp\ut-win.r
+001002  \\192.168.200.77\Totvs12\fnd\btb\btb901zo.r
+001000  \\192.168.200.77\Totvs12\fnd\utp\ut-globalsession.r
+
+** PROPATH **
+\\192.168.200.77\Totvs12\_custom_prod\audit,\\192.168.200.77\Totvs12\_custom_prod\prgtec,\\192.168.200.77\Totvs12\_custom_prod\NDD,\\192.168.200.77\Totvs12\_custom_prod,\\192.168.200.77\Totvs12\_quarentena_prod\fnd,\\192.168.200.77\Totvs12\fnd,\\192.168.200.77\Totvs12\fnd\interfac\DLLOffice,\\192.168.200.77\Totvs12\_quarentena_prod\ems2,\\192.168.200.77\Totvs12\ems2,\\192.168.200.77\Totvs12\_quarentena_prod\ems5,\\192.168.200.77\Totvs12\ems5,\\192.168.200.77\Totvs12\_quarentena_prod\hcm,\\192.168.200.77\Totvs12\hcm,\\192.168.200.77\Totvs12\_quarentena_prod\eai,\\192.168.200.77\Totvs12\eai,\\192.168.200.77\Totvs12\_quarentena_prod\eai2,\\192.168.200.77\Totvs12\eai2,\\192.168.200.77\Totvs12\_quarentena_prod\crm,\\192.168.200.77\Totvs12\crm,\\192.168.200.77\Totvs12\_quarentena_prod\crm\database,\\192.168.200.77\Totvs12\crm\database,\\192.168.200.77\Totvs12\_quarentena_prod\crm\integracoes,\\192.168.200.77\Totvs12\crm\integracoes,\\192.168.200.77\Totvs12\_quarentena_prod\ddk,\\192.168.200.77\Totvs12\ddk,\\192.168.200.77\Totvs12\_quarentena_prod\DDKGui,\\192.168.200.77\Totvs12\DDKGui,C:\totvs\progress\oe11\gui\ablunit.pl,C:\totvs\progress\oe11\gui\adetran.pl,C:\totvs\progress\oe11\gui\adeuib.pl,C:\totvs\progress\oe11\gui\adeweb.pl,C:\totvs\progress\oe11\gui\adexml.pl,C:\totvs\progress\oe11\gui\OpenEdge.BusinessLogic.pl,C:\totvs\progress\oe11\gui\OpenEdge.Core.pl,C:\totvs\progress\oe11\gui\OpenEdge.ServerAdmin.pl,C:\totvs\progress\oe11\gui\adecomm.pl,C:\totvs\progress\oe11\gui\adecomp.pl,C:\totvs\progress\oe11\gui\adedesk.pl,C:\totvs\progress\oe11\gui\adedict.pl,C:\totvs\progress\oe11\gui\adeedit.pl,C:\totvs\progress\oe11\gui\adeicon.pl,C:\totvs\progress\oe11\gui\aderes.pl,C:\totvs\progress\oe11\gui\adeshar.pl,C:\totvs\progress\oe11\gui\dataadmin.pl,C:\totvs\progress\oe11\gui\prodict.pl,C:\totvs\progress\oe11\gui\protools.pl,C:\totvs\progress\oe11,C:\totvs\progress\oe11\bin,C:\totvs\progress\oe11\gui,
+
+** Databases (logical/type/physical) **
+
+** End of Protrace **

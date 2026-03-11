@@ -1,0 +1,114 @@
+/****************************************************************************
+**
+** FT0717.I1
+** 
+*****************************************************************************/ 
+
+&IF "{&bf_dis_versao_ems}" >= "2.02" &THEN
+
+    /* DESCONTOS */
+    if para-fat.log-ctblz-desc
+    and it-nota-fisc.vl-merc-ori > it-nota-fisc.vl-merc-liq
+    and nota-fiscal.emite-duplic = yes 
+    and natur-oper.emite-duplic  = yes 
+    AND conta-ft.cod-cta-desc <> "":U then do:
+
+        assign de-vl-contab = (it-nota-fisc.vl-merc-ori - it-nota-fisc.vl-merc-liq) * de-fator.
+
+        /* Receita de Vendas */
+        {ftp/ft0717.i2 conta-ft.ct-recven de-vl-contab 20 conta-ft.sc-recven it-nota-fisc.cod-unid-negoc}
+        
+        if l-indicador then do:
+            {ftp/ft0708a.i6 "(it-nota-fisc.vl-merc-ori - it-nota-fisc.vl-merc-liq)" "yes"}
+        end.    
+
+        assign de-vl-contab = de-vl-contab * -1.
+        
+        assign c-parametro    = estabelec.ct-recven
+               c-cc-parametro = estabelec.sc-recven.
+        
+
+        {ftp/ft0717.i2 c-parametro de-vl-contab 20 c-cc-parametro it-nota-fisc.cod-unid-negoc}
+
+        if l-indicador then do:
+            {ftp/ft0708a.i6 "(it-nota-fisc.vl-merc-ori - it-nota-fisc.vl-merc-liq)" "no"}
+        end.    
+
+        assign de-vl-contab = (it-nota-fisc.vl-merc-ori - it-nota-fisc.vl-merc-liq) * de-fator.    
+
+        /* Desconto */
+        assign c-parametro    = estabelec.ct-recven
+               c-cc-parametro = estabelec.sc-recven.
+
+        {ftp/ft0717.i2 c-parametro de-vl-contab 20 c-cc-parametro it-nota-fisc.cod-unid-negoc}
+        
+        assign de-vl-contab = de-vl-contab * -1.
+
+        {ftp/ft0717.i2 conta-ft.cod-cta-desc de-vl-contab 24 conta-ft.cod-ccusto-desc it-nota-fisc.cod-unid-negoc}
+
+        if l-indicador then do:
+            {ftp/ft0708a.i6 "(it-nota-fisc.vl-merc-ori - it-nota-fisc.vl-merc-liq)" "no"}
+        end.    
+    END.
+&ENDIF
+
+       /* RECEITA DE VENDAS */ 
+       
+       /***IVA Taxado***/
+       if avail fat-duplic then do:
+           for each it-nota-imp where
+                    it-nota-imp.cod-estabel = it-nota-fisc.cod-estabel and   
+                    it-nota-imp.serie       = it-nota-fisc.serie       and   
+                    it-nota-imp.nr-nota-fis = nota-fiscal.nr-nota-fis  and   
+                    it-nota-imp.nr-seq-fat  = it-nota-fisc.nr-seq-fat  and   
+                    it-nota-imp.it-codigo   = it-nota-fisc.it-codigo exclusive-lock:
+
+               if  can-find(first  tipo-tax 
+                   where tipo-tax.cod-tax = it-nota-imp.cod-taxa
+                     and tipo-tax.tipo    = 3
+                     AND tipo-tax.ind-tip-calc = 3) then /* IVA Taxado */
+
+               assign de-vl-contab = (de-valor - it-nota-imp.vl-imposto)* de-fator
+                      de-valor = de-vl-contab.
+           END.
+       END.
+       assign de-vl-contab = de-valor * de-fator.
+       
+       /* Receita Exporta‡Æo - Para notas fiscais de exporta‡Æo as despesas que formam *
+        * pre‡o de venda devem ser contabilizadas juntamente com a receita             */
+       IF  i-pais-impto-usuario <> 1
+       AND param-global.modulo-ex
+       AND emitente.natureza > 3 THEN .
+           assign de-vl-contab = de-vl-contab + it-nota-fisc.vl-despes-it.       
+       
+       
+       /* cria sumar-ft e soma o valor padrao - credito */
+       {ftp/ft0717.i2 conta-ft.ct-recven de-vl-contab 20 conta-ft.sc-recven it-nota-fisc.cod-unid-negoc}
+
+       /* adiciona o valor fasb */
+       if  l-fasb = yes
+       or  l-cmi  = yes then
+           run ftp/ft0708i.p (input rowid(sumar-ft),
+                           input nota-fiscal.vl-merc-tot-fat,
+                           input de-valor,
+                           input yes /* credito */).    
+
+       /* cria sumar-ft e soma o valor padrao - debito  */
+       assign de-vl-contab = de-valor * (-1) * de-fator.
+
+       
+       assign c-parametro    = estabelec.ct-recven
+              c-cc-parametro = estabelec.sc-recven.
+       
+
+       {ftp/ft0717.i2 c-parametro de-vl-contab 20 c-cc-parametro it-nota-fisc.cod-unid-negoc}
+
+       /* adiciona o valor fasb*/
+       if  l-fasb = yes
+       or  l-cmi  = yes then
+           run ftp/ft0708i.p (input rowid(sumar-ft),
+                           input nota-fiscal.vl-merc-tot-fat,
+                           input de-valor,
+                           input no /* debito */).
+
+/*ftp/ft0717.i1*/

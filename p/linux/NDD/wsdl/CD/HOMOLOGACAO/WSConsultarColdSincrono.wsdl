@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://nddigital.com.br/eForms/webservices" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://nddigital.com.br/eForms/webservices" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://nddigital.com.br/eForms/webservices">
+      <s:element name="ConsultarDocumento">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="xml" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultarDocumentoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarDocumentoResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ConsultarDocumentoSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarDocumento" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarDocumentoSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarDocumentoResponse" />
+  </wsdl:message>
+  <wsdl:portType name="WSConsultarColdSincronoSoap">
+    <wsdl:operation name="ConsultarDocumento">
+      <wsdl:input message="tns:ConsultarDocumentoSoapIn" />
+      <wsdl:output message="tns:ConsultarDocumentoSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WSConsultarColdSincronoSoap" type="tns:WSConsultarColdSincronoSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarDocumento">
+      <soap:operation soapAction="http://nddigital.com.br/eForms/webservices/ConsultarDocumento" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="WSConsultarColdSincronoSoap12" type="tns:WSConsultarColdSincronoSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarDocumento">
+      <soap12:operation soapAction="http://nddigital.com.br/eForms/webservices/ConsultarDocumento" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WSConsultarColdSincrono">
+    <wsdl:port name="WSConsultarColdSincronoSoap" binding="tns:WSConsultarColdSincronoSoap">
+      <soap:address location="http://192.168.100.176/eFormsWebServices/WSConsultarColdSincrono.asmx" />
+    </wsdl:port>
+    <wsdl:port name="WSConsultarColdSincronoSoap12" binding="tns:WSConsultarColdSincronoSoap12">
+      <soap12:address location="http://192.168.100.176/eFormsWebServices/WSConsultarColdSincrono.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

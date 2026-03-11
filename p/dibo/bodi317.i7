@@ -1,0 +1,16 @@
+/********************************************************************************
+** Copyright DATASUL S.A. (1997)
+** Todos os Direitos Reservados.
+**
+** Este fonte e de propriedade exclusiva da DATASUL, sua reproducao
+** parcial ou total por qualquer meio, so podera ser feita mediante
+** autorizacao expressa.
+*******************************************************************************/
+
+/* Include para determinar o tratamento de impostos para AM */
+DEF VAR l-america-latina AS LOG NO-UNDO.
+ASSIGN l-america-latina = (   i-pais-impto-usuario = 17 /* Colombia */
+                           OR i-pais-impto-usuario = 4  /* Mexico mesmo tratamento da AM */
+                           OR i-pais-impto-usuario = 2  /* Argentina */ 
+                           OR i-pais-impto-usuario = 7  /* Chile */
+                           OR i-pais-impto-usuario = 9  /* Paraguay */).

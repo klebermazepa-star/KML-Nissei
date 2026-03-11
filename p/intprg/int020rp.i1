@@ -1,0 +1,1744 @@
+/*******************************************************
+**
+**  INT020RP.I1 - Include do programa INT020RP.P
+**
+*******************************************************/
+
+procedure gera-duplicatas:
+    i-cont  = 0.
+    i-cont2 = 0.
+    de-vl-tot-dup = 0.
+
+    /* eliminando cst-fat-duplic anterior, se houver */
+    for each cst-fat-duplic exclusive where 
+        cst-fat-duplic.cod-estabel = c-cod-estabel and
+        cst-fat-duplic.serie       = c-serie and
+        cst-fat-duplic.nr-fatura   = c-num-nota
+        query-tuning(no-lookahead):
+        delete cst-fat-duplic.
+    end.
+
+    if c-status <> "C" /* cancelado */ then do:
+        /*
+        if de-valor-dinh <> 0 and
+           de-valor-dinh < de-vl-tot-cup then do:
+            assign i-seq-fat-duplic = i-seq-fat-duplic + 1.
+            assign i-cont  = i-cont + 1.
+            create tt-fat-duplic.
+            assign tt-fat-duplic.seq-tt-fat-duplic = i-seq-fat-duplic
+                   tt-fat-duplic.seq-tt-docto      = i-nr-registro
+                   tt-fat-duplic.cod-vencto        = 3 /* antecipacao */
+                   tt-fat-duplic.dt-venciment      = d-dt-emissao
+                   tt-fat-duplic.dt-desconto       = ? /*tt-fat-duplic.dt-venciment*/
+                   tt-fat-duplic.vl-desconto       = 0
+                   tt-fat-duplic.parcela           = trim(string(i-cont,"99"))
+                   tt-fat-duplic.vl-parcela        = de-valor-dinh
+                   tt-fat-duplic.vl-comis          = 0
+                   tt-fat-duplic.vl-acum-dup       = de-vl-tot-dup + tt-fat-duplic.vl-parcela
+                   tt-fat-duplic.cod-esp           = "DI".
+            assign de-vl-tot-dup                   = de-vl-tot-dup + tt-fat-duplic.vl-parcela
+                   i-cont2                         = i-cont
+                   de-vl-tot-cup                   = de-vl-tot-cup - tt-fat-duplic.vl-parcela.
+            create cst-fat-duplic.
+            buffer-copy tt-fat-duplic to cst-fat-duplic
+                assign cst-fat-duplic.cod-portador  = i-cod-port-dinh
+                       cst-fat-duplic.modalidade    = i-modalid-dinh
+                       cst-fat-duplic.cod-cond-pag  = i-cond-pag-dinh
+                       cst-fat-duplic.condipag      = string(i-cond-pag-dinh,"99")
+                       cst-fat-duplic.cod-estabel   = c-cod-estabel
+                       cst-fat-duplic.serie         = c-serie
+                       cst-fat-duplic.nr-fatura     = c-num-nota.
+                assign cst-fat-duplic.adm-cartao    = ""
+                       cst-fat-duplic.autorizacao   = ""
+                       cst-fat-duplic.nsu-admin     = ""
+                       cst-fat-duplic.nsu-numero    = ""
+                       cst-fat-duplic.taxa-admin    = 0.
+        end.
+        if de-valor-cartaoc <> 0 or 
+           de-valor-cartaod <> 0 or
+           de-valor-vale    <> 0 then do:
+           
+            for each tt-int-ds-nota-loja-cartao no-lock where 
+                tt-int-ds-nota-loja-cartao.cnpj_filial = int-ds-nota-loja.cnpj_filial and
+                tt-int-ds-nota-loja-cartao.serie = int-ds-nota-loja.serie and
+                tt-int-ds-nota-loja-cartao.num_nota = int-ds-nota-loja.num_nota
+                query-tuning(no-lookahead):
+                if tt-int-ds-nota-loja-cartao.valor <= 0 then next.
+                
+                if tt-int-ds-nota-loja-cartao.vencimento < int-ds-nota-loja.emissao then do:
+                    /*
+                    assign i-erro = 47
+                           c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + "CNPJ Filial: " + string(int-ds-nota-loja.cnpj_filial) + 
+                                          " Vencto.: " + string(tt-int-ds-nota-loja-cartao.vencimento,"99/99/9999") +
+                                          " Emiss∆o: " + string(int-ds-nota-loja.emissao,"99/99/9999")
+                           l-cupom-com-erro = yes.
+                    run gera-log. 
+                    return.
+                    */
+                    assign tt-int-ds-nota-loja-cartao.vencimento = int-ds-nota-loja.emissao.
+                end.
+                assign i-seq-fat-duplic = i-seq-fat-duplic + 1
+                       i-cont           = i-cont + 1
+                       i-cont2          = i-cont.
+                create tt-fat-duplic.
+                assign tt-fat-duplic.seq-tt-fat-duplic = i-seq-fat-duplic
+                       tt-fat-duplic.seq-tt-docto      = i-nr-registro
+                       tt-fat-duplic.cod-vencto        = tt-int-ds-nota-loja-cartao.cod-vencto
+                       tt-fat-duplic.dt-venciment      = tt-int-ds-nota-loja-cartao.vencimento
+                       tt-fat-duplic.dt-desconto       = ? 
+                       tt-fat-duplic.vl-desconto       = 0 /* tt-int-ds-nota-loja-cartao.taxa_admin */
+                       tt-fat-duplic.parcela           = trim(string(i-cont,"99"))
+                       tt-fat-duplic.vl-parcela        = tt-int-ds-nota-loja-cartao.valor  /* - tt-int-ds-nota-loja-cartao.taxa_admin */
+                       tt-fat-duplic.vl-comis          = 0
+                       tt-fat-duplic.vl-acum-dup       = de-vl-tot-dup + tt-fat-duplic.vl-parcela
+                       tt-fat-duplic.cod-esp           = tt-int-ds-nota-loja-cartao.cod-esp.
+                assign de-vl-tot-dup                   = de-vl-tot-dup + tt-fat-duplic.vl-parcela
+                       de-vl-tot-cup                   = de-vl-tot-cup - tt-fat-duplic.vl-parcela.
+                create cst-fat-duplic.
+                buffer-copy tt-fat-duplic to cst-fat-duplic
+                    assign cst-fat-duplic.cod-portador  = tt-int-ds-nota-loja-cartao.cod-portador
+                           cst-fat-duplic.modalidade    = tt-int-ds-nota-loja-cartao.modalidade
+                           cst-fat-duplic.cod-cond-pag  = tt-int-ds-nota-loja-cartao.cod-cond-pag
+                           cst-fat-duplic.adm-cartao    = tt-int-ds-nota-loja-cartao.adm_cartao
+                           cst-fat-duplic.autorizacao   = tt-int-ds-nota-loja-cartao.autorizacao
+                           cst-fat-duplic.condipag      = tt-int-ds-nota-loja-cartao.condipag
+                           cst-fat-duplic.nsu-admin     = substring(tt-int-ds-nota-loja-cartao.nsu_admin,1,10) /* retirar apos aumentado o campo */
+                           cst-fat-duplic.nsu-numero    = substring(tt-int-ds-nota-loja-cartao.nsu_numero,1,10) /* retirar apos aumentado o campo */
+                           cst-fat-duplic.taxa-admin    = tt-int-ds-nota-loja-cartao.taxa_admin
+                           cst-fat-duplic.cod-estabel   = c-cod-estabel
+                           cst-fat-duplic.serie         = c-serie
+                           cst-fat-duplic.nr-fatura     = c-num-nota.
+            end.
+        end.
+        i-num-parcelas = i-num-parcelas + i-cont2.
+        i-cont2 = i-cont2 + 1.
+        if de-vl-tot-cup > 0.01 then 
+        do i-cont = i-cont2 to i-num-parcelas:
+        
+            assign i-seq-fat-duplic = i-seq-fat-duplic + 1.
+            create tt-fat-duplic.
+            assign tt-fat-duplic.seq-tt-fat-duplic = i-seq-fat-duplic
+                   tt-fat-duplic.seq-tt-docto      = i-nr-registro
+                   tt-fat-duplic.cod-vencto        = i-cod-vencto
+                   tt-fat-duplic.dt-venciment      = d-dt-emissao + 
+                                                     i-prazos[i-cont]
+                   tt-fat-duplic.dt-desconto       = ? 
+                   tt-fat-duplic.vl-desconto       = 0
+                   tt-fat-duplic.parcela           = trim(string(i-cont,"99"))
+                   tt-fat-duplic.vl-parcela        = (if i-cont = i-num-parcelas then de-vl-tot-cup
+                                                      else (de-vl-tot-cup * de-per-pg-dup[i-cont] / 100))
+                   tt-fat-duplic.vl-comis          = 0
+                   tt-fat-duplic.vl-acum-dup       = de-vl-tot-dup + tt-fat-duplic.vl-parcela
+                   tt-fat-duplic.cod-esp           = c-cod-esp-princ.
+                   
+            assign de-vl-tot-dup                   = de-vl-tot-dup + tt-fat-duplic.vl-parcela
+                   de-vl-tot-cup                   = de-vl-tot-cup - tt-fat-duplic.vl-parcela.
+            
+            create cst-fat-duplic.
+            buffer-copy tt-fat-duplic to cst-fat-duplic
+                assign cst-fat-duplic.cod-portador  = i-cod-portador
+                       cst-fat-duplic.modalidade    = i-modalidade
+                       cst-fat-duplic.cod-cond-pag  = i-cod-cond-pag
+                       cst-fat-duplic.condipag      = c-condipag
+                       cst-fat-duplic.cod-estabel   = c-cod-estabel
+                       cst-fat-duplic.serie         = c-serie
+                       cst-fat-duplic.nr-fatura     = c-num-nota.
+                assign cst-fat-duplic.adm-cartao    = ""
+                       cst-fat-duplic.autorizacao   = ""
+                       cst-fat-duplic.nsu-admin     = ""
+                       cst-fat-duplic.nsu-numero    = ""
+                       cst-fat-duplic.taxa-admin    = 0.
+        end.
+        */
+
+        for each tt-int-ds-nota-loja-cartao no-lock where 
+            tt-int-ds-nota-loja-cartao.cnpj_filial = int-ds-nota-loja.cnpj_filial and
+            tt-int-ds-nota-loja-cartao.serie = int-ds-nota-loja.serie and
+            tt-int-ds-nota-loja-cartao.num_nota = int-ds-nota-loja.num_nota
+            query-tuning(no-lookahead):
+            if tt-int-ds-nota-loja-cartao.valor <= 0 then next.
+            
+            if tt-int-ds-nota-loja-cartao.vencimento < int-ds-nota-loja.emissao then do:
+                assign tt-int-ds-nota-loja-cartao.vencimento = int-ds-nota-loja.emissao.
+            end.
+            assign i-seq-fat-duplic = i-seq-fat-duplic + 1
+                   i-cont           = i-cont + 1.
+            create tt-fat-duplic.
+            assign tt-fat-duplic.seq-tt-fat-duplic = i-seq-fat-duplic
+                   tt-fat-duplic.seq-tt-docto      = i-nr-registro
+                   tt-fat-duplic.cod-vencto        = tt-int-ds-nota-loja-cartao.cod-vencto
+                   tt-fat-duplic.dt-venciment      = tt-int-ds-nota-loja-cartao.vencimento
+                   tt-fat-duplic.dt-desconto       = ? 
+                   tt-fat-duplic.vl-desconto       = 0
+                   tt-fat-duplic.parcela           = /*trim(string(i-cont,"99"))*/ string(tt-int-ds-nota-loja-cartao.parcela,"99")
+                   tt-fat-duplic.vl-parcela        = tt-int-ds-nota-loja-cartao.valor
+                   tt-fat-duplic.vl-comis          = 0
+                   tt-fat-duplic.vl-acum-dup       = de-vl-tot-dup + tt-fat-duplic.vl-parcela
+                   tt-fat-duplic.cod-esp           = tt-int-ds-nota-loja-cartao.cod-esp.
+            assign de-vl-tot-dup                   = de-vl-tot-dup + tt-fat-duplic.vl-parcela
+                   de-vl-tot-cup                   = de-vl-tot-cup - tt-fat-duplic.vl-parcela.
+                   
+            create cst-fat-duplic.
+            buffer-copy tt-fat-duplic to cst-fat-duplic
+                assign cst-fat-duplic.cod-portador  = tt-int-ds-nota-loja-cartao.cod-portador
+                       cst-fat-duplic.modalidade    = tt-int-ds-nota-loja-cartao.modalidade
+                       cst-fat-duplic.cod-cond-pag  = tt-int-ds-nota-loja-cartao.cod-cond-pag
+                       cst-fat-duplic.adm-cartao    = tt-int-ds-nota-loja-cartao.adm_cartao
+                       cst-fat-duplic.autorizacao   = tt-int-ds-nota-loja-cartao.autorizacao
+                       cst-fat-duplic.condipag      = tt-int-ds-nota-loja-cartao.condipag
+                       cst-fat-duplic.nsu-admin     = substring(tt-int-ds-nota-loja-cartao.nsu_admin,1,10) /* retirar apos aumentado o campo */
+                       cst-fat-duplic.nsu-numero    = substring(tt-int-ds-nota-loja-cartao.nsu_numero,1,10) /* retirar apos aumentado o campo */
+                       cst-fat-duplic.taxa-admin    = tt-int-ds-nota-loja-cartao.taxa_admin
+                       cst-fat-duplic.cod-estabel   = c-cod-estabel
+                       cst-fat-duplic.serie         = c-serie
+                       cst-fat-duplic.nr-fatura     = c-num-nota.
+        end.
+
+        if not can-find(first tt-fat-duplic where
+                        tt-fat-duplic.seq-tt-docto = i-nr-registro) then do:
+           run pi-erros-nota (input 15299, input trim(return-value)).
+           return.
+        end.
+        create tt-fat-repre.
+        assign tt-fat-repre.seq-tt-docto = i-nr-registro
+               tt-fat-repre.sequencia    = 1
+               tt-fat-repre.cod-rep      = i-cod-rep
+               tt-fat-repre.nome-ab-rep  = c-nome-repres
+               tt-fat-repre.perc-comis   = 0
+               tt-fat-repre.comis-emis   = 0
+               tt-fat-repre.vl-comis     = 0
+               tt-fat-repre.vl-emis      = 0.
+    end.
+end.
+
+procedure valida-registro-cabecalho.
+    
+    define buffer bint-ds-nota-loja-item for int-ds-nota-loja-item.
+
+    if i-nr-registro mod 100 = 0 then
+        run pi-acompanhar in h-acomp (input "Validando cupom").
+
+    assign  c-cod-estabel = ""
+            c-estado      = ""
+            c-cidade      = ""
+            c-bairro      = ""
+            c-endereco    = ""
+            c-pais        = ""
+            i-cep         = 0
+            i-ep-codigo   = &if "{&bf_dis_versao_ems}" < "2.07" &THEN
+                            0 &else "" &endif. 
+    for each estabelec 
+        fields (cod-estabel estado cidade 
+                cep pais endereco bairro ep-codigo) 
+        no-lock where
+        estabelec.cgc = int-ds-nota-loja.cnpj_filial,
+        first cst-estabelec no-lock where 
+        cst-estabelec.cod-estabel = estabelec.cod-estabel and
+        cst-estabelec.dt-fim-operacao >= d-dt-emissao:
+        assign c-cod-estabel = estabelec.cod-estabel
+               c-estado      = estabelec.estado
+               c-cidade      = estabelec.cidade
+               c-bairro      = estabelec.bairro
+               c-endereco    = estabelec.endereco
+               c-pais        = estabelec.pais
+               i-cep         = estabelec.cep
+               i-ep-codigo   = estabelec.ep-codigo.                                     
+        leave.
+    end.
+                            
+    for first param-estoq no-lock: 
+        if month (param-estoq.ult-fech-dia) = 12 then 
+            assign c-aux = string(year(param-estoq.ult-fech-dia) + 1,"9999") + "01".
+        else
+            assign c-aux = string(year(param-estoq.ult-fech-dia),"9999") + string(month(param-estoq.ult-fech-dia) + 1,"99").
+        
+        if (c-aux = string(year(d-dt-emissao),"9999") + string(month(d-dt-emissao),"99") and
+           (param-estoq.fase-medio <> 1 or param-estoq.pm-j†-ini = yes)) or
+            param-estoq.ult-fech-dia >= d-dt-emissao then do:
+            assign i-erro = 51
+                   c-informacao = "SÇrie: "   + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + 
+                                  "Estab: "   + c-cod-estabel                               + " - " +
+                                  "Emiss∆o: " + string(d-dt-emissao,"99/99/9999")           + " - " +
+                                  "Valor: "   + string(int-ds-nota-loja.valor_total)
+                   l-cupom-com-erro = yes.
+            run gera-log. 
+            return.
+        end.                
+    end.
+
+    if c-cod-estabel = "" then
+    do:
+       assign i-erro = 30
+              c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + "CNPJ Filial: " + string(int-ds-nota-loja.cnpj_filial)
+              l-cupom-com-erro = yes.
+       run gera-log. 
+       return.
+    end.
+    if c-cod-estabel = "500" then
+    do:
+       assign i-erro = 30
+              c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + "CNPJ Filial: " + string(int-ds-nota-loja.cnpj_filial)
+              l-cupom-com-erro = yes.
+       run gera-log. 
+       return.
+    end.
+    
+
+   FOR FIRST estabelec NO-LOCK
+       WHERE estabelec.cod-estabel = c-cod-estabel:
+   END.
+   
+   if  int(int-ds-nota-loja.serie) = 1 and 
+       int-ds-nota-loja.num_identi begins "cont"
+   then
+       assign c-serie = "801".
+   else do:
+       if (int(int-ds-nota-loja.serie) = 1 and 
+           not int-ds-nota-loja.num_identi begins "cont")
+       then
+           assign c-serie = estabelec.serie-manual.
+       else
+           assign c-serie = trim(int-ds-nota-loja.serie).
+   end.
+
+   if  c-serie = ? 
+   then 
+       assign c-serie = trim(int-ds-nota-loja.serie).
+       
+   
+   for first ser-estab no-lock where
+        ser-estab.serie = c-serie and
+        ser-estab.cod-estabel = c-cod-estabel: 
+   end.
+   if not avail ser-estab then do:
+      assign i-erro = 36
+             c-informacao = "Nr. Nota: " + c-num-nota + " - " + 
+                            "SÇrie: " + c-serie + " - " + "Estab.: " + c-cod-estabel
+             l-cupom-com-erro = yes.
+      run gera-log. 
+      return.
+   end.  
+
+    
+    if int-ds-nota-loja.valor_convenio <> 0 and (
+       decimal(trim(OnlyNumbers(int-ds-nota-loja.cpf_cliente))) <= 0 or
+       decimal(trim(OnlyNumbers(int-ds-nota-loja.cpf_cliente))) = ? or
+       decimal(trim(OnlyNumbers(int-ds-nota-loja.cpf_cliente))) = 1) then do:
+        assign i-erro = 44
+               c-informacao = "SÇrie: " + c-serie + "/" + "Nr. Nota: " + c-num-nota + " - " + 
+                              "CPF Cliente: " + 
+                              int-ds-nota-loja.cpf_cliente + " - " + 
+                              "Convànio: " +
+                              c-convenio
+               l-cupom-com-erro = yes.
+        run gera-log. 
+        return.
+    end.
+    if int-ds-nota-loja.valor_convenio <> 0 and 
+       decimal(trim(OnlyNumbers(int-ds-nota-loja.cpf_cliente))) > 0 then do:
+        if not can-find (first emitente no-lock where 
+                 emitente.cgc = trim(OnlyNumbers(int-ds-nota-loja.cpf_cliente))) then do:
+           assign i-erro = 46
+                  c-informacao = "SÇrie: " + c-serie + "/" + "Nr. Nota: " + c-num-nota + " - " + 
+                                 "CPF Cliente: " + 
+                                 int-ds-nota-loja.cpf_cliente + " - " + 
+                                 "Convànio: " +
+                                 c-convenio
+                  l-cupom-com-erro = yes.
+           run gera-log. 
+           return.
+        end.                
+    end.
+    
+
+
+    assign  c-nome-abrev = if int-ds-nota-loja.valor_convenio <> 0 
+                           then "CONSUMIDORCV" else "CONSUMIDOR"
+            i-cod-emitente = 0
+            i-canal-vendas = 0
+            i-cod-rep      = 1.
+    if int-ds-nota-loja.cnpjcpf_imp_cup <> ? AND 
+       trim(OnlyNumbers(int-ds-nota-loja.cnpjcpf_imp_cup)) <> "" AND
+       decimal(trim(OnlyNumbers(int-ds-nota-loja.cnpjcpf_imp_cup))) > 1 then do:
+        for first emitente fields (cod-emitente nome-abrev cod-canal-venda tip-cob-desp
+                                   cod-rep ind-cre-cli identific pais estado cgc)
+            no-lock where
+            emitente.cgc = trim(OnlyNumbers(int-ds-nota-loja.cnpjcpf_imp_cup)):
+            assign  c-nome-abrev   = emitente.nome-abrev
+                    i-cod-emitente = emitente.cod-emitente
+                    i-canal-vendas = emitente.cod-canal-venda
+                    i-cod-rep      = if emitente.cod-rep <> 0 
+                                     then emitente.cod-rep
+                                     else i-cod-rep
+                    c-cpf           = emitente.cgc
+                    i-tip-cob-desp  = emitente.tip-cob-desp    .
+        end.
+        if not avail emitente then do:
+           IF c-nome-abrev begins "CONSUMIDOR" THEN DO:
+              for first emitente fields (cod-emitente nome-abrev cod-canal-venda tip-cob-desp
+                                         cod-rep ind-cre-cli identific pais estado cgc)
+                  no-lock where
+                  emitente.nome-abrev = c-nome-abrev:
+                  assign  c-nome-abrev   = emitente.nome-abrev
+                          i-cod-emitente = emitente.cod-emitente
+                          i-canal-vendas = emitente.cod-canal-venda
+                          i-cod-rep      = if emitente.cod-rep <> 0 
+                                           then emitente.cod-rep
+                                           else i-cod-rep
+                          c-cpf          = emitente.cgc
+                          i-tip-cob-desp = emitente.tip-cob-desp    .
+               end.
+            END.
+        END.
+        IF NOT AVAIL emitente THEN DO:
+           assign i-erro = 2
+                  c-informacao = "SÇrie: " + c-serie + "/" + "Nr. Nota: " + c-num-nota + " - " + 
+                                 "CPF Cupom: " + 
+                                 int-ds-nota-loja.cnpjcpf_imp_cup
+                  l-cupom-com-erro = yes.
+           run gera-log. 
+           return.
+        end.
+    end.
+    else do:
+        for first emitente fields (cod-emitente nome-abrev cod-canal-venda tip-cob-desp
+                                   cod-rep ind-cre-cli identific pais estado cgc)
+            no-lock where
+            emitente.nome-abrev = c-nome-abrev:
+            assign  c-nome-abrev   = emitente.nome-abrev
+                    i-cod-emitente = emitente.cod-emitente
+                    i-canal-vendas = emitente.cod-canal-venda
+                    i-cod-rep      = if emitente.cod-rep <> 0 
+                                     then emitente.cod-rep
+                                     else i-cod-rep
+                    c-cpf          = emitente.cgc
+                    i-tip-cob-desp = emitente.tip-cob-desp    .
+        end.
+        if not avail emitente then do:
+            assign i-erro = 2
+                   c-informacao = "SÇrie: " + c-serie + "/" + "Nr. Nota: " + c-num-nota + " - " + 
+                                  "Nome Abrev.: " + c-nome-abrev
+                   l-cupom-com-erro = yes.
+            run gera-log. 
+            return.
+        end.
+    end.
+
+    /*    
+    if emitente.ind-cre-cli = 4 then do:
+        assign i-erro = 27
+               c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + "Emitente: " + string(i-cod-emitente)
+               l-cupom-com-erro = yes.
+        run gera-log. 
+        return.
+    end. 
+    */
+
+    if emitente.identific = 2 then do:     /* Fornecedor */
+        run pi-erros-nota (input 15143, input "Fornecedor: " + string(emitente.cod-emitente)).
+        return.                                 
+    end.
+
+    /*
+    if not can-find(unid-feder 
+                    where unid-feder.pais   = emitente.pais 
+                    and   unid-feder.estado = emitente.estado) then do:
+       {utp/ut-table.i mguni unid-feder 1}              
+       run pi-erros-nota (input 56, input trim(return-value) + " UF: " + emitente.estado).
+       return.
+    end.
+    */
+
+    c-nome-repres  = "".
+    if i-cod-rep <> 0 then do:
+        for first repres fields (cod-rep nome-abrev) no-lock where 
+            repres.cod-rep = i-cod-rep:
+            assign c-nome-repres = repres.nome-abrev.
+        end.
+    end.
+    if i-tab-finan = 0 then
+      assign i-tab-finan = 1
+             i-indice    = 0.
+            
+    /*
+    if not can-find (first tab-finan no-lock where 
+                    tab-finan.nr-tab-finan = i-tab-finan) then do:
+      assign i-erro = 35
+             c-informacao = "Nr. Nota: " + c-num-nota + " - " + 
+                            "SÇrie: " + c-serie + " - " +
+                            "Tab. Financ.: " + string(i-tab-finan)
+             l-cupom-com-erro = yes.
+      run gera-log. 
+      return.
+    end.                     
+    */
+    /*
+    if i-canal-vendas <> 0 then
+    do:
+       for first canal-venda fields (cod-canal-venda) no-lock where
+           canal-venda.cod-canal-venda = i-canal-vendas: end.
+       if not avail canal-venda then
+       do:
+          assign i-erro = 31
+                 c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " +
+                                "Canal Vendas: " + string(i-canal-vendas) + " - " + "Emitente: " + string(i-cod-emitente)
+                 l-cupom-com-erro = yes.
+          run gera-log. 
+          return.
+       end.
+    end.
+    */
+
+    if c-status <> "C" /* duplicatas vir∆o todas do frente de loja
+       and  (
+       de-valor-cartaod <> 0 or 
+       de-valor-cartaoc <> 0 or 
+       de-valor-vale    <> 0 )*/ then do:
+        if not can-find(first int-ds-nota-loja-cartao no-lock where
+            int-ds-nota-loja-cartao.cnpj_filial = int-ds-nota-loja.cnpj_filial and
+            int-ds-nota-loja-cartao.serie = int-ds-nota-loja.serie and
+            int-ds-nota-loja-cartao.num_nota = int-ds-nota-loja.num_nota) then do:
+            assign i-erro = 39
+                   c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + "CNPJ Filial: " + int-ds-nota-loja.cnpj_filial + " - " + "Estab.: " + c-cod-estabel
+                   l-cupom-com-erro = yes.
+            run gera-log. 
+            return.
+        end.
+        else do:
+            assign de-aux = 0.
+            for each tt-int-ds-nota-loja-cartao no-lock where 
+                tt-int-ds-nota-loja-cartao.cnpj_filial = int-ds-nota-loja.cnpj_filial and
+                tt-int-ds-nota-loja-cartao.serie       = int-ds-nota-loja.serie and
+                tt-int-ds-nota-loja-cartao.num_nota    = int-ds-nota-loja.num_nota:
+                delete tt-int-ds-nota-loja-cartao.
+            end.                
+            for each int-ds-nota-loja-cartao no-lock where 
+                int-ds-nota-loja-cartao.cnpj_filial = int-ds-nota-loja.cnpj_filial and
+                int-ds-nota-loja-cartao.serie       = int-ds-nota-loja.serie and
+                int-ds-nota-loja-cartao.num_nota    = int-ds-nota-loja.num_nota
+                query-tuning(no-lookahead):
+                if int-ds-nota-loja-cartao.valor <= 0 then next.
+                de-aux = de-aux + int-ds-nota-loja-cartao.valor.
+                create tt-int-ds-nota-loja-cartao.
+                buffer-copy int-ds-nota-loja-cartao to tt-int-ds-nota-loja-cartao.
+                
+                for first int-ds-nota-loja-item of int-ds-nota-loja no-lock,
+                    first item no-lock
+                    where item.it-codigo = trim(string(int(int-ds-nota-loja-item.produto))):
+                end.
+
+                /* determina natureza de operacao */
+                run intprg/int018a.p (INPUT  trim(int-ds-nota-loja-cartao.condipag),
+                                      INPUT  item.class-fisc,
+                                      OUTPUT v-row-loja-cond-pag,
+                                      OUTPUT v-row-classif-fisc). 
+                
+                for first int-ds-loja-cond-pag no-lock 
+                    where rowid(int-ds-loja-cond-pag) = v-row-loja-cond-pag:
+                    assign  i-cod-cond-pag = int-ds-loja-cond-pag.cod-cond-pag 
+                            i-cod-portador = int-ds-loja-cond-pag.cod-portador
+                            i-modalidade   = int-ds-loja-cond-pag.modalidade.
+
+                    for first cond-pagto fields (cod-vencto) no-lock where 
+                        cond-pagto.cod-cond-pag = int-ds-loja-cond-pag.cod-cond-pag:
+                        assign tt-int-ds-nota-loja-cartao.cod-vencto   = cond-pagto.cod-vencto.
+                    end.
+                    if not avail cond-pagto then do:
+                        assign i-erro = 15
+                               c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " +
+                                              "Cond. Pagto.: " + string(int-ds-loja-cond-pag.cod-cond-pag)
+                               l-cupom-com-erro = yes.
+                        run gera-log. 
+                        return.
+                    end.
+                    
+                    assign tt-int-ds-nota-loja-cartao.cod-portador  = int-ds-loja-cond-pag.cod-portador
+                           tt-int-ds-nota-loja-cartao.modalidade    = int-ds-loja-cond-pag.modalidade
+                           tt-int-ds-nota-loja-cartao.cod-esp       = int-ds-loja-cond-pag.cod-esp
+                           tt-int-ds-nota-loja-cartao.cod-cond-pag  = int-ds-loja-cond-pag.cod-cond-pag.
+                           
+                    if not can-find (first mgadm.portador no-lock where
+                         portador.ep-codigo    = i-ep-codigo and
+                         portador.cod-portador = tt-int-ds-nota-loja-cartao.cod-portador and
+                         portador.modalidade   = tt-int-ds-nota-loja-cartao.modalidade)
+                    then do:
+                       assign i-erro = 34
+                              c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " +
+                                             "Portador: " + string(tt-int-ds-nota-loja-cartao.cod-portador) + "/" + "Modalidade: " + string(tt-int-ds-nota-loja-cartao.modalidade)
+                              l-cupom-com-erro = yes.
+                       run gera-log. 
+                       return.
+                    end.    
+                end.
+                      
+
+                for first int-ds-classif-fisc no-lock 
+                    where rowid(int-ds-classif-fisc) = v-row-classif-fisc:
+                     for first natur-oper 
+                       fields (nat-ativa nat-operacao emite-duplic tipo char-2 cod-esp log-ipi-bicms 
+                               terceiros cd-trib-icm cd-trib-ipi cod-mensagem 
+                               consum-final perc-red-ipi perc-red-icm mercado)
+                       no-lock where
+                       natur-oper.nat-operacao = int-ds-classif-fisc.cod-nat-oper-cupom:
+                     end.
+                end.
+
+                if not avail int-ds-classif-fisc or not avail natur-oper then do:
+                    assign i-erro = 21
+                           c-informacao = "Nr. Nota: "       + c-num-nota            + " - " + 
+                                          "Classif Fiscal: " + trim(item.class-fisc) + " - " +    
+                                          "Item: "           + item.it-codigo
+                           l-cupom-com-erro = yes.
+                    run gera-log. 
+                    return.
+                end.
+            end.
+
+            if  de-aux <> /*(de-valor-cartaoc + de-valor-cartaod + de-valor-vale)*/ de-vl-tot-cup then do:
+                assign i-erro = 40
+                       c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + "Estab.: " + c-cod-estabel + " - " + 
+                                      "Valor Duplicata: " + string(de-aux) + " - " + 
+                                      "Valor Cupom: "     + string(de-vl-tot-cup)
+                       l-cupom-com-erro = yes.
+                run gera-log. 
+                return.
+            end.
+        end.
+    end.
+
+    if c-estado = "PR" and int-ds-nota-loja.nfce_chave_s  /* chave acesso */ = ? 
+       and c-status <> "C" then do:
+        l-servico = NO.
+        FOR EACH bint-ds-nota-loja-item NO-LOCK OF int-ds-nota-loja.
+            FOR FIRST ITEM NO-LOCK WHERE
+                ITEM.it-codigo = trim(string(int(bint-ds-nota-loja-item.produto))): END.
+            IF avail item and item.tipo-contr <> 4 THEN DO:
+                l-servico = NO.
+                LEAVE.
+            END.
+            l-servico = YES.
+        END.
+        IF l-servico THEN NEXT.
+        assign i-erro = 48
+               c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + "Estab.: " + c-cod-estabel + " - " + 
+                              string(de-aux) + " - " + string(de-valor-cartaoc) + " - " + 
+                              string(de-valor-cartaod) + " - " + string(de-valor-vale)
+               l-cupom-com-erro = yes.
+        run gera-log. 
+        return.
+    end.               
+
+end.
+      
+procedure valida-registro-item.
+
+   if i-nr-registro mod 100 = 0 then
+       run pi-acompanhar in h-acomp (input "Validando Itens").
+   for first item 
+        fields (class-fiscal ind-item-fat cod-obsoleto tipo-contr cd-trib-icm aliquota-ipi char-1 char-2
+                aliquota-iss cd-trib-ipi un ind-ipi-dife cod-localiz tipo-con-est perm-saldo-neg)
+        no-lock where
+        item.it-codigo = c-it-codigo:
+        c-class-fiscal = item.class-fiscal.
+        l-saldo-neg = item.perm-saldo-neg = 3.
+        i-tipo-contr = item.tipo-contr.
+   end.
+   if not avail item then do:
+      assign i-erro = 9
+             c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + "Estab: " + c-cod-estabel + 
+                            "Item: " + c-it-codigo 
+             l-cupom-com-erro = yes.
+      run gera-log. 
+      return.
+   end.
+   if avail item and item.cod-obsoleto = 4 then do:
+      assign i-erro = 10
+             c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " + "Estab: " + c-cod-estabel + 
+                            "Item: " + c-it-codigo
+             l-cupom-com-erro = yes.
+      run gera-log. 
+      return.
+   end.     
+   if avail item THEN do: /*and not item.ind-item-fat then do:*/
+      FOR FIRST item-uni-estab WHERE
+                item-uni-estab.it-codigo   = ITEM.it-codigo AND
+                item-uni-estab.cod-estabel = c-cod-estabel NO-LOCK:  
+      END.
+      IF AVAIL item-uni-estab AND item-uni-estab.ind-item-fat = NO THEN DO:
+         assign i-erro = 11
+                c-informacao = "Nr. Nota: " + c-num-nota + " - " + 
+                               "Item: " + c-it-codigo
+                l-cupom-com-erro = yes.
+         run gera-log. 
+         return.
+      END.
+   end.     
+   /***************** Classificaªío Fiscal *******************************/
+   if avail item and i-pais-impto-usuario = 1  /* Brasil */
+   and not can-find(classif-fisc where 
+                   classif-fisc.class-fiscal = item.class-fiscal) then do:
+       {utp/ut-table.i mgind classif-fisc 1}  
+       run pi-erros-nota (input 56, input trim(return-value) + " Class. Fiscal: " + item.class-fiscal).
+       return.
+   end.
+   /**************** Item x Referºncia ***********************************/
+   /*
+   if avail item and item.tipo-con-est = 4 then do:  /* Referencia */
+      if not can-find(ref-item where
+                      ref-item.it-codigo = tt-it-docto.it-codigo and
+                      ref-item.cod-refer = tt-it-docto.cod-refer) then do:        
+          {utp/ut-table.i mgind ref-item 1}                        
+          run pi-erros-nota (input 56, input trim(return-value) + " Item: " + tt-it-docto.it-codigo + "/" + "Cod. Refer.: " + tt-it-docto.cod-refer).
+          return.
+      end.
+   end.
+   */
+   if avail item and item.tipo-con-est = 3 and
+      c-numero-lote = "" then do:  /* Lote */
+       assign i-erro = 41
+              c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " +
+                             "Item: " + c-it-codigo + " - " + 
+                             "Lote: " + c-numero-lote
+              l-cupom-com-erro = yes.
+       run gera-log. 
+       return.
+   end.
+
+/* n∆o ter† mais lote
+   if avail item and item.tipo-con-est <> 3 and
+      c-numero-lote <> "" then do:  /* Lote */
+       assign i-erro = 42
+              c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " +
+                             "Item: " + c-it-codigo + " - " + 
+                             "Lote: " + c-numero-lote
+              l-cupom-com-erro = yes.
+       run gera-log. 
+       return.
+   end.
+*/
+   /******************************************/
+
+   if dec(de-quantidade) <= 0 then do:
+      assign i-erro = 12
+             c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " +
+                            "Item: " + c-it-codigo + " - " + 
+                            "Qtde.: " + string(de-quantidade)
+             l-cupom-com-erro = yes.
+      run gera-log. 
+      return.
+   end. 
+
+
+   /* determina natureza de operacao */
+   run intprg/int018a.p (INPUT  c-condipag,
+                         INPUT  c-class-fiscal,
+                         OUTPUT v-row-loja-cond-pag,
+                         OUTPUT v-row-classif-fisc). 
+
+   FOR FIRST estabelec NO-LOCK
+       WHERE estabelec.cod-estabel = c-cod-estabel:
+   END.
+   
+   assign  c-natur  = "".
+   for first int-ds-classif-fisc no-lock 
+       where rowid(int-ds-classif-fisc) = v-row-classif-fisc:
+       assign  c-natur = int-ds-classif-fisc.cod-nat-oper-cupom.
+   end.
+   
+   for first natur-oper no-lock 
+       where natur-oper.nat-operacao = int-ds-classif-fisc.cod-nat-oper-cupom:
+       assign c-cod-esp-princ = natur-oper.cod-esp.
+   end.
+   
+   for first int-ds-loja-cond-pag no-lock 
+       where rowid(int-ds-loja-cond-pag) = v-row-loja-cond-pag:
+       assign  i-cod-cond-pag  = int-ds-loja-cond-pag.cod-cond-pag 
+               i-cod-portador  = int-ds-loja-cond-pag.cod-portador
+               i-modalidade    = int-ds-loja-cond-pag.modalidade
+               c-cod-esp-princ = int-ds-loja-cond-pag.cod-esp.
+   end.
+   
+   for first cond-pagto fields (cod-cond-pag nr-tab-finan nr-ind-finan 
+                                cod-vencto prazos per-pg-dup num-parcelas)
+       where cond-pagto.cod-cond-pag = i-cod-cond-pag
+       no-lock: end.
+   if not avail cond-pagto then do:
+   
+      assign i-erro = 15
+             c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " +
+                            "Cond. Pagto.: " + string(i-cod-cond-pag)
+             l-cupom-com-erro = yes.
+      run gera-log. 
+      return.
+   end.
+   else
+       assign i-tab-finan    = cond-pagto.nr-tab-finan
+              i-indice       = cond-pagto.nr-ind-finan
+              i-cod-vencto   = cond-pagto.cod-vencto  
+              i-prazos       = cond-pagto.prazos      
+              de-per-pg-dup  = cond-pagto.per-pg-dup  
+              i-num-parcelas = cond-pagto.num-parcelas.
+   
+   for first int-ds-loja-cond-pag no-lock 
+       where rowid(int-ds-loja-cond-pag) = v-row-loja-cond-pag:
+       
+       if  c-cod-esp-princ = "" or i-cod-portador = ? or i-cod-cond-pag = ? then do:
+           assign  i-cod-cond-pag  = int-ds-loja-cond-pag.cod-cond-pag 
+                   i-cod-portador  = int-ds-loja-cond-pag.cod-portador
+                   i-modalidade    = int-ds-loja-cond-pag.modalidade
+                   c-cod-esp-princ = int-ds-loja-cond-pag.cod-esp.
+
+           if c-cod-esp-princ = "" or 
+              not can-find (first esp-doc no-lock where 
+                            esp-doc.cod-esp = c-cod-esp-princ) then do:
+               assign i-erro = 43
+                      c-informacao = "Nr. Nota: " + c-num-nota          + " - " + 
+                                     "Cod. EspÇcie: " + c-cod-esp-princ + " - " +
+                                     "Cond Pag: " + c-condipag 
+                      l-cupom-com-erro = yes.
+               run gera-log. 
+               return.
+           end.
+                      
+           if i-cod-portador <> 0
+           then do:
+              if not can-find (first mgadm.portador no-lock where
+                   portador.ep-codigo    = i-ep-codigo and
+                   portador.cod-portador = i-cod-portador and
+                   portador.modalidade   = i-modalidade)
+              then do:
+                 assign i-erro = 34
+                        c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " +
+                                       "Portador: " + string(i-cod-portador) + "/" + "Modalidade: " + string(i-modalidade)
+                        l-cupom-com-erro = yes.
+                 run gera-log. 
+                 return.
+              end.    
+           end.
+
+           for first ser-estab no-lock where
+                ser-estab.serie = c-serie and
+                ser-estab.cod-estabel = c-cod-estabel: 
+           end.
+           if not avail ser-estab then do:
+              assign i-erro = 36
+                     c-informacao = "Nr. Nota: " + c-num-nota + " - " + 
+                                    "SÇrie: " + c-serie + " - " + "Estab.: " + c-cod-estabel
+                     l-cupom-com-erro = yes.
+              run gera-log. 
+              return.
+           end.   
+              
+              /* 
+              if avail ser-estab then do:
+                 if ser-estab.forma-emis = 1 /* automatica */ then do:
+                     assign i-erro = 19
+                            c-informacao = "Nr. Nota: " + c-num-nota + " - " + 
+                                           "SÇrie: " + c-serie + " - " + "Estab.: " + c-cod-estabel
+                            l-cupom-com-erro = yes.
+                     run gera-log. 
+                     return.
+                 end.
+                 /*
+                 else do:
+                   assign ser-estab.dt-prox-fat = 01/01/0001
+                          ser-estab.dt-ult-fat  = 01/01/0001.
+                 end.
+                 */
+              
+              end.
+              */
+
+           if can-find (first serie no-lock where 
+               serie.serie = c-serie and
+               serie.forma-emis = 1 /* Automatica */) then do:
+               assign i-erro = 19
+                      c-informacao = "Nr. Nota: " + c-num-nota + " - " + 
+                                     "SÇrie: " + c-serie 
+                      l-cupom-com-erro = yes.
+               run gera-log. 
+               return.
+           end.
+       end.
+   end.
+   for first natur-oper 
+       fields (nat-ativa nat-operacao emite-duplic tipo char-2 cod-esp log-ipi-bicms 
+               terceiros cd-trib-icm cd-trib-ipi cod-mensagem subs-trib char-1 mercado
+               consum-final perc-red-ipi perc-red-icm perc-pis natur-oper.per-fin-soc)
+       no-lock where
+       natur-oper.nat-operacao = c-natur: 
+       if i-cod-mensagem = 0 then 
+           i-cod-mensagem = natur-oper.cod-mensagem.
+   end.
+   if not avail natur-oper or not avail int-ds-classif-fisc then do:
+       assign i-erro = 21
+              c-informacao = "Nr. Nota: "      + c-num-nota     + " - " + 
+                             "Natur. Oper.: "  + c-natur        + " - " + 
+                             "Class. Fiscal: " + c-class-fiscal + " - " +
+                             "Item: "          + item.it-codigo
+              l-cupom-com-erro = yes.
+       run gera-log. 
+       return.
+   end.
+   if avail natur-oper and 
+      not natur-oper.nat-ativa then do:
+       assign i-erro = 32  
+              c-informacao = "Nr. Nota: " + c-num-nota + " - " + 
+                             "Natur. Oper.: " + c-natur
+           l-cupom-com-erro = yes.
+       run gera-log. 
+       return.
+   end.
+
+   /**************** Natureza nío pode ser de entrada ****************/
+   if natur-oper.tipo = 1 then do:     /* Entrada */
+      run pi-erros-nota (input 6028, input "Entrada" + " Natur. Oper.: " + natur-oper.nat-operacao).
+      return.
+   end.
+
+    /*********** Natureza nío pode ser operacao com terceiros *********/
+    if natur-oper.terceiros then do:     /* terceiro */
+       run pi-erros-nota (input 15126, input "Terceiros" + " Natur. Oper.: " + natur-oper.nat-operacao).
+       return.
+    end.
+
+    /********** Natureza de Operaªío Inativa ***********************/
+    if natur-oper.nat-ativa = no then do:
+       run pi-erros-nota (input 26759, input "Inativa" + " Natur. Oper.: " + natur-oper.nat-operacao).
+       return.
+    end.
+
+    /*************** CΩdigo da Mensagem ***********************************/
+    /*
+    if  natur-oper.cod-mensagem <> 0 
+    and not can-find(mensagem where 
+                     mensagem.cod-mensagem = natur-oper.cod-mensagem) then do:
+        {utp/ut-table.i mgadm mensagem 1}    
+        run pi-erros-nota (input 56, input trim(return-value) + " Cod. Mensagem: " + string(natur-oper.cod-mensagem)).
+        return.
+    end.
+    */
+
+    /* Venda tributada ICMS e natureza NAO tributa 
+    if natur-oper.cd-trib-icm <> 1 and
+      (trim(c-trib-icms) = "1" or 
+       trim(c-trib-icms) = "3") and
+       de-valor-icms > 0 then do:
+        assign i-erro = 49
+               c-informacao = "Nr. Nota: " + c-num-nota + " - " + "Item: " + c-it-codigo + " - " +
+                              "NCM: " + c-class-fiscal + " - " + "Cd Pgto: " + c-condipag + " - " +
+                              "Natur. Oper.: " + c-natur +
+                              " - " + "ICMS: " + trim(string(de-valor-icms,"->>>,>>>,>>9.99"))
+            l-cupom-com-erro = yes.
+        run gera-log. 
+        return.
+    end.
+    */
+    /* Natureza c/ ICMS e cupom sem valor de ICMS 
+    if natur-oper.cd-trib-icm = 1 and
+       trim(c-trib-icms) <> "1" and
+       trim(c-trib-icms) <> "3" and
+       de-valor-icms = 0 then do:
+        assign i-erro = 50
+               c-informacao = "Nr. Nota: " + c-num-nota + " - " + "Item: " + c-it-codigo + " - " +
+                              "NCM: " + c-class-fiscal + " - " + "Cd Pgto: " + c-condipag + " - " +
+                              "Natur. Oper.: " + c-natur +
+                              " - " + "ICMS: " + trim(string(de-valor-icms,"->>>,>>>,>>9.99"))
+            l-cupom-com-erro = yes.
+        run gera-log. 
+        return.
+    end.
+    */
+   /**************** Nota Fiscal jˇ existe *********************************/
+   if can-find(nota-fiscal
+      where nota-fiscal.cod-estabel = c-cod-estabel
+      and   nota-fiscal.serie       = c-serie
+      and   nota-fiscal.nr-nota-fis = c-num-nota) then do:
+       {utp/ut-table.i mgdis nota-fiscal 1}
+       run pi-erros-nota (input 1, input trim(return-value) + " Estab.: " + c-cod-estabel + " SÇrie: " + c-serie + " Nr. Nota: " + c-num-nota).
+       run finaliza-cupom.
+       return.
+   end.
+
+   if de-vl-uni = 0 then do:
+        assign i-erro = 38
+               c-informacao = "SÇrie: " + c-serie + " - " + "Nr. Nota: " + c-num-nota + " - " +
+                              "Item: " + c-it-codigo
+               l-cupom-com-erro = yes.
+        run gera-log. 
+        return.
+   end.
+
+end.
+ 
+procedure cria-tt-docto.
+    if i-nr-registro mod 100 = 0 then
+        run pi-acompanhar in h-acomp (input "Criando Cupom").
+    
+    create tt-docto.
+    assign tt-docto.fat-nota         = if int-ds-nota-loja.valor_convenio <> 0 and c-status <> "C"
+                                       then 1 /* NFF */ else 2 /* nota */
+           tt-docto.ind-tip-nota     = 11     /* Importada */
+           tt-docto.nr-prog          = 2015
+           tt-docto.seq-tt-docto     = i-nr-registro
+           tt-docto.cod-des-merc     = 2 /* consumo */
+           tt-docto.cod-estabel      = c-cod-estabel
+           tt-docto.dt-nf-ent-fut    = ?
+           tt-docto.nat-operacao     = c-natur
+           tt-docto.cod-emitente     = i-cod-emitente
+           tt-docto.nr-nota          = c-num-nota
+           tt-docto.serie            = c-serie
+           tt-docto.cgc              = c-cpf
+           tt-docto.ins-estadual     = ""
+           tt-docto.nome-abrev       = c-nome-abrev
+           tt-docto.cod-emitente     = i-cod-emitente
+           tt-docto.tip-cob-desp     = i-tip-cob-desp.
+
+    assign tt-docto.estado         = c-estado
+           tt-docto.cep            = string(i-cep)
+           tt-docto.pais           = c-pais
+           tt-docto.endereco       = c-endereco
+           tt-docto.bairro         = c-bairro
+           tt-docto.cidade         = c-cidade.
+           
+    assign tt-docto.perc-embalagem   = 0
+           tt-docto.perc-frete       = 0
+           tt-docto.perc-desco1      = 0
+           tt-docto.perc-desco2      = 0
+           tt-docto.perc-seguro      = 0
+           tt-docto.peso-bru-tot     = 0
+           tt-docto.peso-liq-tot     = 0
+           tt-docto.vl-embalagem     = 0
+           tt-docto.vl-frete         = 0
+           tt-docto.vl-seguro        = 0
+           tt-docto.cod-canal-venda  = 0
+           tt-docto.cidade-cif       = ""
+           tt-docto.cod-cond-pag     = i-cod-cond-pag
+           tt-docto.cod-entrega      = ""
+           tt-docto.dt-base-dup      = d-dt-emissao
+           tt-docto.dt-emis-nota     = d-dt-emissao
+           tt-docto.dt-prvenc        = d-dt-emissao
+           tt-docto.dt-cancela       = if c-status = "C" then d-dt-emissao else ?
+           tt-docto.marca-volume     = ""
+           tt-docto.mo-codigo        = 0
+           tt-docto.no-ab-reppri     = c-nome-repres
+           tt-docto.nome-tr-red      = ""
+           tt-docto.nome-transp      = "PADRAO"
+           tt-docto.nr-fatura        = c-num-nota
+           tt-docto.nr-tabpre        = ""
+           tt-docto.nr-volumes       = ""
+           tt-docto.placa            = ""
+           tt-docto.serie-ent-fut    = ""
+           tt-docto.nr-nota-ent-fut  = ""
+           tt-docto.ind-lib-nota     = yes
+           tt-docto.cod-rota         = ""
+           tt-docto.cod-msg          = i-cod-mensagem
+           tt-docto.vl-taxa-exp      = 0
+           tt-docto.nr-proc-exp      = ""
+           tt-docto.nr-tab-finan     = i-tab-finan
+           tt-docto.nr-ind-finan     = i-indice
+           tt-docto.cod-portador     = i-cod-portador
+           tt-docto.modalidade       = i-modalidade
+           tt-docto.nr-nota-base     = ""
+           tt-docto.serie-base       = ""
+           tt-docto.uf-placa         = ""
+           tt-docto.dt-embarque      = ?
+           tt-docto.serie-dif        = ""
+           tt-docto.nr-nota-dif      = ""
+           tt-docto.perc-acres-dif   = 0
+           tt-docto.vl-acres-dif     = 0
+           tt-docto.vl-taxa-exp-dif  = 0
+           tt-docto.cond-redespa     = ""
+           tt-docto.obs              = ""
+           tt-docto.esp-docto        = 22 /* NFS */
+           tt-docto.motvo-cance      = "".
+           
+    assign tt-docto.vl-mercad         = de-vl-tot-cup.
+
+    if int-ds-nota-loja.nfce_chave_s  /* chave acesso */ <> ? then do:
+        assign overlay(tt-docto.char-1,112,60) = replace(replace(int-ds-nota-loja.nfce_chave_s,'NFe',''),'CFe','')  /* chave acesso */
+               overlay(tt-docto.char-1,172,2)  = if c-status <> "C" then "3" else "6" /* situacao */.
+    end.               
+        
+    if int-ds-nota-loja.nfce_transmissao_s /* tipo transmissao*/  <> ? then 
+        assign overlay(tt-docto.char-1,174,1)  = int-ds-nota-loja.nfce_transmissao_s /* tipo transmissao*/.
+    if int-ds-nota-loja.nfce_protocolo_s /* protocolo */ <> ? then
+           assign overlay(tt-docto.char-1,175,15) = int-ds-nota-loja.nfce_protocolo_s. /* protocolo */.
+           
+    /*Modalidade de Frete*/
+    assign overlay(tt-docto.char-1,190,8) = '9' NO-ERROR.
+    /*Fim Modalidade de Frete*/			     
+
+    create tt-cst-nota-fiscal.
+    assign tt-cst-nota-fiscal.cod-estabel       = c-cod-estabel
+           tt-cst-nota-fiscal.serie             = c-serie
+           tt-cst-nota-fiscal.nr-nota-fis       = c-num-nota
+           tt-cst-nota-fiscal.condipag          = int-ds-nota-loja.condipag
+           tt-cst-nota-fiscal.convenio          = int-ds-nota-loja.convenio
+           tt-cst-nota-fiscal.cupom-ecf         = int-ds-nota-loja.cupom_ecf
+           tt-cst-nota-fiscal.nfce-chave        = int-ds-nota-loja.nfce_chave_s
+           tt-cst-nota-fiscal.valor-chq         = int-ds-nota-loja.valor_chq
+           tt-cst-nota-fiscal.valor-chq-pre     = int-ds-nota-loja.valor_chq_pre
+           tt-cst-nota-fiscal.valor-convenio    = int-ds-nota-loja.valor_convenio
+           tt-cst-nota-fiscal.valor-cartao      = int-ds-nota-loja.valor_cartaod 
+                                                + int-ds-nota-loja.valor_cartaoc
+           tt-cst-nota-fiscal.valor-dinheiro    = de-valor-dinh
+           tt-cst-nota-fiscal.valor-ticket      = int-ds-nota-loja.valor_ticket
+           tt-cst-nota-fiscal.valor-vale        = int-ds-nota-loja.valor_vale
+           tt-cst-nota-fiscal.nfce-dt-transmissao   = int-ds-nota-loja.nfce_transmissao_d
+           tt-cst-nota-fiscal.nfce-protocolo        = int-ds-nota-loja.nfce_protocolo_s
+           tt-cst-nota-fiscal.nfce-transmissao      = int-ds-nota-loja.nfce_transmissao_s
+           tt-cst-nota-fiscal.cpf-cupom             = if int-ds-nota-loja.condipag <> "83"
+                                                      then int-ds-nota-loja.cpf_cliente
+                                                      else "00000000985" /* GoldenFarma */
+           tt-cst-nota-fiscal.cartao-manual         = (int-ds-nota-loja.cartao_manual = 1)
+
+           tt-cst-nota-fiscal.num-nota          = int-ds-nota-loja.num_nota
+           tt-cst-nota-fiscal.indterminal       = int-ds-nota-loja.indterminal
+           tt-cst-nota-fiscal.num-identi        = int-ds-nota-loja.num_identi
+           tt-cst-nota-fiscal.impressora        = int-ds-nota-loja.impressora
+           tt-cst-nota-fiscal.data-ecf          = int-ds-nota-loja.data_ecf
+           tt-cst-nota-fiscal.serie-cupom       = int-ds-nota-loja.serie
+           tt-cst-nota-fiscal.versaopdv         = int-ds-nota-loja.versaopdv.
+
+    for each int-ds-convenio where int-ds-convenio.cod-convenio = int(tt-cst-nota-fiscal.convenio):
+        assign tt-cst-nota-fiscal.tipo-venda = int-ds-convenio.tipo-venda.
+    end.
+
+end.
+ 
+procedure cria-tt-it-docto.
+
+   define var i-cd-trib-ipi as integer no-undo.
+   define var i-cd-trib-icm as integer no-undo.
+
+   if i-nr-registro mod 100 = 0 then
+       run pi-acompanhar in h-acomp (input "Criando Itens do Cupom").
+
+   if not avail natur-oper then
+       find natur-oper no-lock where natur-oper.nat-operacao = c-natur no-error.
+
+   if not avail item then
+       find item no-lock where item.it-codigo = c-it-codigo no-error.
+   assign i-cd-trib-ipi = natur-oper.cd-trib-ipi.
+   if i-cd-trib-ipi <> 2 /* Isento */ and 
+      i-cd-trib-ipi <> 3 /* Outros */ then
+        if item.cd-trib-ipi = 1 /* tributado */ or  
+           item.cd-trib-ipi = 4 /* reduzido */ then
+            assign i-cd-trib-ipi = item.cd-trib-ipi.
+
+   assign de-red-base-ipi = 0 /* base normal */
+          de-base-ipi = (de-vl-liq * de-quantidade). 
+   if avail natur-oper and /* IPI SOBRE O BRUTO */
+     substring(natur-oper.char-2,11,1) = "1" then
+   do:
+      de-base-ipi = (de-vl-uni * de-quantidade). 
+   end.
+   
+   if i-cd-trib-ipi <> 2 and    /* isento */
+      i-cd-trib-ipi <> 3 then do: /* outros */ 
+      if i-cd-trib-ipi = 4 /* reduzido */ then
+      do:
+         assign de-red-base-ipi = natur-oper.perc-red-ipi.
+                de-base-ipi = (de-vl-liq * de-quantidade) * 
+                               (1 - (de-red-base-ipi / 100)).
+      end. 
+   end.
+   else do: /* somente tributa se natureza = T/R e item = T/R */
+      assign de-aliquota-ipi = 0.
+   end.
+   /*
+   assign i-cd-trib-icm = natur-oper.cd-trib-icm.
+   if i-cd-trib-icm <> 2 /* Isento */ and 
+      i-cd-trib-icm <> 3 /* Outros */ then
+        if item.cd-trib-icm = 1 /* tributado */ or  
+           item.cd-trib-icm = 4 /* reduzido */ then
+            assign i-cd-trib-icm = item.cd-trib-icm.
+
+   assign de-red-base-icm = 0 /* base normal */
+          de-base-icms = (de-vl-liq * de-quantidade). 
+   
+   if natur-oper.log-ipi-bicms or trim(substr(natur-oper.char-2,1,5)) = "1" then 
+       assign de-base-icms = de-base-icms + it-nota-fisc.vl-ipi-it.
+   
+   if i-cd-trib-icm <> 2 and    /* isento */
+      i-cd-trib-icm <> 3 then do: /* outros */ 
+      if i-cd-trib-icm = 4 /* reduzido */ then
+      do:
+         assign de-red-base-icm = natur-oper.perc-red-icm.
+                de-base-icms = (de-vl-liq * de-quantidade) * 
+                               (1 - (de-red-base-icm / 100)).
+      end. 
+   end.
+   else do: /* somente tributa se natureza = T/R e item = T/R */
+      assign de-aliq-icms = 0.
+   end.
+   */
+
+   i-cd-trib-icm = 0.
+   case c-trib-icms:
+       when "1" then do:
+           i-cd-trib-icm = 1.
+       end.
+       when "2" then do:
+           i-cd-trib-icm = 2.
+       end.
+       when "3" then do:
+           i-cd-trib-icm = 1.
+       end.
+       when "4" then do:
+           i-cd-trib-icm = 3.
+       end.
+       when "5" then do:
+           i-cd-trib-icm = 3.
+       end.
+
+   end case.
+   i-nr-sequencia = i-nr-sequencia + 1.
+
+   create tt-it-docto.
+   assign tt-it-docto.calcula             = yes
+          tt-it-docto.tipo-atend          = 1   /* Total */
+          tt-it-docto.seq-tt-it-docto     = i-nr-sequencia
+          tt-it-docto.baixa-estoq         = if c-status <> "C" then i-tipo-contr <> 4 else no
+          tt-it-docto.class-fiscal        = item.class-fiscal
+          tt-it-docto.cod-estabel         = c-cod-estabel
+          tt-it-docto.cod-refer           = ""
+          tt-it-docto.data-comp           = ?
+          tt-it-docto.it-codigo           = c-it-codigo
+          tt-it-docto.nat-comp            = ""
+          tt-it-docto.nat-operacao        = c-natur
+          tt-it-docto.nr-nota             = c-num-nota
+          tt-it-docto.nr-sequencia        = i-nr-seq-item
+          tt-it-docto.nro-comp            = ""
+          tt-it-docto.per-des-item        = de-desconto
+          tt-it-docto.peso-liq-it-inf     = 0
+          tt-it-docto.peso-embal-it       = 0
+          tt-it-docto.quantidade[1]       = de-quantidade
+          tt-it-docto.quantidade[2]       = 0
+          tt-it-docto.seq-comp            = 0
+          tt-it-docto.serie               = c-serie
+          tt-it-docto.serie-comp          = ""
+          tt-it-docto.un[1]               = item.un
+          tt-it-docto.un[2]               = ""
+          tt-it-docto.vl-despes-it        = 0
+          tt-it-docto.vl-embalagem        = 0
+          tt-it-docto.vl-frete            = 0
+          tt-it-docto.vl-merc-liq         = truncate(de-vl-liq * de-quantidade,2)
+          tt-it-docto.vl-merc-ori         = truncate(de-vl-uni * de-quantidade,2)
+          tt-it-docto.vl-merc-tab         = truncate(de-vl-uni * de-quantidade,2)
+          tt-it-docto.vl-preori           = de-vl-uni
+          tt-it-docto.vl-pretab           = de-vl-uni
+          tt-it-docto.vl-preuni           = de-vl-liq
+          tt-it-docto.vl-seguro           = 0
+          tt-it-docto.vl-tot-item         = tt-it-docto.vl-merc-liq /*+ (de-base-ipi * (de-aliquota-ipi / 100))*/
+          tt-it-docto.ind-imprenda        = no
+          tt-it-docto.mercliq-moeda-forte = 0
+          tt-it-docto.mercori-moeda-forte = 0
+          tt-it-docto.merctab-moeda-forte = 0
+          tt-it-docto.peso-bru-it-inf     = 0
+          tt-it-docto.vl-taxa-exp         = 0
+          tt-it-docto.vl-desconto         = if tt-it-docto.vl-merc-ori >= tt-it-docto.vl-merc-liq 
+                                            then (tt-it-docto.vl-merc-ori - tt-it-docto.vl-merc-liq) else 0
+          tt-it-docto.vl-desconto-perc    = 0.
+   
+   create tt-it-imposto.
+   assign tt-it-imposto.seq-tt-it-docto   = i-nr-sequencia
+          tt-it-imposto.aliquota-icm      = de-aliq-icms
+          tt-it-imposto.aliquota-ipi      = de-aliquota-ipi
+          tt-it-imposto.cd-trib-icm       = i-cd-trib-icm
+          tt-it-imposto.cd-trib-iss       = 2 /* isento */
+          tt-it-imposto.cod-servico       = 0
+          tt-it-imposto.ind-icm-ret       = no
+          tt-it-imposto.per-des-icms      = 0
+          tt-it-imposto.perc-red-icm      = de-red-base-icm
+          tt-it-imposto.perc-red-iss      = 0
+          tt-it-imposto.vl-bicms-ent-fut  = 0
+          tt-it-imposto.vl-bicms-it       = if i-cd-trib-icm = 1 then de-base-icms else 0
+          tt-it-imposto.vl-icms-it        = if i-cd-trib-icm = 1 then de-valor-icms else 0
+          tt-it-imposto.vl-icms-outras    = if i-cd-trib-icm = 3 then de-base-icms else
+                                            if de-red-base-icm <> 0 then ((de-vl-liq * de-quantidade) - de-base-icms) 
+                                            else 0                                                                 
+          tt-it-imposto.vl-icmsou-it      = tt-it-imposto.vl-icms-outras
+          tt-it-imposto.vl-icmsnt-it      = if i-cd-trib-icm = 2 then de-base-icms else 0
+          tt-it-imposto.cd-trib-ipi       = i-cd-trib-ipi
+          tt-it-imposto.perc-red-ipi      = de-red-base-ipi
+          tt-it-imposto.vl-bipi-ent-fut   = 0
+          tt-it-imposto.vl-ipi-ent-fut    = 0
+          tt-it-imposto.vl-bipi-it        = if i-cd-trib-ipi = 1 or i-cd-trib-ipi = 4 then de-base-ipi else 0
+          tt-it-imposto.vl-ipi-it         = de-base-ipi * (de-aliquota-ipi / 100)
+          tt-it-imposto.vl-ipi-outras     = if i-cd-trib-ipi = 3 then de-base-ipi else 
+                                            if de-red-base-ipi <> 0 then ((de-vl-liq * de-quantidade) - de-base-ipi)
+                                            else 0
+          tt-it-imposto.vl-ipiou-it       = tt-it-imposto.vl-ipi-outras
+          tt-it-imposto.vl-ipint-it       = if i-cd-trib-ipi = 2 then de-base-ipi else 0.
+
+   assign tt-it-imposto.vl-biss-it        = 0
+          tt-it-imposto.vl-bsubs-ent-fut  = 0
+          tt-it-imposto.vl-bsubs-it       = 0
+          tt-it-imposto.icm-complem       = 0
+          tt-it-imposto.vl-icms-ent-fut   = 0
+          tt-it-imposto.vl-icmsub-ent-fut = 0
+          tt-it-imposto.vl-icmsub-it      = 0
+          tt-it-imposto.aliq-icm-comp     = 0
+          tt-it-imposto.aliquota-iss      = 0
+          tt-it-imposto.vl-irf-it         = 0
+          tt-it-imposto.vl-iss-it         = 0
+          tt-it-imposto.vl-issnt-it       = 0
+          tt-it-imposto.vl-issou-it       = 0
+          tt-it-docto.desconto-zf         = 0
+          tt-it-docto.narrativa           = c-numero-lote.
+          
+   /* Tributaá∆o PIS    */ 
+   overlay(tt-it-docto.char-2,96,1) = (substr(natur-oper.char-1,86,1)).
+
+   /* Aliquota PIS      */ 
+   overlay(tt-it-docto.char-2,76,5) = "00,00".
+   if int(substring(tt-it-docto.char-2,96,1)) = 1 then do:
+       if natur-oper.mercado = 1 then                         /* Mercado Interno */
+           if substr(item.char-2,52,1) = "1" then             /* Al°quota do Item */
+               overlay(tt-it-docto.char-2,76,5) = string(dec(substr(item.char-2,31,5)),"99.99").
+           else /* aliquota da natureza*/
+               overlay(tt-it-docto.char-2,76,5) = string(natur-oper.perc-pis[1],"99.99").
+       else  /* Mercado externo */
+           overlay(tt-it-docto.char-2,76,5) = string(natur-oper.perc-pis[2],"99.99").
+   end.
+   /* sem aliquota deve ficar como isento */
+   if dec(substring(tt-it-docto.char-2,76,5)) = 0 then
+       overlay(tt-it-docto.char-2,96,1) = "2".
+
+
+   /* Tributaá∆o COFINS */
+   overlay(tt-it-docto.char-2,97,1) = (substr(natur-oper.char-1,87,1)).
+
+   /* Aliquota COFINS   */ 
+   overlay(tt-it-docto.char-2,81,5) = "00,00".
+   if int(substring(tt-it-docto.char-2,97,1)) = 1 then do:
+       if natur-oper.mercado = 1 then                    /* Mercado Interno */               
+           if substr(item.char-2,53,1) = "1" then        /* aliquota do item */
+               overlay(tt-it-docto.char-2,81,5) = string(dec(substr(item.char-2,36,5)),"99.99").
+           else /* aliquota da natureza*/
+               overlay(tt-it-docto.char-2,81,5) = string(natur-oper.per-fin-soc[1],"99.99").
+       else /* Mercado externo */ 
+           overlay(tt-it-docto.char-2,81,5) = string(natur-oper.per-fin-soc[2],"99.99").
+   end.
+   /* sem aliquota deve ficar como isento */
+   if dec(substring(tt-it-docto.char-2,81,5)) = 0 then 
+       overlay(tt-it-docto.char-2,97,1) = "2" .
+
+   overlay(tt-it-docto.char-2,86,5)  /* Reduá∆o PIS       */ = "00,00".
+   overlay(tt-it-docto.char-2,91,5)  /* Reduá∆o COFINS    */ = "00,00".
+
+   /* Unidade de Negocio */
+   assign overlay(tt-it-docto.char-2,172,03) = "000"
+          tt-it-imposto.vl-pauta             = 0.
+
+   /*assign de-vl-tot-cup = de-vl-tot-cup + tt-it-docto.vl-merc-liq.
+   assumido total enviado */
+
+   if i-tipo-contr <> 4 /* debito direto */ and c-status <> "C" then do:
+
+       if item.tipo-con-est = 3 /* lote */ then
+       for first saldo-estoq fields (dt-vali-lote) no-lock where 
+           saldo-estoq.cod-estabel = c-cod-estabel and
+           saldo-estoq.cod-depos   = "LOJ" and
+           saldo-estoq.cod-localiz = "" and
+           saldo-estoq.cod-refer   = "" and
+           saldo-estoq.it-codigo   = c-it-codigo and
+           saldo-estoq.lote        = c-numero-lote:
+           create tt-saldo-estoq.
+           assign tt-saldo-estoq.seq-tt-saldo-estoq = i-nr-sequencia
+                  tt-saldo-estoq.seq-tt-it-docto    = i-nr-sequencia
+                  tt-saldo-estoq.it-codigo          = c-it-codigo
+                  tt-saldo-estoq.cod-depos          = "LOJ"
+                  tt-saldo-estoq.cod-localiz        = ""
+                  tt-saldo-estoq.lote               = c-numero-lote
+                  tt-saldo-estoq.dt-vali-lote       = saldo-estoq.dt-vali-lote
+                  tt-saldo-estoq.quantidade         = de-quantidade
+                  tt-saldo-estoq.qtd-contada        = de-quantidade.
+       end.
+       if not avail saldo-estoq and l-saldo-neg then do:
+           create tt-saldo-estoq.
+           assign tt-saldo-estoq.seq-tt-saldo-estoq = i-nr-sequencia
+                  tt-saldo-estoq.seq-tt-it-docto    = i-nr-sequencia
+                  tt-saldo-estoq.it-codigo          = c-it-codigo
+                  tt-saldo-estoq.cod-depos          = "LOJ"
+                  tt-saldo-estoq.cod-localiz        = ""
+                  tt-saldo-estoq.lote               = if item.tipo-con-est = 3 /* lote */ then c-numero-lote else ""
+                  tt-saldo-estoq.dt-vali-lote       = if item.tipo-con-est = 3 /* lote */ then today else ?
+                  tt-saldo-estoq.quantidade         = de-quantidade
+                  tt-saldo-estoq.qtd-contada        = de-quantidade.
+       end.
+       /*************** Baixa do Estoque *************************************/
+       if  tt-it-docto.baixa-estoq and 
+       not avail tt-saldo-estoq then do:
+           run pi-erros-nota (input 26082, input "Item: " + trim(tt-it-docto.it-codigo)).
+           return.
+       end.
+   end.
+end.
+ 
+procedure importa-nota.
+
+    if i-nr-registro mod 100 = 0 then
+        run pi-acompanhar in h-acomp (input "Gerando Nota").
+    if  can-find (first tt-docto) and
+        can-find (first tt-it-docto) then do:
+        run ftp/ft2010.p (input  no,
+                          output l-cupom-com-erro,
+                          input  table tt-docto,
+                          input  table tt-it-docto,
+                          input  table tt-it-imposto,
+                          input  table tt-nota-trans,
+                          input  table tt-saldo-estoq,
+                          input  table tt-fat-duplic,
+                          input  table tt-fat-repre,
+                          input  table tt-nota-embal,
+                          input  table tt-item-embal,
+                          input  table tt-it-docto-imp,
+                          &IF DEFINED(bf_dis_desc_bonif) &THEN
+                          input  table tt-docto-bn,
+                          input  table tt-it-docto-bn,
+                          &ENDIF
+                          &IF DEFINED(bf_dis_unid_neg) &THEN
+                          input table tt-rateio-it-duplic ,
+                          &ENDIF
+                          input-output table tt-notas-geradas
+                          &IF DEFINED(bf_dis_ciap) &THEN ,
+                          input table tt-it-nota-doc
+                          &ENDIF ,
+                          input table tt-desp-nota-fisc).                         
+    end.
+    for each tt-notas-geradas:
+        for first nota-fiscal exclusive-lock where 
+            rowid(nota-fiscal) = tt-notas-geradas.rw-nota-fiscal:
+            run pi-acompanhar in h-acomp (input "Altera Duplicata: " + nota-fiscal.nr-nota-fis).
+
+            for each cst-fat-duplic no-lock where 
+                cst-fat-duplic.cod-estabel = nota-fiscal.cod-estabel and
+                cst-fat-duplic.serie       = nota-fiscal.serie and
+                cst-fat-duplic.nr-fatura   = nota-fiscal.nr-fatura:
+                for each fat-duplic exclusive where 
+                    fat-duplic.cod-estabel  = cst-fat-duplic.cod-estabel  and
+                    fat-duplic.serie        = cst-fat-duplic.serie        and
+                    fat-duplic.nr-fatura    = cst-fat-duplic.nr-fatura    and
+                    fat-duplic.parcela      = cst-fat-duplic.parcela
+                    query-tuning(no-lookahead):
+                    assign fat-duplic.int-1 = cst-fat-duplic.cod-portador
+                           fat-duplic.int-2 = cst-fat-duplic.modalidade.
+                    /* nota - nao gera ACR */
+                    if fat-duplic.cod-esp <> "CV" and
+                       fat-duplic.cod-esp <> "CE" then 
+                        assign fat-duplic.ind-fat-nota = 2.
+                end.
+            end.
+            for first tt-cst-nota-fiscal no-lock where
+                tt-cst-nota-fiscal.cod-estabel = nota-fiscal.cod-estabel and
+                tt-cst-nota-fiscal.serie       = nota-fiscal.serie       and
+                tt-cst-nota-fiscal.nr-nota-fis = nota-fiscal.nr-nota-fis:
+                create cst-nota-fiscal.
+                buffer-copy tt-cst-nota-fiscal to cst-nota-fiscal.
+            end.
+            /* acerto pis/cofins */
+            for each it-nota-fisc EXCLUSIVE of nota-fiscal:
+
+                for each tt-it-docto where
+                    tt-it-docto.cod-estabel         = it-nota-fisc.cod-estabel  and
+                    tt-it-docto.serie               = it-nota-fisc.serie        and
+                    tt-it-docto.nr-nota             = it-nota-fisc.nr-nota-fis  and
+                    tt-it-docto.nr-sequencia        = it-nota-fisc.nr-seq-fat   and
+                    tt-it-docto.it-codigo           = it-nota-fisc.it-codigo:
+
+                   assign overlay(it-nota-fisc.char-2,76,5) = substr(tt-it-docto.char-2,76,5)  /* Aliquota PIS      */
+                          overlay(it-nota-fisc.char-2,81,5) = substr(tt-it-docto.char-2,81,5)  /* Aliquota COFINS   */
+                          overlay(it-nota-fisc.char-2,86,5) = substr(tt-it-docto.char-2,86,5)  /* Reduá∆o PIS       */
+                          overlay(it-nota-fisc.char-2,91,5) = substr(tt-it-docto.char-2,91,5)  /* Reduá∆o COFINS    */
+                          overlay(it-nota-fisc.char-2,96,1) = substr(tt-it-docto.char-2,96,1)  /* Tributaá∆o PIS    */
+                          overlay(it-nota-fisc.char-2,97,1) = substr(tt-it-docto.char-2,97,1). /* Tributaá∆o COFINS */
+
+                end.
+            end.
+            for first estabelec fields (cgc) no-lock where 
+                estabelec.cod-estabel = nota-fiscal.cod-estabel: 
+                for each int-ds-nota-loja where
+                        int-ds-nota-loja.cnpj_filial = estabelec.cgc and
+                        /*int-ds-nota-loja.serie       = nota-fiscal.serie and*/
+                        int-ds-nota-loja.num_nota    = trim(string(int(nota-fiscal.nr-nota-fis),"999999")) and
+                        int-ds-nota-loja.emissao     = nota-fiscal.dt-emis-nota and
+                        int-ds-nota-loja.situacao    = 1
+                        query-tuning(no-lookahead):
+                        assign i-erro       = 1
+                               c-informacao = "Estab.: " + nota-fiscal.cod-estabel + "/" + "SÇrie: " + nota-fiscal.serie + "/" + "Nr. Nota: " + nota-fiscal.nr-nota-fis + "/" + "Nome Abrev.: " + nota-fiscal.nome-ab-cli.
+                        assign int-ds-nota-loja.situacao = 2 /* integrado */.
+                        run gera-log.
+                        release int-ds-nota-loja.
+                 end.
+            end.
+        end.
+    end.
+    
+    /* verificando notas n∆o importadas */
+    for each tt-docto:
+        if not can-find (first nota-fiscal no-lock where
+                               nota-fiscal.cod-estabel = tt-docto.cod-estabel and
+                               nota-fiscal.serie       = tt-docto.serie       and
+                               nota-fiscal.nr-nota-fis = tt-docto.nr-nota) then do:
+            for first estabelec fields (cgc) no-lock where 
+                estabelec.cod-estabel = tt-docto.cod-estabel: 
+                for first int-ds-nota-loja where
+                    int-ds-nota-loja.cnpj_filial = estabelec.cgc and
+                    /*int-ds-nota-loja.serie       = nota-fiscal.serie and*/ 
+                    int-ds-nota-loja.num_nota    = trim(string(int(tt-docto.nr-nota),"999999")) and
+                    int-ds-nota-loja.emissao     = tt-docto.dt-emis-nota and
+                    int-ds-nota-loja.situacao    = 1:
+
+                    run pi-acompanhar in h-acomp (input "Marcando N∆o Integrada: " + tt-docto.nr-nota).
+                    assign i-erro       = 22
+                           c-informacao = "Estab.: " + tt-docto.cod-estabel
+                                        + "/" +
+                                        "SÇrie: " + tt-docto.serie
+                                        + "/" +
+                                        "Nr. Nota: " + tt-docto.nr-nota
+                                        + "/" +
+                                        "Nome Abrev.: " + tt-docto.nome-abrev
+                                        + " Nota Fiscal n∆o integrada" .
+                    run gera-log.
+                end.
+            end.
+            for each cst-fat-duplic exclusive-lock where 
+                cst-fat-duplic.cod-estabel = tt-docto.cod-estabel and
+                cst-fat-duplic.serie       = tt-docto.serie and
+                cst-fat-duplic.nr-fatura   = tt-docto.nr-fatura
+                query-tuning(no-lookahead):
+                delete cst-fat-duplic.
+            end.                
+        end.
+    end.
+    
+    run pi-elimina-tabelas.
+end procedure.
+
+procedure pi-erros-nota:
+
+    define input parameter pcod-erro as integer.
+    define input parameter pmensagem as character.
+
+    &IF "{&bf_dis_versao_ems}":U >= "2.07":U &THEN
+        for first cadast_msg fields (des_text_msg)
+            no-lock where 
+            cadast_msg.cdn_msg = pcod-erro: end.
+           
+        assign i-erro = 22
+               c-informacao = "Estab.: " + trim(substring(c-cod-estabel + "/" + "SÇrie: " + c-serie + "/" + "Nr. Nota: " + c-num-nota + "/" + "Nome Abrev.: " + c-nome-abrev               
+                              + " - " + 
+                              "Cod. Erro: " + string(pcod-erro) + " - " +
+                              replace(des_text_msg,"&1", pmensagem),1,400)).
+               l-cupom-com-erro = yes.
+        run gera-log. 
+        return.
+    &else
+        for first Cad-msgs fields (Cad-msgs.texto-msg)
+            no-lock where 
+            Cad-msgs.cd-msg = pcod-erro: end.
+            
+        assign i-erro = 22
+               c-informacao = "Estab.: " + trim(substring(c-cod-estabel + "/" + "SÇrie: " + c-serie + "/" + "Nr. Nota: " + c-num-nota + "/" + "Nome Abrev.: " + c-nome-abrev               
+                              + " - " + 
+                              "Cod. Erro: " + string(pcod-erro) + " - " +
+                              replace(Cad-msgs.texto-msg,"$1", pmensagem),1,400)).
+               l-cupom-com-erro = yes.
+        run gera-log. 
+        return.
+    &endif
+end.
+
+procedure gera-log.
+
+   if i-nr-registro mod 100 = 0 then
+       run pi-acompanhar in h-acomp (input "Listando Erros").
+   IF tt-param.arquivo <> "" THEN DO:
+
+           display /*stream str-rp*/
+                   i-nr-registro
+                   with frame f-erro. 
+               
+           display /*stream str-rp*/
+                   tb-erro[i-erro] @ tb-erro[1]
+                   c-informacao
+                   with frame f-erro.
+           down /*stream str-rp*/
+                with frame f-erro.
+   end.        
+   
+   assign c-chave = trim(int-ds-nota-loja.cnpj_filial + "/" + c-serie  + "/" + trim(string(int(c-num-nota),">>>9999999"))).
+
+   run intprg/int999.p ("CUPOM", 
+                        c-chave,
+                        substring(trim(tb-erro[i-erro]) + " - " + c-informacao,1,500),
+                        int-ds-nota-loja.situacao, /* 1 - Pendente, 2 - Processado */ 
+                        c-seg-usuario).
+
+   for each  int-ds-log use-index orig-chave-sit-dt 
+       where int-ds-log.origem = "CUPOM" 
+         and int-ds-log.chave  = c-chave:
+      assign int-ds-log.dt-movto = int-ds-nota-loja.emissao.
+   end.
+   release int-ds-log.
+
+   assign c-informacao = " ".
+end.
+/* FIM DO PROGRAMA */
+
+procedure apaga-registro-atual:
+    for first tt-docto where 
+        tt-docto.cod-estabel = c-cod-estabel and
+        tt-docto.serie       = c-serie       and
+        tt-docto.nr-nota     = c-num-nota:
+        for each tt-it-docto where
+            tt-it-docto.cod-estabel = c-cod-estabel and
+            tt-it-docto.serie       = c-serie       and
+            tt-it-docto.nr-nota     = c-num-nota:
+            for each tt-it-imposto where 
+                tt-it-imposto.seq-tt-it-docto = tt-it-docto.seq-tt-it-docto:
+                delete tt-it-imposto.
+            end.
+            for each tt-saldo-estoq where 
+                tt-saldo-estoq.seq-tt-it-docto = tt-it-docto.seq-tt-it-docto:
+                delete tt-saldo-estoq.
+            end.
+            delete tt-it-docto. 
+        end.
+        for each tt-fat-duplic where tt-fat-duplic.seq-tt-docto = tt-docto.seq-tt-docto:
+            delete tt-fat-duplic.
+        end.
+        for each tt-fat-repre where tt-fat-repre.seq-tt-docto = tt-docto.seq-tt-docto:
+            delete tt-fat-repre.
+        end.
+        for each tt-cst-nota-fiscal where 
+            tt-cst-nota-fiscal.cod-estabel = c-cod-estabel and
+            tt-cst-nota-fiscal.serie       = c-serie       and
+            tt-cst-nota-fiscal.nr-nota     = c-num-nota:
+            delete tt-cst-nota-fiscal.
+        end.
+        for each tt-int-ds-nota-loja-cartao no-lock where 
+            tt-int-ds-nota-loja-cartao.cnpj_filial = int-ds-nota-loja.cnpj_filial and
+            tt-int-ds-nota-loja-cartao.serie = int-ds-nota-loja.serie and
+            tt-int-ds-nota-loja-cartao.num_nota = int-ds-nota-loja.num_nota:
+            delete tt-int-ds-nota-loja-cartao.
+        end.
+        delete tt-docto.
+    end.
+end.
+
+procedure finaliza-cupom.
+   run pi-acompanhar in h-acomp (input "Finalizando Cupom: " + trim(int-ds-nota-loja.num_nota)).
+   find current int-ds-nota-loja exclusive-lock no-error.
+   if avail int-ds-nota-loja then do:
+       for first nota-fiscal fields (cod-estabel nr-fatura
+                                    serie cod-cond-pag modalidade
+                                    nr-nota-fis cod-portador)
+         where nota-fiscal.cod-estabel = c-cod-estabel
+         and   nota-fiscal.serie       = c-serie
+         and   nota-fiscal.nr-nota-fis = c-num-nota
+         no-lock:
+    
+           for each cst-fat-duplic no-lock where 
+               cst-fat-duplic.cod-estabel = nota-fiscal.cod-estabel and
+               cst-fat-duplic.serie       = nota-fiscal.serie and
+               cst-fat-duplic.nr-fatura   = nota-fiscal.nr-fatura
+               query-tuning(no-lookahead):
+               for each fat-duplic exclusive where 
+                   fat-duplic.cod-estabel  = cst-fat-duplic.cod-estabel  and
+                   fat-duplic.serie        = cst-fat-duplic.serie        and
+                   fat-duplic.nr-fatura    = cst-fat-duplic.nr-fatura    and
+                   fat-duplic.parcela      = cst-fat-duplic.parcela
+                   query-tuning(no-lookahead):
+                   assign fat-duplic.int-1 = cst-fat-duplic.cod-portador
+                          fat-duplic.int-2 = cst-fat-duplic.modalidade.
+                   /* nota - nao gera ACR */
+                   if fat-duplic.cod-esp <> "CV" AND 
+                      fat-duplic.cod-esp <> "CE" then 
+                       assign fat-duplic.ind-fat-nota = 2.
+               end.
+           end.
+    
+           for first cst-nota-fiscal of nota-fiscal exclusive-lock: end.
+           if not avail cst-nota-fiscal then do:
+               create cst-nota-fiscal.
+               assign cst-nota-fiscal.cod-estabel       = nota-fiscal.cod-estabel
+                      cst-nota-fiscal.serie             = nota-fiscal.serie
+                      cst-nota-fiscal.nr-nota-fis       = nota-fiscal.nr-nota-fis.
+           end.
+           assign cst-nota-fiscal.condipag            = int-ds-nota-loja.condipag
+                  cst-nota-fiscal.convenio            = int-ds-nota-loja.convenio
+                  cst-nota-fiscal.cupom-ecf           = int-ds-nota-loja.cupom_ecf
+                  cst-nota-fiscal.nfce-chave          = int-ds-nota-loja.nfce_chave_s
+                  cst-nota-fiscal.valor-chq           = int-ds-nota-loja.valor_chq
+                  cst-nota-fiscal.valor-chq-pre       = int-ds-nota-loja.valor_chq_pre
+                  cst-nota-fiscal.valor-convenio      = int-ds-nota-loja.valor_convenio
+                  cst-nota-fiscal.valor-dinheiro      = int-ds-nota-loja.valor_din_mov
+                  cst-nota-fiscal.valor-ticket        = int-ds-nota-loja.valor_ticket
+                  cst-nota-fiscal.valor-vale          = int-ds-nota-loja.valor_vale
+                  cst-nota-fiscal.valor-cartao        = int-ds-nota-loja.valor_cartaod + 
+                                                        int-ds-nota-loja.valor_cartaoc
+                  cst-nota-fiscal.nfce-dt-transmissao = int-ds-nota-loja.nfce_transmissao_d
+                  cst-nota-fiscal.nfce-protocolo      = int-ds-nota-loja.nfce_protocolo_s
+                  cst-nota-fiscal.nfce-transmissao    = int-ds-nota-loja.nfce_transmissao_s
+                  cst-nota-fiscal.cpf-cupom           = int-ds-nota-loja.cpf_cliente
+                  cst-nota-fiscal.cartao-manual       = (int-ds-nota-loja.cartao_manual = 1).
+       end.
+       for each it-nota-fisc exclusive of nota-fiscal:
+
+           find natur-oper no-lock where natur-oper.nat-operacao = it-nota-fisc.nat-operacao no-error.
+           find item no-lock where item.it-codigo = it-nota-fisc.it-codigo no-error.
+
+           /* Tributaá∆o PIS    */ 
+           overlay(it-nota-fisc.char-2,96,1) = (substr(natur-oper.char-1,86,1)).
+
+           /* Aliquota PIS      */ 
+           overlay(it-nota-fisc.char-2,76,5) = "00,00".
+           if int(substring(it-nota-fisc.char-2,96,1)) = 1 then do:
+               if natur-oper.mercado = 1 then                         /* Mercado Interno */
+                   if substr(item.char-2,52,1) = "1" then             /* Al°quota do Item */
+                       overlay(it-nota-fisc.char-2,76,5) = string(dec(substr(item.char-2,31,5)),"99.99").
+                   else /* aliquota da natureza*/
+                       overlay(it-nota-fisc.char-2,76,5) = string(natur-oper.perc-pis[1],"99.99").
+               else  /* Mercado externo */
+                   overlay(it-nota-fisc.char-2,76,5) = string(natur-oper.perc-pis[2],"99.99").
+           end.
+           /* sem aliquota deve ficar como isento */
+           if dec(substring(it-nota-fisc.char-2,76,5)) = 0 then
+               overlay(it-nota-fisc.char-2,96,1) = "2".
+
+
+           /* Tributaá∆o COFINS */
+           overlay(it-nota-fisc.char-2,97,1) = (substr(natur-oper.char-1,87,1)).
+
+           /* Aliquota COFINS   */ 
+           overlay(it-nota-fisc.char-2,81,5) = "00,00".
+           if int(substr(it-nota-fisc.char-2,97,1)) = 1 then do:
+               if natur-oper.mercado = 1 then                    /* Mercado Interno */               
+                   if substr(item.char-2,53,1) = "1" then        /* aliquota do item */
+                       overlay(it-nota-fisc.char-2,81,5) = string(dec(substr(item.char-2,36,5)),"99.99").
+                   else /* aliquota da natureza*/
+                       overlay(it-nota-fisc.char-2,81,5) = string(natur-oper.per-fin-soc[1],"99.99").
+               else /* Mercado externo */ 
+                   overlay(it-nota-fisc.char-2,81,5) = string(natur-oper.per-fin-soc[2],"99.99").
+           end.
+           /* sem aliquota deve ficar como isento */
+           if dec(substring(it-nota-fisc.char-2,81,5)) = 0 then 
+               overlay(it-nota-fisc.char-2,97,1) = "2" .
+
+           overlay(it-nota-fisc.char-2,86,5)  /* Reduá∆o PIS       */ = "00,00".
+           overlay(it-nota-fisc.char-2,91,5)  /* Reduá∆o COFINS    */ = "00,00".
+
+       end.
+       assign i-erro       = 1
+              c-informacao = "Estab.: " + c-cod-estabel + "/" + 
+                             "SÇrie: " + c-serie + "/" + "Nr. Nota: " + c-num-nota + "/" + "Nome Abrev.: " + c-nome-abrev.
+       assign int-ds-nota-loja.situacao = 2. /* integrado */
+       assign l-cupom-com-erro = yes.
+       run gera-log. 
+       /*release int-ds-nota-loja.*/
+   end.
+end.

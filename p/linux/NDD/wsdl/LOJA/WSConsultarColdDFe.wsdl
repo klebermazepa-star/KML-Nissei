@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://nddigital.com.br/eForms/webservices" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="http://nddigital.com.br/eForms/webservices" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://nddigital.com.br/eForms/webservices">
+      <s:element name="ConsultarDFeInterno">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="xml" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultarDFeInternoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarDFeInternoResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ConsultarDFeInternoSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarDFeInterno" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarDFeInternoSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarDFeInternoResponse" />
+  </wsdl:message>
+  <wsdl:portType name="WSConsultarColdDFeSoap">
+    <wsdl:operation name="ConsultarDFeInterno">
+      <wsdl:input message="tns:ConsultarDFeInternoSoapIn" />
+      <wsdl:output message="tns:ConsultarDFeInternoSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WSConsultarColdDFeSoap" type="tns:WSConsultarColdDFeSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarDFeInterno">
+      <soap:operation soapAction="http://nddigital.com.br/eForms/webservices/ConsultarDFeInterno" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="WSConsultarColdDFeSoap12" type="tns:WSConsultarColdDFeSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarDFeInterno">
+      <soap12:operation soapAction="http://nddigital.com.br/eForms/webservices/ConsultarDFeInterno" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WSConsultarColdDFe">
+    <wsdl:port name="WSConsultarColdDFeSoap" binding="tns:WSConsultarColdDFeSoap">
+      <soap:address location="https://nfenissei.e-datacenter.nddigital.com.br/eFormsWebServices/WSConsultarColdDFe.asmx" />
+    </wsdl:port>
+    <wsdl:port name="WSConsultarColdDFeSoap12" binding="tns:WSConsultarColdDFeSoap12">
+      <soap12:address location="https://nfenissei.e-datacenter.nddigital.com.br/eFormsWebServices/WSConsultarColdDFe.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

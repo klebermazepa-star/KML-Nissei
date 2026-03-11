@@ -1,0 +1,12 @@
+/******************************************************************************
+**
+**  FT2011.I1 - Defini‡Æo da tt-ped-ent
+**
+******************************************************************************/
+
+def temp-table tt-ped-item no-undo
+    field rw-ped-item as rowid
+    index codigo is unique primary
+          rw-ped-item.
+
+/*  FT2011.I1  */

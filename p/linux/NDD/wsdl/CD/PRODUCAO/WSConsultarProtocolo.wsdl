@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://nddigital.com.br/eForms/webservices" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://nddigital.com.br/eForms/webservices" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://nddigital.com.br/eForms/webservices">
+      <s:element name="ConsultarProtocolo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="xml" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultarProtocoloResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarProtocoloResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ConsultarProtocoloSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarProtocolo" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarProtocoloSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarProtocoloResponse" />
+  </wsdl:message>
+  <wsdl:portType name="WSConsultarProtocoloSoap">
+    <wsdl:operation name="ConsultarProtocolo">
+      <wsdl:input message="tns:ConsultarProtocoloSoapIn" />
+      <wsdl:output message="tns:ConsultarProtocoloSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WSConsultarProtocoloSoap" type="tns:WSConsultarProtocoloSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarProtocolo">
+      <soap:operation soapAction="http://nddigital.com.br/eForms/webservices/ConsultarProtocolo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="WSConsultarProtocoloSoap12" type="tns:WSConsultarProtocoloSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarProtocolo">
+      <soap12:operation soapAction="http://nddigital.com.br/eForms/webservices/ConsultarProtocolo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WSConsultarProtocolo">
+    <wsdl:port name="WSConsultarProtocoloSoap" binding="tns:WSConsultarProtocoloSoap">
+      <soap:address location="http://10.181.1.2/eFormsWebServices/WSConsultarProtocolo.asmx" />
+    </wsdl:port>
+    <wsdl:port name="WSConsultarProtocoloSoap12" binding="tns:WSConsultarProtocoloSoap12">
+      <soap12:address location="http://10.181.1.2/eFormsWebServices/WSConsultarProtocolo.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

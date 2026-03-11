@@ -1,0 +1,339 @@
+
+//MESSAGE "Gui" VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+
+do  da-cont = tt-param.da-emissao-ini to tt-param.da-emissao-fim:
+
+    blk_nota:
+    for each {&ESTAB-SEC-TT} no-lock,
+       each nota-fiscal fields (dt-emis-nota 
+                                 nr-nota-fis
+                                 nome-ab-cli
+                                 nr-pedcli
+                                 nro-nota-orig
+                                 emite-duplic
+                                 cod-estabel
+                                 serie
+                                 nr-fatura 
+                                 nr-nota-fis 
+                                 dt-cancela 
+                                 cod-cond-pag
+                                 nat-operacao 
+                                 cod-entrega 
+                                 cod-portador
+                                 dt-emis 
+                                 modalidade 
+                                 ind-tip-nota 
+                                 nr-proc-exp 
+                                 vl-taxa-exp
+                                 estado 
+                                 vl-tot-nota 
+                                 no-ab-reppri 
+                                 dt-atual-cr 
+                                 serie-orig
+                                 mo-codigo 
+                                 cdd-embarq
+                                 replica-nf)
+        where nota-fiscal.dt-emis-nota  = da-cont
+        and   nota-fiscal.cod-estabel  >= tt-param.c-cod-estabel-ini
+        and   nota-fiscal.cod-estabel  <= tt-param.c-cod-estabel-fim
+        {1}
+        and   nota-fiscal.cdd-embarq   >= tt-param.de-embarque-ini
+        and   nota-fiscal.cdd-embarq   <= tt-param.de-embarque-fim
+        and   nota-fiscal.serie        >= tt-param.c-serie-ini
+        and   nota-fiscal.serie        <= tt-param.c-serie-fim
+        and   nota-fiscal.nr-nota-fis  >= tt-param.c-nr-nota-ini
+        and   nota-fiscal.nr-nota-fis  <= tt-param.c-nr-nota-fim
+        and   nota-fiscal.dt-atual-cr   = ? 
+        and   nota-fiscal.replica-nf    = no,
+        each fat-duplic
+           WHERE fat-duplic.cod-estabel = nota-fiscal.cod-estabel
+             AND fat-duplic.serie       = nota-fiscal.serie
+             AND fat-duplic.nr-fatura   = nota-fiscal.nr-fatura
+             AND (fat-duplic.INT-1 =  99501 
+                 or   fat-duplic.int-1 =  99301
+                 or   fat-duplic.int-1 =  99701 
+                 or   fat-duplic.int-1 =  99801
+                 or   fat-duplic.int-1 =  91801
+                 or   fat-duplic.int-1 =  99201
+                 or   fat-duplic.int-1 =  99999
+                 or   fat-duplic.int-1 =  93102
+                 or   fat-duplic.int-1 =  0)
+          no-lock: /* falta colocar flag na tela para as notas de servi‡o */
+          
+        IF fat-duplic.cod-esp     = "CV" then do:   
+			
+			/*
+			MESSAGE "antes assign" fat-duplic.ind-fat-nota VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.  
+                                                                                                
+			find first b2-fat-duplic of fat-duplic exclusive-lock no-error.            
+			if avail b2-fat-duplic then                                                               
+					assign b2-fat-duplic.ind-fat-nota = 1.                                                  
+			RELEASE b2-fat-duplic .                                                                   
+																						
+			MESSAGE "depois assign" fat-duplic.ind-fat-nota VIEW-AS ALERT-BOX INFORMATION BUTTONS OK. 
+			*/
+           find first b2-nota-fiscal of nota-fiscal exclusive-lock no-error.
+           
+           if avail b2-nota-fiscal then do:
+                
+                for each cst_fat_duplic no-lock
+                    where cst_fat_duplic.cod_estabel = nota-fiscal.cod-estabel
+                      and   cst_fat_duplic.serie       = nota-fiscal.serie      
+                      and   cst_fat_duplic.nr_fatura   = nota-fiscal.nr-fatura:
+                
+                        find first int_ds_loja_cond_pag no-lock
+                             where int_ds_loja_cond_pag.COD_COND_PAG = cst_fat_duplic.cod_cond_pag no-error.
+                             
+                        if avail int_ds_loja_cond_pag then do:
+                                
+                                //assign b2-nota-fiscal.cod-portador = int_ds_loja_cond_pag.COD_PORTADOR.
+                                
+                                if int_ds_loja_cond_pag.cod_emitente > 0 then do:
+                                    
+                                        find first cst_nota_fiscal exclusive-lock
+                                                 where cst_nota_fiscal.cod_estabel = nota-fiscal.cod-estabel
+                                                   and cst_nota_fiscal.serie       = nota-fiscal.serie
+                                                   and cst_nota_fiscal.nr_nota_fis = nota-fiscal.nr-nota-fis no-error.
+                                   
+                                        find first emitente no-lock
+                                                 where emitente.cod-emitente = int_ds_loja_cond_pag.cod_emitente no-error.
+                                        if avail emitente and  
+                                           avail cst_nota_fiscal then 
+                                                assign cst_nota_fiscal.cpf_cupom = emitente.cgc.
+                                end.
+                                
+
+                        end.
+
+                        /* 
+                        if cst_fat_duplic.cod_cond_pag = 4 then                 
+                            assign b2-nota-fiscal.cod-portador = 99501.                                               
+                        if cst_fat_duplic.cod_cond_pag = 12 then do:
+                        
+                            assign b2-nota-fiscal.cod-portador = 93102.
+                            
+                            find first cst_nota_fiscal exclusive-lock
+                                 where cst_nota_fiscal.cod_estabel = nota-fiscal.cod-estabel
+                                   and cst_nota_fiscal.serie       = nota-fiscal.serie
+                                   and cst_nota_fiscal.nr_nota_fis = nota-fiscal.nr-nota-fis no-error.
+                           
+                            if avail cst_nota_fiscal then
+                                assign cst_nota_fiscal.cpf_cupom = "49554562000176".
+                                
+                            release cst_nota_fiscal.
+                             
+                            
+                        end.
+                        
+                        */
+
+ 					
+					
+                end.
+           end.
+           
+        end.
+      
+        
+        /* verificar se o titulo existe */
+        FIND  tit_acr NO-LOCK 
+        WHERE tit_acr.cod_estab       = fat-duplic.cod-estabel
+          AND tit_acr.cod_espec_docto = fat-duplic.cod-esp 
+          AND tit_acr.cod_ser_docto   = fat-duplic.serie     
+          AND tit_acr.cod_tit_acr     = fat-duplic.nr-fatura 
+          AND tit_acr.cod_parcela     = string(fat-duplic.parcela)  NO-ERROR.
+          
+        if avail tit_acr then do:
+        
+           if nota-fiscal.dt-atual-cr   = ? then do:
+
+                    For first b-nota-fisc  
+                        WHERE rowid(b-nota-fisc) = rowid(nota-fiscal):
+                    
+                         assign b-nota-fisc.dt-atual-cr = today.
+                    
+					end.
+           end.
+
+           next blk_nota.
+       end.
+
+        IF fat-duplic.int-1 =  99501 THEN DO:
+
+               IF tt-param.id-convenio = no THEN NEXT blk_nota.
+        END.
+        ELSE IF fat-duplic.int-1  =  99801 
+            and fat-duplic.cod-esp     = "CE" THEN DO:
+
+                
+                find first b2-fat-duplic of fat-duplic exclusive-lock no-error.
+                if avail b2-fat-duplic then
+                        assign b2-fat-duplic.ind-fat-nota = 1.
+                RELEASE b2-fat-duplic .
+                
+                               
+                IF tt-param.id-cheque = no THEN NEXT blk_nota.
+        END.
+        ELSE IF fat-duplic.int-1  =  99301 
+            AND fat-duplic.cod-esp     = "CA" THEN DO:
+        
+                
+                find first b2-fat-duplic of fat-duplic exclusive-lock no-error.
+                if avail b2-fat-duplic then
+                        assign b2-fat-duplic.ind-fat-nota = 1.
+                RELEASE b2-fat-duplic .            
+                
+        END.   
+        ELSE IF fat-duplic.int-1  =  99201 
+            AND fat-duplic.cod-esp     = "CA" THEN DO:
+        
+                
+                find first b2-fat-duplic of fat-duplic exclusive-lock no-error.
+                if avail b2-fat-duplic then
+                        assign b2-fat-duplic.ind-fat-nota = 1.
+                RELEASE b2-fat-duplic .            
+                
+        END.            
+        ELSE IF fat-duplic.int-1  =  91801 
+            AND fat-duplic.cod-esp     = "CR" THEN DO:
+        
+                find first b2-fat-duplic of fat-duplic exclusive-lock no-error.
+                if avail b2-fat-duplic then
+                        assign b2-fat-duplic.ind-fat-nota = 1.
+                RELEASE b2-fat-duplic .            
+        END.      
+        ELSE IF fat-duplic.int-1 = 99999 THEN DO:
+
+                IF tt-param.id-servico = no THEN DO:
+                        NEXT blk_nota.
+                END.
+                ELSE DO:
+                        IF fat-duplic.cod-esp     <> "NF" THEN NEXT.
+                END.
+        END.
+        
+        IF fat-duplic.int-1  =  99501 THEN DO:
+        
+                //MESSAGE "antes assign" fat-duplic.ind-fat-nota VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+        
+                find first b2-fat-duplic of fat-duplic exclusive-lock no-error.
+                if avail b2-fat-duplic then
+                        assign b2-fat-duplic.ind-fat-nota = 1.
+                RELEASE b2-fat-duplic .
+
+			   // MESSAGE "depois assign" fat-duplic.ind-fat-nota VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.           
+        END.
+        else IF fat-duplic.int-1  =  93102 THEN DO:
+			
+			//MESSAGE "antes assign" fat-duplic.ind-fat-nota VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+        
+                find first b2-fat-duplic of fat-duplic exclusive-lock no-error.
+                if avail b2-fat-duplic then
+                        assign b2-fat-duplic.ind-fat-nota = 1.
+                RELEASE b2-fat-duplic .
+
+			//MESSAGE "depois assign" fat-duplic.ind-fat-nota VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+        END. 
+
+        if  time - i-time > 0 then do:
+            assign i-time = time.
+            run pi-acompanhar in h-acomp (input "(" + string(nota-fiscal.dt-emis-nota, "99/99/9999") + " / " +
+                                           string(nota-fiscal.nr-nota-fis) + ")").
+        END.
+
+	   &IF "{&bf_dis_versao_ems}" >= "2.062" &then
+            IF VALID-HANDLE(h_bodi135)
+            AND nota-fiscal.nat-operacao BEGINS "7" THEN DO:
+           
+                RUN piValidaProcExpotacaoNF IN h_bodi135(INPUT ROWID(nota-fiscal),
+                                                         OUTPUT c-msg-retorno).
+           
+                IF c-msg-retorno <> "" THEN DO:
+                    CREATE tt-erro.
+                    ASSIGN tt-erro.tipo       = 1    /* 1- Nota Fiscal 2- T¡tulo 3- Nota de D‚bito/Cr‚dito */
+                           tt-erro.cod-erro   = "17006"
+                           tt-erro.referencia = ""
+                           tt-erro.desc-erro  = c-msg-retorno
+                           tt-erro.situacao   = NO 
+                           tt-erro.cod-chave  = "" + ",," +
+                                               STRING(i-empresa) + "," +
+                                               nota-fiscal.cod-estabel + ",," +
+                                               nota-fiscal.serie + "," +
+                                               nota-fiscal.nr-nota-fis.
+                    next.
+                END.
+            END.
+		&ENDIF
+                
+        IF param-global.ind-cons-conta = 2 THEN do:
+          FIND estabelec WHERE  
+               estabelec.cod-estabel = nota-fiscal.cod-estabel NO-LOCK NO-ERROR.
+            assign i-empresa = estabelec.ep-codigo when avail estabelec.
+        end.
+
+        IF  nota-fiscal.nro-nota-orig <> " "
+        AND i-pais-impto-usuario <> 1 THEN
+            find first b-nota-fisc  
+            WHERE b-nota-fisc.nome-ab-cli   = nota-fiscal.nome-ab-cli
+              AND b-nota-fisc.nr-pedcli     = nota-fiscal.nr-pedcli
+              AND b-nota-fisc.nr-nota-fis   = nota-fiscal.nro-nota-orig
+              AND b-nota-fisc.serie         = nota-fiscal.serie-orig NO-LOCK no-error.
+
+        IF AVAIL b-nota-fisc AND 
+                 b-nota-fisc.dt-atual-cr = ? THEN DO:
+                 
+        
+            run utp/ut-msgs.p (input "msg",
+                               input 8034,
+                               input "").
+
+            create tt-erro.
+            assign tt-erro.tipo       = 3    /* 1- Nota Fiscal 2- T¡tulo 3- Nota de D‚bito/Cr‚dito */
+                   tt-erro.cod-erro   = "8034"
+                   tt-erro.referencia = ""
+                   tt-erro.desc-erro  = return-value
+                   tt-erro.situacao   = no
+                   tt-erro.cod-chave  = "" + ",," +
+                                       string(i-empresa) + "," +
+                                       b-nota-fisc.cod-estabel + ",," +
+                                       b-nota-fisc.serie + "," +
+                                       (if b-nota-fisc.nr-fatura = "" then
+                                           b-nota-fisc.nr-nota-fis 
+                                        else 
+                                           b-nota-fisc.nr-fatura) + ",,,".
+
+        end.
+        else do:
+                
+            IF VALID-HANDLE(h_bodi135) THEN DO:
+                RUN piAtualAutomNFe IN h_bodi135(INPUT  ROWID(nota-fiscal),
+                                                 OUTPUT l-cons-nota,
+                                                 OUTPUT c-msg-retorno).
+            END.
+            IF NOT l-cons-nota THEN DO:
+                create tt-erro.
+                assign tt-erro.tipo       = 1    /* 1- Nota Fiscal 2- T¡tulo 3- Nota de D‚bito/Cr‚dito */
+                       tt-erro.cod-erro   = ""
+                       tt-erro.referencia = ""
+                       tt-erro.desc-erro  = c-msg-retorno
+                       tt-erro.situacao   = no
+                       tt-erro.cod-chave  = "" + ",," +
+                                           string(i-empresa) + "," +
+                                           nota-fiscal.cod-estabel + ",," +
+                                           nota-fiscal.serie + "," +
+                                           nota-fiscal.nr-nota-fis.
+            END.
+            ELSE DO:
+                
+                create tt-nota-fiscal.
+                assign tt-nota-fiscal.r-nota-fiscal = rowid(nota-fiscal)
+                       tt-nota-fiscal.atualizar     = yes
+                       tt-nota-fiscal.emite-duplic  = nota-fiscal.emite-duplic
+                       tt-nota-fiscal.cod-estabel   = nota-fiscal.cod-estabel
+                       tt-nota-fiscal.serie         = nota-fiscal.serie
+                       tt-nota-fiscal.nr-fatura     = nota-fiscal.nr-fatura.
+            END.
+        end.
+
+    end.
+end.

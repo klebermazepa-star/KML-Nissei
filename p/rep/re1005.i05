@@ -1,0 +1,35 @@
+/******************************************************************
+**
+**      RE1005.I05 - Definicao de Temp-Table TT-RATEIO
+**
+******************************************************************/
+
+def temp-table tt-rateio no-undo
+        field sequencia           like item-doc-est.sequencia
+        field rw-desp             as   rowid
+        field vl-icms-fonte       like despesa-aces.valor
+        field vl-desp-aces        like despesa-aces.valor
+        field vl-icm-trib         like despesa-aces.valor
+        field vl-subs-tot         like despesa-aces.valor
+        field vl-icm-comp-trib    like despesa-aces.valor
+        field vl-icm-comp-tot     like despesa-aces.valor
+
+        /* Atualizacao com O.F. */
+        field vl-bicms            like despesa-aces.valor
+        field vl-icmsou           like despesa-aces.valor
+        field vl-icmsnt           like despesa-aces.valor
+
+        field vl-pis-trib         like despesa-aces.valor
+        field vl-cofins-trib      like despesa-aces.valor
+
+        field vl-base-pis-trib    like despesa-aces.valor
+        field vl-base-cofins-trib like despesa-aces.valor
+        
+        field cod-unid-negoc      like item-doc-est.cod-unid-negoc
+
+        index codigo is unique 
+            sequencia
+            rw-desp.
+
+/* fim do include */
+

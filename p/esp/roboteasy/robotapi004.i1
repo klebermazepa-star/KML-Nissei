@@ -1,0 +1,358 @@
+// 26/12/2024 - Everton
+// alterado para atualizar o campo tt_titulo_antecip_pef_a_pagar qdo estiver em branco buscando do fornec_financ.cod_forma_pagto
+// implementado o include para fazer teste locais
+
+def var ret as int no-undo.
+def var tit as int no-undo.
+def var ret-msg as int no-undo.
+
+//**************************************************
+// BLOCO DE EXECU€ÇO LOCAL PARA TESTES
+//**************************************************
+
+    // EXECU€ÇO LOCAL - carrega lista
+
+    CREATE tt_param.
+    ASSIGN tt_param.cod_estab                  = "320"
+           tt_param.cod_empresa                = "32"
+           tt_param.cod_portador               = "13341"
+           tt_param.num_bord_ap                = 83582
+           tt_param.ind_tip_docto_prepar_pagto = ? // Ambos
+           tt_param.ind_liber_pagto_dat        = ? // Previs Pagto
+           tt_param.dat_inicio                 = 03/28/25
+           tt_param.dat_fim                    = 03/28/25
+           tt_param.cod_estab_ini              = ?
+           tt_param.cod_estab_fim              = ?
+           tt_param.cdn_fornecedor_ini         = 10970
+           tt_param.cdn_fornecedor_fim         = 10970
+           tt_param.cod_espec_docto_ini        = ?
+           tt_param.cod_espec_docto_fim        = ?
+           tt_param.cod_forma_pagto_ini        = ?  
+           tt_param.cod_forma_pagto_fim        = ?  
+           tt_param.cod_indic_econ_ini         = ?  
+           tt_param.cod_indic_econ_fim         = ?  
+           tt_param.cod_portador_ini           = ?  
+           tt_param.cod_portador_fim           = ?  
+           tt_param.ind_pagto_liber            = "Ambos" // "J  Liberados"
+           tt_param.val_cotac_indic_econ       = ?  
+           tt_param.dat_cotac_indic_econ       = ?  
+           tt_param.ind_favorec_cheq           = ?  
+           tt_param.log_gerac_autom            = ?   
+           tt_param.log_consid_fatur_cta       = ? 
+        .
+RUN  pi-busca-tit (INPUT TABLE tt_param,OUTPUT TABLE tt_titulos_bord, INPUT-OUTPUT TABLE tt-retorno).
+
+// adto
+/***
+    CREATE tt_titulos_bord.
+    ASSIGN tt_titulos_bord.cod_estab			  = "320"
+           tt_titulos_bord.nom_abrev        		  = "matasul cor"
+           tt_titulos_bord.val_pagto_moe        	  = 2100
+           tt_titulos_bord.cod_agenc_bcia_digito	  = "000000-"
+           tt_titulos_bord.cod_refer_antecip_pef	  = "250202Apdq"
+           tt_titulos_bord.dat_prev_pagto        	  = 02/02/25
+           tt_titulos_bord.cod_espec_docto        	  = "AN"
+           tt_titulos_bord.dat_emis_docto        	  = 02/02/25
+           tt_titulos_bord.cod_tit_ap        		  = "020201"
+           tt_titulos_bord.cod_forma_pagto        	  ="DOC"
+           tt_titulos_bord.cod_cta_corren_bco_digito     = "0000000000-"
+           tt_titulos_bord.cod_parcela        		  = "01"
+           tt_titulos_bord.cdn_fornecedor        	  = 32927
+           tt_titulos_bord.dat_desconto        	         = ?
+           tt_titulos_bord.cod_refer			  = "an020201p1"
+           tt_titulos_bord.val_sdo_tit_ap        	  = 2100
+           tt_titulos_bord.dat_vencto_tit_ap             = 02/02/25
+           tt_titulos_bord.ind_sit_prepar_liber	         = ""
+           tt_titulos_bord.cod_ser_docto        	  = "1"
+           tt_titulos_bord.cod_indic_econ        	  = "Real"
+           tt_titulos_bord.cod_banco        		  = "001".
+***/
+// titulo
+/***
+    CREATE tt_titulos_bord.
+    ASSIGN tt_titulos_bord.cod_estab			  = "320"
+           tt_titulos_bord.nom_abrev        		  = "herick fe"
+           tt_titulos_bord.val_pagto_moe        	  = 50
+           tt_titulos_bord.cod_agenc_bcia_digito	  = "000000-"
+           tt_titulos_bord.cod_refer_antecip_pef	  = ""
+           tt_titulos_bord.dat_prev_pagto        	  = 12/12/24
+           tt_titulos_bord.cod_espec_docto        	  = "RC"
+           tt_titulos_bord.dat_emis_docto        	  = 12/12/24
+           tt_titulos_bord.cod_tit_ap        		  = "186982"
+           tt_titulos_bord.cod_forma_pagto        	  ="DOC"
+           tt_titulos_bord.cod_cta_corren_bco_digito     = "0000000000-"
+           tt_titulos_bord.cod_parcela        		  = "01"
+           tt_titulos_bord.cdn_fornecedor        	  = 340000
+           tt_titulos_bord.dat_desconto        	          = ?
+           tt_titulos_bord.cod_refer			  = ""
+           tt_titulos_bord.val_sdo_tit_ap        	  = 50
+           tt_titulos_bord.dat_vencto_tit_ap             = 12/23/24
+           tt_titulos_bord.ind_sit_prepar_liber	         = ""
+           tt_titulos_bord.cod_ser_docto        	 = "1"
+           tt_titulos_bord.cod_indic_econ        	 = "Real"
+           tt_titulos_bord.cod_banco        		 = "001".
+***/
+
+//RUN  pi-vincula-bord (INPUT TABLE tt_param, INPUT TABLE tt_titulos_bord, OUTPUT TABLE tt-retorno).
+
+//**************************************************
+//**************************************************
+
+assign ret = 0
+       ret-msg = 0.
+for each tt-retorno 
+    // where cod-status = 1 
+    with frame f-retorno down TITLE "RETORNO" by tt-retorno.desc-retorno:
+    assign ret = ret + 1.
+    if  cod-status = 1 then 
+        assign ret-msg = ret-msg + 1.
+    disp //tt-retorno.cod-status
+        tt-retorno.desc-retorno format "x(75)" column-label "DESCRI€ÇO"
+         .
+    if  index(tt-retorno.desc-retorno, "refer=") <> 0         
+    and index(tt-retorno.desc-retorno, "1236") <> 0 then
+        message tt-retorno.desc-retorno 
+           view-as alert-box.
+end.     
+
+//**************************************************
+//**************************************************
+
+assign tit = 0.
+for each tt_titulos_bord with frame f-titulos down:
+
+        assign tit = tit + 1.
+        disp    tt_titulos_bord.cod_estab 
+                tt_titulos_bord.cdn_fornecedor       
+                tt_titulos_bord.cod_espec_docto      
+                tt_titulos_bord.cod_ser_docto        
+                tt_titulos_bord.cod_tit_ap           
+                tt_titulos_bord.cod_parcela          
+                tt_titulos_bord.dat_vencto_tit_ap    
+                tt_titulos_bord.cod_refer_antecip_pef
+                tt_titulos_bord.val_pagto            
+                tt_titulos_bord.log_possui_antecip_forn
+                .
+end.   
+       
+               message "ret = " ret skip
+                       "ret-msg = " ret-msg skip
+                       "tit = " tit
+                   view-as alert-box.  
+return.
+
+/****************************************************************************************************
+
+    // EXECU€ÇO LOCAL - cria border“
+    CREATE tt_bordero.
+    ASSIGN tt_bordero.cod_estab          = "100"
+           tt_bordero.cod_empresa        = "1"
+           tt_bordero.cod_portador       = "10001"
+           tt_bordero.cod_indic_econ     = "Real"
+           tt_bordero.val_tot_lote_pagto_efe = 11120.22
+           tt_bordero.log_bord_ap_escrit = YES
+           tt_bordero.log_bxa_estab      = YES
+           tt_bordero.cod_msg_inic  = ?
+           tt_bordero.cod_msg_fim = ?.
+  
+    RUN pi-cria-bordero (INPUT TABLE tt_bordero, OUTPUT TABLE tt-retorno).
+  
+    FOR EACH tt-retorno:
+        MESSAGE tt-retorno.cod-status SKIP tt-retorno.desc-retorno
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+  
+
+    // EXECU€ÇO LOCAL - carrega lista
+
+    CREATE tt_param.
+    ASSIGN tt_param.cod_estab                  = "406"
+           tt_param.cod_empresa                = "1"
+           tt_param.cod_portador               = "10341"
+           tt_param.num_bord_ap                = 1
+           tt_param.ind_tip_docto_prepar_pagto = ?
+           tt_param.ind_liber_pagto_dat        = ?  
+           tt_param.dat_inicio                 = 08/01/2024  
+           tt_param.dat_fim                    = 09/27/2024  
+           tt_param.cod_estab_ini              = ?  
+           tt_param.cod_estab_fim              = ?  
+           tt_param.cdn_fornecedor_ini         = ?  
+           tt_param.cdn_fornecedor_fim         = ?  
+           tt_param.cod_espec_docto_ini        = ?  
+           tt_param.cod_espec_docto_fim        = ?  
+           tt_param.cod_forma_pagto_in         = ?  
+           tt_param.cod_forma_pagto_fn         = ?  
+           tt_param.cod_indic_econ_ini         = ?  
+           tt_param.cod_indic_econ_fim         = ?  
+           tt_param.cod_portador_ini           = ?  
+           tt_param.cod_portador_fim           = ?  
+           tt_param.ind_pagto_liber            = "Ambos"  
+           tt_param.val_cotac_indic_econ       = ?  
+           tt_param.dat_cotac_indic_econ       = ?  
+           tt_param.ind_favorec_cheq           = ?  
+           tt_param.log_gerac_autom            = ?   
+           tt_param.log_consid_fatur_cta       = ? 
+           tt_param.log_atualiza_dat_pagto = ?
+        .
+  
+    RUN  pi-busca-tit (INPUT TABLE tt_param,OUTPUT TABLE tt_titulos_bord, OUTPUT TABLE tt-retorno).
+  
+    FOR EACH tt-retorno:
+        MESSAGE tt-retorno.cod-status SKIP tt-retorno.desc-retorno
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+  
+    // EXECU€ÇO LOCAL - vincula
+  
+    CREATE tt_param.
+    ASSIGN tt_param.cod_estab                  = "406"
+           tt_param.cod_empresa                = "1"
+           tt_param.cod_portador               = "10341"
+           tt_param.num_bord_ap                = 1
+           tt_param.ind_tip_docto_prepar_pagto = ?
+           tt_param.ind_liber_pagto_dat        = ?  
+           tt_param.dat_inicio                 = 08/01/2024  
+           tt_param.dat_fim                    = 09/27/2024  
+           tt_param.cod_estab_ini              = ?  
+           tt_param.cod_estab_fim              = ?  
+           tt_param.cdn_fornecedor_ini         = ?  
+           tt_param.cdn_fornecedor_fim         = ?  
+           tt_param.cod_espec_docto_ini        = ?  
+           tt_param.cod_espec_docto_fim        = ?  
+           tt_param.cod_forma_pagto_in         = ?  
+           tt_param.cod_forma_pagto_fn         = ?  
+           tt_param.cod_indic_econ_ini         = ?  
+           tt_param.cod_indic_econ_fim         = ?  
+           tt_param.cod_portador_ini           = ?  
+           tt_param.cod_portador_fim           = ?  
+           tt_param.ind_pagto_liber            = "Ambos"  
+           tt_param.val_cotac_indic_econ       = ?  
+           tt_param.dat_cotac_indic_econ       = ?  
+           tt_param.ind_favorec_cheq           = ?  
+           tt_param.log_gerac_autom            = ?   
+           tt_param.log_consid_fatur_cta       = ? 
+        .
+  
+    CREATE tt_titulos_bord.
+    ASSIGN tt_titulos_bord.cod_estab				  = "406"
+           tt_titulos_bord.nom_abrev        		  = "INSS"
+           tt_titulos_bord.val_pagto_moe        	  = 73.58
+           tt_titulos_bord.cod_agenc_bcia_digito	  = "000000-"
+           tt_titulos_bord.cod_refer_antecip_pef	  = ""
+           tt_titulos_bord.dat_prev_pagto        	  = 09/20/2024
+           tt_titulos_bord.cod_espec_docto        	  = "VF"
+           tt_titulos_bord.dat_emis_docto        	  = 08/19/2024
+           tt_titulos_bord.cod_tit_ap        		  = "0000329"
+           tt_titulos_bord.cod_forma_pagto        	  ="DOC"
+           tt_titulos_bord.cod_cta_corren_bco_digito = "0000000000-"
+           tt_titulos_bord.cod_parcela        		  = "6l"
+           tt_titulos_bord.cdn_fornecedor        	  = 1509
+           tt_titulos_bord.dat_desconto        	  = ?
+           tt_titulos_bord.cod_refer				  = "J8OG64196"
+           tt_titulos_bord.val_sdo_tit_ap        	  = 73.58
+           tt_titulos_bord.dat_vencto_tit_ap         = 09/20/2024
+           tt_titulos_bord.ind_sit_prepar_liber	  = ""
+           tt_titulos_bord.cod_ser_docto        	  = "920"
+           tt_titulos_bord.cod_indic_econ        	  = "Real"
+           tt_titulos_bord.cod_banco        		  = "1".
+  
+    RUN  pi-vincula-bord (INPUT TABLE tt_param, INPUT TABLE tt_titulos_bord, OUTPUT TABLE tt-retorno).
+  
+    FOR EACH tt-retorno:
+        MESSAGE tt-retorno.cod-status SKIP tt-retorno.desc-retorno
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+  
+    // EXECU€ÇO LOCAL - Envio banco
+    CREATE tt_bordero.
+    ASSIGN tt_bordero.cod_estab          = "406"
+           tt_bordero.cod_empresa        = "1"
+           tt_bordero.cod_portador       = "10341"
+           tt_bordero.num_bord_ap        = 1.
+  
+    RUN pi-envio-banco  (INPUT TABLE tt_bordero, OUTPUT TABLE tt-retorno).
+  
+    FOR EACH tt-retorno:
+        MESSAGE tt-retorno.cod-status SKIP tt-retorno.desc-retorno
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+  
+    //Transmitir banco
+    CREATE tt_bordero.
+    ASSIGN tt_bordero.cod_estab          = "100"
+           tt_bordero.cod_empresa        = "1"
+           tt_bordero.cod_portador       = "10001"
+           tt_bordero.num_bord_ap        = 4288.
+  
+    RUN pi-transmitir-banco  (INPUT TABLE tt_bordero, OUTPUT TABLE tt-retorno).
+  
+    FOR EACH tt-retorno:
+        MESSAGE tt-retorno.cod-status SKIP tt-retorno.desc-retorno
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+  
+    //transfere border“
+    CREATE tt_bordero.
+    ASSIGN tt_bordero.cod_estab          = "100"
+           tt_bordero.cod_empresa        = "1"
+           tt_bordero.cod_portador       = "10001"
+           tt_bordero.num_bord_ap        = 4213.
+  
+    RUN pi-transfere-bordero  (INPUT TABLE tt_bordero, OUTPUT TABLE tt-retorno).
+  
+    FOR EACH tt-retorno:
+        MESSAGE tt-retorno.cod-status SKIP tt-retorno.desc-retorno
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+  
+    // EXECU€ÇO LOCAL - Confirma border“ baixa
+    CREATE tt_bordero.
+    ASSIGN tt_bordero.cod_estab          = "406"
+           tt_bordero.cod_empresa        = "1"
+           tt_bordero.cod_portador       = "10341"
+           tt_bordero.num_bord_ap        = 1.
+   
+    RUN pi-confirma-bordero  (INPUT TABLE tt_bordero, OUTPUT TABLE tt-retorno).
+  
+    FOR EACH tt-retorno:
+        MESSAGE tt-retorno.cod-status SKIP tt-retorno.desc-retorno
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+  
+    // EXECU€ÇO LOCAL - consulta borderos abertos
+    CREATE tt_param.
+    ASSIGN tt_param.cod_empresa                = "1"
+           tt_param.num_bord_ap                = 1
+           tt_param.ind_tip_docto_prepar_pagto = ?
+           tt_param.ind_liber_pagto_dat        = ?  
+           tt_param.dat_inicio                 = 9/27/2024  
+           tt_param.dat_fim                    = 10/27/2024  
+           tt_param.cod_estab_ini              = "406"  
+           tt_param.cod_estab_fim              = "406"  .
+    RUN pi-busca-bordero-aberto (INPUT TABLE tt_param, OUTPUT TABLE tt_bordero, OUTPUT TABLE tt-retorno).
+  
+    FOR EACH tt_bordero:
+        MESSAGE tt_bordero.num_bord_ap
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+
+    FOR EACH tt-retorno:
+        MESSAGE tt-retorno.cod-status tt-retorno.desc-retorno
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+  
+    // EXECU€ÇO LOCAL - Eliminar border“
+    CREATE tt_bordero.
+    ASSIGN tt_bordero.cod_estab          = "100"
+           tt_bordero.cod_empresa        = "1"
+           tt_bordero.cod_portador       = "10001"
+           tt_bordero.num_bord_ap        = 4299.
+  
+    RUN pi-elimina-bordero  (INPUT TABLE tt_bordero, OUTPUT TABLE tt-retorno).
+  
+    FOR EACH tt-retorno:
+        MESSAGE tt-retorno.cod-status tt-retorno.desc-retorno
+            VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
+    END.
+
+****************************************************************************************************/

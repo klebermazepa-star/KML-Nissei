@@ -1,0 +1,124 @@
+
+/*******************************************************************************
+* FT0708.I6
+* Definica das variaveis do programa ft0708.p
+*******************************************************************************/
+
+def {1} buffer  param-global for param-global.
+def {1} buffer  param-fasb   for param-fasb.
+def {1} buffer  para-fat     for para-fat.
+
+def {1} var r-sumar-ft      as rowid                                    no-undo.
+def {1} var r-nota          as rowid                                    no-undo.
+def {1} var de-cre-dta      as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+def {1} var de-deb-dta      as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+def {1} var de-cre-cta      as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+def {1} var de-deb-cta      as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+
+def {1} var de-cre-est      as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+def {1} var de-deb-est      as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+def {1} var de-tot-deb      as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+def {1} var de-tot-deb-ifrs as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+def {1} var de-tot-cre      as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+def {1} var de-tot-cre-ifrs as dec format "->>,>>>,>>>,>>9.99" extent 4 no-undo.
+
+def {1} var i-valor         like sumar-ft.vl-contab            extent 3 no-undo.
+def {1} var c-label         as character        format "x(18)" extent 3 no-undo.
+def {1} var c-sublinha      as character        format "x(18)" extent 3 no-undo.
+def {1} var c-lancamento    as character        format "x(02)"          no-undo.
+def {1} var de-valor        like sumar-ft.vl-contab                     no-undo.
+def {1} var c-moeda         as character  format "x(18)"                no-undo.
+def {1} var i-ct-fim        as char format "x(20)".
+def {1} var i-sc-fim        as char format "x(20)".
+def {1} var i-ct-ini        as char format "x(20)".
+def {1} var i-sc-ini        as char format "x(20)".
+def {1} var da-movto    like sumar-ft.dt-movto no-undo. 
+def {1} var l-mudoupag  as log init no no-undo. 
+def {1} var c-total     as char    format "x(22)" no-undo. 
+def {1} var i-clas      as integer no-undo. 
+def {1} var l-tipo          as log format "Detalhado/resumido" init yes no-undo.
+def {1} var l-moeda         as log format "Real/Historica"     init yes no-undo.
+
+def {1} var de-vl-alfa      as decimal format "->>,>>>,>>>,>>9.9999"    no-undo.
+def {1} var de-vl-alfa1     like de-vl-alfa                             no-undo.
+def {1} var de-vl-pres      like de-vl-alfa                             no-undo.
+def {1} var de-vl-cmi       like de-vl-alfa                             no-undo.
+def {1} var de-vl-tot-dup   like de-vl-alfa                             no-undo.
+def {1} var de-vl-fasb      like sumar-ft.vl-contab                     no-undo.
+def {1} var de-taxa-anbid   like sumar-ft.vl-contab                     no-undo.
+def {1} var de-taxa-cmi     like sumar-ft.vl-contab                     no-undo.
+def {1} var de-tot-dup      like de-vl-alfa                             no-undo.
+def {1} var de-acum-dup     like de-vl-alfa               init 0        no-undo.
+def {1} var de-vl-salvo     like de-vl-alfa                             no-undo.
+def {1} var de-vl-cont      like de-vl-alfa                             no-undo.
+def {1} var de-vl-contab    like de-vl-alfa                             no-undo.
+def {1} var c-referencia    like doc-pendente.referencia                no-undo.
+def {1} var da-fim-per      like nota-fiscal.dt-emis-nota init today    no-undo.
+def {1} var c-est-ini       like nota-fiscal.cod-estabel  init "1"      no-undo.
+def {1} var c-est-fim       like nota-fiscal.cod-estabel  init "999"    no-undo.
+def {1} var da-vcto-ipi     like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-vcto-iss     like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-vcto-irrf    like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-vcto-pis     like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-vcto-cofins  like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-vcto-icmsub  like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-vcto-icms    like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-vcto-inss    like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-ini-per      like nota-fiscal.dt-emis-nota init today    no-undo.
+def {1} var da-ult-dia      like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var de-tx-anbid     as decimal                                  no-undo.
+def {1} var de-tx-cmi       as decimal                                  no-undo.
+def {1} var de-tx-dolar     as decimal                                  no-undo.
+def {1} var de-tx-emis      as decimal decimals 4                       no-undo.
+def {1} var de-tx-vcto      as decimal decimals 4                       no-undo.
+def {1} var de-cotacao      like cotacao.cota-media                     no-undo.
+
+def {1} var da-ipi          like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-iss          like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-irrf         like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-pis          like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-cofins       like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-icms-subs    like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-icms         like nota-fiscal.dt-emis-nota               no-undo.
+def {1} var da-inss         like nota-fiscal.dt-emis-nota               no-undo.
+
+def {1} var de-vl-cmi-acum  like sumar-ft.vl-contab                     no-undo.
+def {1} var de-vl-anbid     like sumar-ft.vl-contab                     no-undo.
+def {1} var da-ult-datemi   like sumar-ft.dt-movto                      no-undo.
+
+def {1} var l-vcto          as log format "Informada/Emissao"  init yes no-undo.
+def {1} var l-duplic        as log format "Sim/Nao"    init no         no-undo.
+def {1} var c-opcao         as char                                    no-undo.
+def {1} var c-natureza      as log                                     no-undo.
+def {1} var c-gr-conta      as character format "x(50)"                no-undo.
+def {1} var l-sel-est       as logical format "Sim/Nao"                no-undo.
+
+def {1} var c-pais like nota-fiscal.pais init "" no-undo.
+
+def {1} var c-pais-ini      like nota-fiscal.pais initial ""           no-undo.
+def {1} var c-pais-fim      like nota-fiscal.pais
+initial "ZZZZZZZZZZZZZZZZZZZZ"
+                                                                       no-undo.
+def {1} var c-pais-nota     like nota-fiscal.pais                      no-undo.
+
+def {1} var c-estado        like nota-fiscal.estado                     no-undo.
+def {1} var c-estado-ini    like nota-fiscal.estado init " "            no-undo.
+def {1} var c-estado-fim    like nota-fiscal.estado init "ZZ"           no-undo.
+def {1} var l-contabil-dup  as logical.
+def {1} workfile w-sumar-rej
+    field registro as rowid.
+
+def {1} var l-vl-pres       as log format "Sim/Nao"    init no          no-undo.
+def {1} var l-receita       as log format "Sim/Nao"    init no          no-undo.
+
+def {1} var h-ft0708o as handle no-undo. /* para execu‡Æo do ft0708o persistente */
+
+{ftp/ft0708.i7 "{1}" }
+
+def {1} var l-notas-fisc    as logical  format "Sim/NÆo" no-undo.
+def {1} var l-proc-exp      as logical  format "Sim/NÆo" no-undo.
+def {1} var l-processa-ifrs as logical  format "Sim/NÆo" no-undo.
+def {1} var l-erro-ex       as logical  no-undo. 
+def var c-tipo-oper         as char     no-undo. 
+
+/* FT0708.I6 */

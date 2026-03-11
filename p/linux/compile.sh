@@ -1,0 +1,10 @@
+
+export TERM=vt100
+export NLS_LANG='AMERICAN_AMERICA.WE8ISO8859P1'
+export DLC=/totvs/progress/oe11
+export PATH=$DLC/bin:$PATH
+export PROTERMCAP=$DLC/protermcap
+export PROMSGS=$DLC/promsgs
+export PROPATH=/totvs/datasul/totvs12/_uteis/sequencias:/totvs/datasul/totvs12/_custom_prod/NDD:/totvs/datasul/totvs12/_custom_prod:/totvs/datasul/totvs12/_quarentena_prod/fnd/tty:/totvs/datasul/totvs12/_quarentena_prod/ems2/tty:/totvs/datasul/totvs12/_quarentena_prod/ems5/tty:/totvs/datasul/totvs12/_quarentena_prod/hcm/tty:/totvs/datasul/totvs12/_quarentena_prod/eai/tty:/totvs/datasul/totvs12/_quarentena_prod/eai2/tty:/totvs/datasul/totvs12/_quarentena_prod/crm/tty:/totvs/datasul/totvs12/_quarentena_prod/crm//tty/database:/totvs/datasul/totvs12/_quarentena_prod/crm//tty/integracoes:/totvs/datasul/totvs12/_quarentena_prod/ddk/tty:/totvs/datasul/totvs12/_quarentena_prod/DDKGui/tty:/totvs/datasul/totvs12/fnd/tty:/totvs/datasul/totvs12/ems2/tty:/totvs/datasul/totvs12/ems5/tty:/totvs/datasul/totvs12/hcm/tty:/totvs/datasul/totvs12/eai/tty:/totvs/datasul/totvs12/eai2/tty:/totvs/datasul/totvs12/crm/tty:/totvs/datasul/totvs12/crm//tty/database:/totvs/datasul/totvs12/crm//tty/integracoes:/totvs/datasul/totvs12/ddk/tty:/totvs/datasul/totvs12/DDKGui/tty:/totvs/datasul/totvs12/_quarentena_prod/fnd:/totvs/datasul/totvs12/_quarentena_prod/ems2:/totvs/datasul/totvs12/_quarentena_prod/ems5:/totvs/datasul/totvs12/_quarentena_prod/hcm:/totvs/datasul/totvs12/_quarentena_prod/eai:/totvs/datasul/totvs12/_quarentena_prod/eai2:/totvs/datasul/totvs12/_quarentena_prod/crm:/totvs/datasul/totvs12/_quarentena_prod/crm/database:/totvs/datasul/totvs12/_quarentena_prod/crm/integracoes:/totvs/datasul/totvs12/_quarentena_prod/ddk:/totvs/datasul/totvs12/DDKGui:/totvs/datasul/totvs12/fnd:/totvs/datasul/totvs12/ems2:/totvs/datasul/totvs12/ems5:/totvs/datasul/totvs12/hcm:/totvs/datasul/totvs12/eai:/totvs/datasul/totvs12/eai2:/totvs/datasul/totvs12/crm:/totvs/datasul/totvs12/crm/database:/totvs/datasul/totvs12/crm/integracoes:/totvs/datasul/totvs12/ddk:/totvs/datasul/totvs12/DDKGui:
+
+_progres -pf /totvs/datasul/totvs12/scripts-8080/datasul_admin_lx.pf -p _edit.p

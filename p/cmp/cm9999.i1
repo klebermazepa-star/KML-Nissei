@@ -1,0 +1,11 @@
+/*********************************************************************************
+* Programa: CMP~\CM9999.I1                                                        *          
+* Data....: 16.08.2005 11:46 - Eliziani                                          *
+* Autor...: CINGO - Desenvolvimento de Sistemas Sob Encomenda                    *
+* Objetivo: Include para apresentar mensagem 26.535                              *                                                     *
+**********************************************************************************/
+RUN utp/ut-msgs.p (INPUT "SHOW":U,
+                   INPUT 26535,
+                   INPUT STRING({1}) + '~~' + '2.04' + '~~' + '2.06' + '~~' + STRING({2})).
+RETURN.
+

@@ -1,0 +1,11 @@
+/************Temp-Table***************/
+DEF TEMP-TABLE tt-docto-estoq-nfe-imp      NO-UNDO LIKE docto-estoq-nfe-imp.
+DEF TEMP-TABLE tt-item-docto-estoq-nfe-imp NO-UNDO LIKE item-docto-estoq-nfe-imp.
+def temp-table tt-embarque-oc no-undo
+    field numero-ordem   like ordens-embarque.numero-ordem
+    field parcela        like ordens-embarque.parcela
+    field sequencia      as   integer
+    field l-gera-prim-nf-remes-mae as logical.
+DEFINE TEMP-TABLE tt-embarque-filho NO-UNDO 
+    FIELD cod-estabel  LIKE embarque-imp.cod-estabel
+    FIELD embarque     LIKE embarque-imp.embarque.

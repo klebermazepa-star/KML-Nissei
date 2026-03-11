@@ -1,0 +1,17 @@
+/*--------------------------------------------------------------------------
+
+    File       : bodi317ef.i1
+    Purpose    : Defini‡Æo da temp-table tt-notas-geradas
+
+    Parameters : 
+
+    Notes      : 
+  ------------------------------------------------------------------------*/
+
+/* Definicao da tabela temporaria tt-notas-geradas */
+def temp-table tt-notas-geradas no-undo
+    field rw-nota-fiscal as   rowid
+    field nr-nota        like nota-fiscal.nr-nota-fis
+    field seq-wt-docto   like wt-docto.seq-wt-docto.
+
+/* BODI317EF.I1 */
